@@ -50,6 +50,7 @@ unsigned int symtable_hash(char *key, int size) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_hash");
     }
+    printf("symtable_search called with key: %s\n", key);
     unsigned int hash = 0;
     while (*key) {
         hash = (hash << 5) + *key++;
@@ -63,6 +64,7 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_insert");
     }
+    printf("symtable_search called with key: %s\n", key);
     if (symbol == NULL) {
         error_exit(ERR_INTERNAL, "NULL symbol passed to symtable_insert");
     }
@@ -113,7 +115,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_search");
     }
-    printf("symtable_search called with key: %s\n", key);
+    //printf("symtable_search called with key: %s\n", key);
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];

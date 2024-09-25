@@ -27,10 +27,10 @@ static Token get_next_token_internal(Scanner *scanner);
 
 void print_token(Token token) {
     if (token.lexeme == NULL) {
-        printf("Token type: %d, lexeme: (null), line: %d, column: %d\n", 
+        printf("Token type: %d, lexeme: (null), line: %d, column: %d\n",
                token.type, token.line, token.column);
     } else {
-        printf("Token type: %d, lexeme: %s, line: %d, column: %d\n", 
+        printf("Token type: %d, lexeme: %s, line: %d, column: %d\n",
                token.type, token.lexeme, token.line, token.column);
     }
 }
@@ -77,11 +77,16 @@ static void skip_whitespace_and_comments(Scanner *scanner) {
 
 // Function to recognize keywords and identifiers
 static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner) {
+    printf("Lexeme in the start recognize is: %s\n", lexeme);
     Token token;
-    token.lexeme = strdup(lexeme);
+    token.lexeme = NULL;
+    printf("token.Lexeme in the start recognize is: %s\n", token.lexeme);
+    token.lexeme = string_duplicate(lexeme);
     if (token.lexeme == NULL) {
         error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
     }
+    printf("Lexeme in the middle recognize is: %s\n", lexeme);
+    printf("token.Lexeme in the middle recognize is: %s\n", token.lexeme);
     token.line = scanner->line;
     token.column = scanner->column - strlen(lexeme);
 
@@ -107,7 +112,7 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner) {
         token.type = TOKEN_IDENTIFIER;
         printf("Recognized as identifier\n");
     }
-
+    printf("Lexeme in the end recognize is: %s\n", token.lexeme);
     return token;
 }
 
@@ -124,6 +129,7 @@ static Token scan_identifier_or_keyword(Scanner *scanner) {
         printf("Processing character in identifier: %c\n", scanner->current_char);
         if (index < MAX_LEXEME_LENGTH - 1) {
             lexeme_buffer[index++] = scanner->current_char;
+            printf("Lexeme_Buffer is: %s\n", lexeme_buffer);
         } else {
             error_exit(ERR_LEXICAL, "Identifier too long.");
         }
@@ -131,10 +137,16 @@ static Token scan_identifier_or_keyword(Scanner *scanner) {
         scanner->column++;
     }
 
+    if (index == 0) {
+        error_exit(ERR_LEXICAL, "Lexeme buffer is empty.");
+    }
+
     lexeme_buffer[index] = '\0';
     printf("Finished scanning identifier: %s\n", lexeme_buffer);
 
     Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
+    printf("Token type: %d, lexeme: %s, line: %d, column: %d\n",
+           t.type, t.lexeme, t.line, t.column);
     print_token(t);  // Выведем отладочную информацию о токене
     return t;
 }
@@ -327,6 +339,9 @@ static Token scan_string(Scanner *scanner) {
     Token token;
     token.type = TOKEN_STRING_LITERAL;
     token.lexeme = string_duplicate(string_buffer);
+    if (token.lexeme == NULL) {
+        error_exit(ERR_INTERNAL, "Memory allocation failed for string literal.");
+    }
     token.line = scanner->line;
     token.column = scanner->column - strlen(string_buffer) - 2; // Approximation
 
@@ -336,6 +351,9 @@ static Token scan_string(Scanner *scanner) {
 // Function to get operator or delimiter tokens
 static Token get_operator_or_delimiter(Scanner *scanner) {
     Token token;
+    if (token.lexeme == NULL) {
+        error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
+    }
     token.lexeme = malloc(2);  // Выделяем память для одного символа + '\0'
     token.line = scanner->line;
     token.column = scanner->column;
@@ -374,7 +392,12 @@ static Token get_operator_or_delimiter(Scanner *scanner) {
             scanner->column++;
             if (scanner->current_char == '=') {
                 token.type = TOKEN_EQUAL;
-                token.lexeme = realloc(token.lexeme, 3);  // Обновляем размер для двух символов
+                char *temp = realloc(token.lexeme, 3);
+                if (temp == NULL) {
+                    free(token.lexeme); // Освобождаем старую память
+                    error_exit(ERR_INTERNAL, "Memory reallocation failed.");
+                }
+                token.lexeme = temp;
                 token.lexeme[0] = '=';
                 token.lexeme[1] = '=';
                 token.lexeme[2] = '\0';
@@ -426,7 +449,13 @@ static Token get_operator_or_delimiter(Scanner *scanner) {
             scanner->column++;
             if (scanner->current_char == '=') {
                 token.type = TOKEN_LESS_EQUAL;
-                token.lexeme = realloc(token.lexeme, 3);
+                char *temp = realloc(token.lexeme, 3);
+                if (temp == NULL) {
+                    free(token.lexeme); // Освобождаем старую память
+                    error_exit(ERR_INTERNAL, "Memory reallocation failed.");
+                }
+                token.lexeme = temp;
+
                 strcpy(token.lexeme, "<=");
                 scanner->current_char = fgetc(scanner->input);
                 scanner->column++;
@@ -441,7 +470,13 @@ static Token get_operator_or_delimiter(Scanner *scanner) {
             scanner->column++;
             if (scanner->current_char == '=') {
                 token.type = TOKEN_GREATER_EQUAL;
-                token.lexeme = realloc(token.lexeme, 3);
+                char *temp = realloc(token.lexeme, 3);
+                if (temp == NULL) {
+                    free(token.lexeme); // Освобождаем старую память
+                    error_exit(ERR_INTERNAL, "Memory reallocation failed.");
+                }
+                token.lexeme = temp;
+
                 strcpy(token.lexeme, ">=");
                 scanner->current_char = fgetc(scanner->input);
                 scanner->column++;
@@ -463,7 +498,13 @@ static Token get_operator_or_delimiter(Scanner *scanner) {
             scanner->column++;
             if (scanner->current_char == '=') {
                 token.type = TOKEN_NOT_EQUAL;
-                token.lexeme = realloc(token.lexeme, 3);
+                char *temp = realloc(token.lexeme, 3);
+                if (temp == NULL) {
+                    free(token.lexeme); // Освобождаем старую память
+                    error_exit(ERR_INTERNAL, "Memory reallocation failed.");
+                }
+                token.lexeme = temp;
+
                 token.lexeme[0] = '!';
                 token.lexeme[1] = '=';
                 token.lexeme[2] = '\0';

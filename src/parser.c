@@ -34,7 +34,7 @@ void parser_init(Scanner *scanner) {
 // Function to start parsing the program
 void parse_program(Scanner *scanner) {
     while (current_token.type != TOKEN_EOF) {
-        print_token(current_token); // Debugging token output
+        //print_token(current_token); // Debugging token output
         if (current_token.type == TOKEN_PUB) {
             parse_function(scanner);
         } else {
@@ -53,7 +53,10 @@ int parse_function(Scanner *scanner) {
         error_exit(ERR_SYNTAX, "Expected function name.");
     }
 
-    char *function_name = strdup(current_token.lexeme);
+    if (current_token.lexeme == NULL) {
+        error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
+    }
+    char *function_name = string_duplicate(current_token.lexeme);
     if (function_name == NULL) {
         error_exit(ERR_INTERNAL, "Memory allocation failed for function name.");
     }
@@ -63,7 +66,7 @@ int parse_function(Scanner *scanner) {
     expect_token(TOKEN_LEFT_PAREN, scanner);  // '('
 
     // Parse function parameters
-    if (current_token.type != TOKEN_RIGHT_PAREN, scanner) {
+    if (current_token.type != TOKEN_RIGHT_PAREN) {
         parse_parameter(scanner);  // Разбираем параметры функции
         while (current_token.type == TOKEN_COMMA) {
             current_token = get_next_token(scanner);
@@ -76,12 +79,12 @@ int parse_function(Scanner *scanner) {
     DataType return_type = parse_return_type(scanner);  // Функция, разбирающая возвращаемый тип
     
     // Добавляем функцию в таблицу символов
-    Symbol *function_symbol = symtable_search(&symtable, function_name);
+    /*Symbol *function_symbol = symtable_search(&symtable, function_name);
     if (function_symbol != NULL) {
         error_exit(ERR_SEMANTIC, "Function already defined.");
     }
     Symbol new_function = {.name = function_name, .symbol_type = SYMBOL_FUNCTION, .data_type = return_type, .is_defined = true};
-    symtable_insert(&symtable, function_name, &new_function);
+    symtable_insert(&symtable, function_name, &new_function);*/
 
     // Parse function body (block)
     parse_block(scanner);
@@ -94,9 +97,8 @@ void parse_parameter(Scanner *scanner) {
         error_exit(ERR_SYNTAX, "Expected parameter name.");
     }
 
-    if (current_token.lexeme == NULL) {
-        error_exit(ERR_INTERNAL, "Token lexeme is NULL.");
-    }
+
+    printf("current_token.lexeme before param: %s\n", current_token.lexeme);
     char *param_name = strdup(current_token.lexeme);
     if (param_name == NULL) {
         error_exit(ERR_INTERNAL, "Memory allocation failed for parameter name.");
@@ -111,7 +113,7 @@ void parse_parameter(Scanner *scanner) {
     DataType param_type = parse_type(scanner);
 
     // Проверяем существование параметра в таблице символов
-    printf("param_name before symtable_search: %s\n", param_name);
+    /*printf("param_name before symtable_search: %s\n", param_name);
     Symbol *param_symbol = symtable_search(&symtable, param_name);
     if (param_symbol != NULL) {
         free(param_name);
@@ -131,7 +133,7 @@ void parse_parameter(Scanner *scanner) {
     new_param->is_defined = true;
     new_param->next = NULL;
 
-    symtable_insert(&symtable, param_name, new_param);
+    symtable_insert(&symtable, param_name, new_param);*/
 
     // Не обрабатываем запятую и не вызываем parse_parameter рекурсивно
 }
@@ -207,8 +209,10 @@ void parse_variable_declaration(Scanner *scanner) {
     if (current_token.type != TOKEN_IDENTIFIER) {
         error_exit(ERR_SYNTAX, "Expected variable name.");
     }
-
-    char *variable_name = strdup(current_token.lexeme);
+    if (current_token.lexeme == NULL) {
+        error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
+    }
+    char *variable_name = string_duplicate(current_token.lexeme);
     if (variable_name == NULL) {
         error_exit(ERR_INTERNAL, "Memory allocation failed for variable name.");
     }
@@ -227,14 +231,14 @@ void parse_variable_declaration(Scanner *scanner) {
 
     expect_token(TOKEN_SEMICOLON, scanner);  // Variable declaration ends with a semicolon
 
-    // Add the variable to the symbol table
+    /*// Add the variable to the symbol table
     Symbol *symbol = symtable_search(&symtable, variable_name);
     if (symbol != NULL) {
         error_exit(ERR_SEMANTIC, "Variable already defined.");
     }
 
     Symbol new_var = {.name = variable_name, .symbol_type = SYMBOL_VARIABLE, .data_type = expr_type, .is_defined = true};
-    symtable_insert(&symtable, variable_name, &new_var);
+    symtable_insert(&symtable, variable_name, &new_var);*/
 }
 
 // Function to parse an if statement
@@ -318,10 +322,10 @@ static DataType parse_primary_expression(Scanner *scanner) {
     } else if (current_token.type == TOKEN_IDENTIFIER) {
         // Check if the identifier is in the symbol table
         char *identifier_name = current_token.lexeme;
-        Symbol *symbol = symtable_search(&symtable, identifier_name);
+        /*Symbol *symbol = symtable_search(&symtable, identifier_name);
         if (symbol == NULL) {
             error_exit(ERR_SEMANTIC, "Undefined variable or function.");
-        }
+        }*/
 
         current_token = get_next_token(scanner);
 
