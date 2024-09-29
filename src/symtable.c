@@ -115,7 +115,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_search");
     }
-    //printf("symtable_search called with key: %s\n", key);
+    printf("symtable_search called with key: %s\n", key);
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];
