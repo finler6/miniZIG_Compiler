@@ -12,6 +12,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef DEBUG_SCANNER
+    #define LOG(...) printf(__VA_ARGS__)
+#else
+    #define LOG(...)
+#endif
+
 // Maximum length for a lexeme
 #define MAX_LEXEME_LENGTH 256
 
@@ -29,12 +35,12 @@ void print_token(Token token)
 {
     if (token.lexeme == NULL)
     {
-        printf("Token type: %d, lexeme: (null), line: %d, column: %d\n",
+        LOG("DEBUG_SCANNER: Token type: %d, lexeme: (null), line: %d, column: %d\n",
                token.type, token.line, token.column);
     }
     else
     {
-        printf("Token type: %d, lexeme: %s, line: %d, column: %d\n",
+        LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
                token.type, token.lexeme, token.line, token.column);
     }
 }
@@ -47,7 +53,7 @@ static void skip_whitespace_and_comments(Scanner *scanner)
         // Skip whitespace
         while (isspace(scanner->current_char))
         {
-            printf("Skipping whitespace: %c\n", scanner->current_char);
+            LOG("DEBUG_SCANNER: Skipping whitespace: %c\n", scanner->current_char);
             if (scanner->current_char == '\n')
             {
                 scanner->line++;
@@ -92,21 +98,21 @@ static void skip_whitespace_and_comments(Scanner *scanner)
 // Function to recognize keywords and identifiers
 static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
 {
-    printf("Lexeme in the start recognize is: %s\n", lexeme);
+    LOG("DEBUG_SCANNER: Lexeme in the start recognize is: %s\n", lexeme);
     Token token;
     token.lexeme = NULL;
-    printf("token.Lexeme in the start recognize is: %s\n", token.lexeme);
+    LOG("DEBUG_SCANNER: token.Lexeme in the start recognize is: %s\n", token.lexeme);
     token.lexeme = string_duplicate(lexeme);
     if (token.lexeme == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
     }
-    printf("Lexeme in the middle recognize is: %s\n", lexeme);
-    printf("token.Lexeme in the middle recognize is: %s\n", token.lexeme);
+    LOG("DEBUG_SCANNER: Lexeme in the middle recognize is: %s\n", lexeme);
+    LOG("DEBUG_SCANNER: token.Lexeme in the middle recognize is: %s\n", token.lexeme);
     token.line = scanner->line;
     token.column = scanner->column - strlen(lexeme);
 
-    printf("Recognizing identifier or keyword: %s\n", lexeme);
+    LOG("DEBUG_SCANNER: Recognizing identifier or keyword: %s\n", lexeme);
 
     if (strcmp(lexeme, "const") == 0)
         token.type = TOKEN_CONST;
@@ -124,7 +130,7 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
         token.type = TOKEN_FN;
     else if (strcmp(lexeme, "pub") == 0)
     {
-        printf("Recognized 'pub' keyword\n");
+        LOG("DEBUG_SCANNER: Recognized 'pub' keyword\n");
         token.type = TOKEN_PUB;
     }
     else if (strcmp(lexeme, "void") == 0)
@@ -140,9 +146,9 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
     else
     {
         token.type = TOKEN_IDENTIFIER;
-        printf("Recognized as identifier\n");
+        LOG("DEBUG_SCANNER: Recognized as identifier\n");
     }
-    printf("Lexeme in the end recognize is: %s\n", token.lexeme);
+    LOG("DEBUG_SCANNER: Lexeme in the end recognize is: %s\n", token.lexeme);
     return token;
 }
 
@@ -152,16 +158,16 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     char lexeme_buffer[MAX_LEXEME_LENGTH];
     int index = 0;
 
-    printf("Starting to scan identifier or keyword\n");
+    LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
 
     // First character is already a letter or '_'
     while (isalnum(scanner->current_char) || scanner->current_char == '_')
     {
-        printf("Processing character in identifier: %c\n", scanner->current_char);
+        LOG("DEBUG_SCANNER: Processing character in identifier: %c\n", scanner->current_char);
         if (index < MAX_LEXEME_LENGTH - 1)
         {
             lexeme_buffer[index++] = scanner->current_char;
-            printf("Lexeme_Buffer is: %s\n", lexeme_buffer);
+            LOG("DEBUG_SCANNER: Lexeme_Buffer is: %s\n", lexeme_buffer);
         }
         else
         {
@@ -177,10 +183,10 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     }
 
     lexeme_buffer[index] = '\0';
-    printf("Finished scanning identifier: %s\n", lexeme_buffer);
+    LOG("DEBUG_SCANNER: Finished scanning identifier: %s\n", lexeme_buffer);
 
     Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
-    printf("Token type: %d, lexeme: %s, line: %d, column: %d\n",
+    LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
            t.type, t.lexeme, t.line, t.column);
     print_token(t); // Выведем отладочную информацию о токене
     return t;
@@ -645,7 +651,7 @@ static Token get_next_token_internal(Scanner *scanner)
 {
     skip_whitespace_and_comments(scanner);
 
-    printf("Processing character: '%c' (ASCII: %d)\n", scanner->current_char, (int)scanner->current_char);
+    LOG("DEBUG_SCANNER: Processing character: '%c' (ASCII: %d)\n", scanner->current_char, (int)scanner->current_char);
 
     Token token;
     token.lexeme = NULL;
@@ -654,37 +660,37 @@ static Token get_next_token_internal(Scanner *scanner)
 
     if (scanner->current_char == EOF)
     {
-        printf("Reached EOF\n");
+        LOG("DEBUG_SCANNER: Reached EOF\n");
         token.type = TOKEN_EOF;
         token.lexeme = string_duplicate("EOF");
-        printf("Returning EOF token\n");
+        LOG("DEBUG_SCANNER: Returning EOF token\n");
         return token;
     }
 
     if (isalpha(scanner->current_char) || scanner->current_char == '_')
     {
-        printf("Detected identifier or keyword\n");
+        LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);
         print_token(t); // Отладочная печать токена
         return t;
     }
     else if (isdigit(scanner->current_char))
     {
-        printf("Detected number\n");
+        LOG("DEBUG_SCANNER: Detected number\n");
         Token t = scan_number(scanner);
         print_token(t); // Отладочная печать токена
         return t;
     }
     else if (scanner->current_char == '"')
     {
-        printf("Detected string\n");
+        LOG("DEBUG_SCANNER: Detected string\n");
         Token t = scan_string(scanner);
         print_token(t); // Отладочная печать токена
         return t;
     }
     else
     {
-        printf("Detected operator or delimiter\n");
+        LOG("DEBUG_SCANNER: Detected operator or delimiter\n");
         Token t = get_operator_or_delimiter(scanner);
         print_token(t); // Отладочная печать токена
         return t;
@@ -704,10 +710,10 @@ void scanner_init(FILE *input_file, Scanner *scanner)
     scanner->current_char = fgetc(scanner->input);
     scanner->column = 1;
     scanner->line = 1;
-    printf("Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char); // Отладка
+    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char); // Отладка
     while ((scanner->current_char = fgetc(scanner->input)) != EOF)
     {
-        printf("Reading character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
+        LOG("DEBUG_SCANNER: Reading character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
     }
 
     // Возвращаемся к началу файла, чтобы начать нормальный процесс анализа

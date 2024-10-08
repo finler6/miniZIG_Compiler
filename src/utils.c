@@ -7,7 +7,8 @@ char* string_duplicate(const char* src) {
     if (src == NULL) {
         return NULL;
     }
-    char* copy = malloc(strlen(src) + 1); // +1 для нуль-терминатора
+    int len_str = strlen(src) + 1;
+    char* copy = (char *)malloc(len_str); // +1 для нуль-терминатора
     if (copy != NULL) {
         strcpy(copy, src);
     }

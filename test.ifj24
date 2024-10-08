@@ -1,12 +1,6 @@
-pub fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
 
 pub fn main() i32 {
-	add(5, 10);
+    const a : i32 = 100000000000000; 
 	return 0;
 }
-
-
-
 

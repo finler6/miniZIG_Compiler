@@ -18,6 +18,8 @@ int parse_function();
 // Parses a statement (expression, if, while, return, etc.)
 void parse_statement();
 
+void parse_parameter(Scanner *scanner);
+
 DataType parse_expression();
 
 #endif // PARSER_H
