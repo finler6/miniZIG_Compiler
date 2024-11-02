@@ -51,6 +51,7 @@ typedef enum {
     TOKEN_UNKNOWN
 } TokenType;
 
+
 typedef struct {
     TokenType type;
     char *lexeme;

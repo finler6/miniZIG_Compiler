@@ -5,7 +5,7 @@ TARGET = ifj24_compiler
 CC = gcc
 
 # Опции компилятора (включаем отладочные символы и стандарт C99)
-CFLAGS = -std=c99 -Wall -Wextra -g
+CFLAGS = -std=c99 -Wall -Wextra -g 
 
 # Папка с исходными файлами
 SRC_DIR = src

@@ -9,6 +9,12 @@
 #include "symtable.h"
 #include "error.h"
 
+#ifdef DEBUG_SYMTABLE
+    #define LOG(...) printf(__VA_ARGS__)
+#else
+    #define LOG(...)
+#endif
+
 #define INITIAL_SYMTABLE_SIZE 64
 #define LOAD_FACTOR 0.75
 
@@ -19,7 +25,7 @@ static void symtable_grow(SymTable *symtable);
 void symtable_init(SymTable *symtable) {
     symtable->size = INITIAL_SYMTABLE_SIZE;
     symtable->count = 0;
-    symtable->table = (Symbol **)malloc(sizeof(Symbol *) * symtable->size);
+    symtable->table = (Symbol **)malloc(sizeof(Symbol) * symtable->size);
     if (symtable->table == NULL) {
         error_exit(ERR_INTERNAL, "Memory allocation failed");
     }
@@ -50,7 +56,7 @@ unsigned int symtable_hash(char *key, int size) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_hash");
     }
-    printf("symtable_search called with key: %s\n", key);
+    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
     unsigned int hash = 0;
     while (*key) {
         hash = (hash << 5) + *key++;
@@ -64,7 +70,7 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_insert");
     }
-    printf("symtable_search called with key: %s\n", key);
+    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
     if (symbol == NULL) {
         error_exit(ERR_INTERNAL, "NULL symbol passed to symtable_insert");
     }
@@ -84,7 +90,7 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
 
     // Проверка на существование символа с таким же ключом
     while (current != NULL) {
-        printf("Comparing key: '%s' with existing symbol: '%s'\n", key, current->name);
+        LOG("DEBUG_SYMTABLE: Comparing key: '%s' with existing symbol: '%s'\n", key, current->name);
         
         // Проверяем, что имя символа не NULL перед сравнением
         if (current->name == NULL) {
@@ -103,7 +109,7 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
     symtable->table[index] = symbol;
     symtable->count++;
 
-    printf("Inserted symbol: '%s' at index: %u\n", symbol->name, index);
+    LOG("DEBUG_SYMTABLE: Inserted symbol: '%s' at index: %u\n", symbol->name, index);
 
     return symbol;
 }
@@ -115,7 +121,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_search");
     }
-    //printf("symtable_search called with key: %s\n", key);
+    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];
@@ -123,7 +129,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
     // Цикл по связному списку символов в ячейке таблицы
     while (current != NULL) {
         // Отладочный вывод для проверки ключей и символов
-        printf("Comparing key: '%s' with symbol: '%s'\n", key, current->name);
+        LOG("DEBUG_SYMTABLE: Comparing key: '%s' with symbol: '%s'\n", key, current->name);
 
         // Проверка, что имя символа не равно NULL перед сравнением
         if (current->name == NULL) {
