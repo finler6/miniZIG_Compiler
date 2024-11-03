@@ -1,6 +1,9 @@
+const ifj = @import("ifj24.zig");
 
-pub fn main() i32 {
-    const a : i32 = 100000000000000; 
-	return 0;
+pub fn main() void {
+    // Variable declaration and initialization
+    var x: i32 = 42;
+    const y: i32 = 16;
+var z: i32 = x + y;
+    return z;
 }
-

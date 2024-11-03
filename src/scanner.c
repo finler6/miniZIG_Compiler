@@ -100,7 +100,6 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
 {
     LOG("DEBUG_SCANNER: Lexeme in the start recognize is: %s\n", lexeme);
     Token token;
-    token.lexeme = NULL;
     LOG("DEBUG_SCANNER: token.Lexeme in the start recognize is: %s\n", token.lexeme);
     token.lexeme = string_duplicate(lexeme);
     if (token.lexeme == NULL)
@@ -143,6 +142,8 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
         token.type = TOKEN_F64;
     else if (strcmp(lexeme, "u8") == 0)
         token.type = TOKEN_U8;
+    else if (strcmp(lexeme, "@import") == 0)
+        token.type = TOKEN_IMPORT;
     else
     {
         token.type = TOKEN_IDENTIFIER;
@@ -161,7 +162,7 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
 
     // First character is already a letter or '_'
-    while (isalnum(scanner->current_char) || scanner->current_char == '_')
+    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@')
     {
         LOG("DEBUG_SCANNER: Processing character in identifier: %c\n", scanner->current_char);
         if (index < MAX_LEXEME_LENGTH - 1)
@@ -450,6 +451,11 @@ static Token scan_string(Scanner *scanner)
 static Token get_operator_or_delimiter(Scanner *scanner)
 {
     Token token;
+    token.line = scanner->line;
+    token.column = scanner->column;
+
+    // Allocate memory for lexeme
+    token.lexeme = malloc(2);
     if (token.lexeme == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
@@ -640,7 +646,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         break;
     default:
         free(token.lexeme);
-        error_exit(ERR_LEXICAL, "Unknown character encountered.");
+        error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c", scanner->current_char);
         break;
     }
 
@@ -667,7 +673,7 @@ static Token get_next_token_internal(Scanner *scanner)
         return token;
     }
 
-    if (isalpha(scanner->current_char) || scanner->current_char == '_')
+    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@')
     {
         LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);

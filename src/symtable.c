@@ -57,13 +57,13 @@ unsigned int symtable_hash(char *key, int size) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_hash");
     }
     LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
-    unsigned int hash = 0;
-    while (*key) {
-        hash = (hash << 5) + *key++;
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *key++)) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
     }
     return hash % size;
 }
-
 // Inserts a symbol into the symbol table
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
     // Проверка ключа и символа на NULL

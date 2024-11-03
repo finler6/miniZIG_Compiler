@@ -21,6 +21,7 @@ static void parse_variable_declaration(Scanner *scanner);
 static void parse_if_statement(Scanner *scanner);
 static void parse_while_statement(Scanner *scanner);
 static void parse_return_statement(Scanner *scanner);
+static void parse_import(Scanner *scanner);
 static DataType parse_primary_expression(Scanner *scanner);
 static DataType parse_binary_operation(Scanner *scanner);
 DataType parse_type(Scanner *scanner);        // Объявляем функцию заранее
@@ -43,10 +44,15 @@ void parser_init(Scanner *scanner)
 void parse_program(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Parsing program\n");
+    
+    // Parse the mandatory import statement
+    parse_import(scanner);
+
+    // Continue parsing the rest of the program
     while (current_token.type != TOKEN_EOF)
     {
         // print_token(current_token); // Debugging token output
-        if (current_token.type == TOKEN_PUB)
+        if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
             parse_function(scanner);
         }
@@ -56,6 +62,7 @@ void parse_program(Scanner *scanner)
         }
     }
 }
+
 
 // Function to parse a function definition
 // Function to parse a function definition
@@ -415,11 +422,8 @@ DataType parse_expression(Scanner *scanner)
     LOG("DEBUG_PARSER: Parsing expression\n");
 
     DataType expression_type =  parse_primary_expression(scanner); // Parse the first operand or literal
-
-    current_token = get_next_token(scanner);
-    // If there is a binary operation, check its type
     if (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS ||
-        current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE)
+           current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE)
     {
         return parse_binary_operation(scanner);
     }
@@ -452,7 +456,7 @@ static DataType parse_primary_expression(Scanner *scanner)
         Symbol *symbol = symtable_search(&symtable, identifier_name);
         if (symbol == NULL)
         {
-            error_exit(ERR_SEMANTIC, "Undefined variable or function.");
+            error_exit(ERR_SEMANTIC, "Undefined variable or function. Got: %s", identifier_name);
         }
 
         current_token = get_next_token(scanner);
@@ -495,21 +499,70 @@ static DataType parse_primary_expression(Scanner *scanner)
 static DataType parse_binary_operation(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Parsing binary operation\n");
-    TokenType operator_type = current_token.type;
-    current_token = get_next_token(scanner); // Move to the next token after operator
 
+    TokenType operator_type = current_token.type;
+    current_token = get_next_token(scanner); // Move to the next token after operator (`+`, `-`, `*`, `/`)
+
+    // Разбираем правую часть операции
     DataType rhs_type = parse_primary_expression(scanner); // Parse the right-hand side of the operation
 
-    // Check the compatibility of types for binary operations
-    if (operator_type == TOKEN_PLUS || operator_type == TOKEN_MINUS ||
-        operator_type == TOKEN_MULTIPLY || operator_type == TOKEN_DIVIDE)
+    // Проверка совместимости типов операндов
+    if ((operator_type == TOKEN_PLUS || operator_type == TOKEN_MINUS ||
+         operator_type == TOKEN_MULTIPLY || operator_type == TOKEN_DIVIDE) &&
+        (rhs_type == TYPE_INT || rhs_type == TYPE_FLOAT))
     {
-        // For now, assuming operations between INT and FLOAT are allowed
-        current_token = get_next_token(scanner);
+        // Для совместимых типов возвращаем тот же тип
+        // Например, int + int = int, float + float = float и т.д.
         return rhs_type;
     }
 
+        error_exit(ERR_SEMANTIC, "Incompatible types for binary operation.");
     return TYPE_UNKNOWN;
+}
+
+
+// Function to parse the import line at the beginning of the program
+void parse_import(Scanner *scanner)
+{
+    LOG("DEBUG_PARSER: Parsing import statement\n");
+    
+    // Expect 'const' keyword
+    expect_token(TOKEN_CONST, scanner);
+    
+    // Expect identifier 'ifj'
+    if (current_token.type != TOKEN_IDENTIFIER || strcmp(current_token.lexeme, "ifj") != 0)
+    {
+        error_exit(ERR_SYNTAX, "Expected identifier 'ifj'.");
+    }
+    current_token = get_next_token(scanner);
+
+    // Expect '='
+    expect_token(TOKEN_ASSIGN, scanner);
+
+    // Expect '@import'
+    if (current_token.type != TOKEN_IMPORT)
+    {
+        error_exit(ERR_SYNTAX, "Expected '@import'.");
+    }
+    current_token = get_next_token(scanner);
+
+    // Expect '('
+    expect_token(TOKEN_LEFT_PAREN, scanner);
+
+    // Expect string literal "ifj24.zig"
+    if (current_token.type != TOKEN_STRING_LITERAL || strcmp(current_token.lexeme, "ifj24.zig") != 0)
+    {
+        error_exit(ERR_SYNTAX, "Expected string literal \"ifj24.zig\". Got: %s", current_token.lexeme);
+    }
+    current_token = get_next_token(scanner);
+
+    // Expect ')'
+    expect_token(TOKEN_RIGHT_PAREN, scanner);
+
+    // Expect ';'
+    expect_token(TOKEN_SEMICOLON, scanner);
+    
+    LOG("DEBUG_PARSER: Finished parsing import statement\n");
 }
 
 // Function to expect a specific token type
@@ -518,7 +571,7 @@ static void expect_token(TokenType expected_type, Scanner *scanner)
     LOG("DEBUG_PARSER: Expected token: %d, got token: %d\n", expected_type, current_token.type);
     if (current_token.type != expected_type)
     {
-        error_exit(ERR_SYNTAX, "Unexpected token.");
+        error_exit(ERR_SYNTAX, "Unexpected token. Expected: %d, got: %d\n on line: %d, column: %d", expected_type, current_token.type, current_token.line, current_token.column);
     }
     current_token = get_next_token(scanner);
 }

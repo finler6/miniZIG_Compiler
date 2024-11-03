@@ -17,6 +17,7 @@ typedef enum {
     TOKEN_I32,
     TOKEN_F64,
     TOKEN_U8,
+    TOKEN_IMPORT,
 
     // Identifiers and literals
     TOKEN_IDENTIFIER,
