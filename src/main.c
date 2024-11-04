@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include "scanner.h"
 #include "parser.h"
-#include "codegen.h"
 #include "error.h"
 #include "symtable.h"
+#include "ast.h" // Подключаем заголовочный файл для работы с AST
 
 int main(int argc, char *argv[]) {
     // Проверяем количество аргументов командной строки
@@ -29,24 +29,20 @@ int main(int argc, char *argv[]) {
     Scanner scanner;
     scanner_init(source_file, &scanner);
 
-    // Инициализируем генератор кода
-    codegen_init(stdout); // Вывод на стандартный вывод
-
-    // Начинаем генерацию кода для программы
-    codegen_program_start();
-
     // Инициализируем парсер с указанием сканера
-    parser_init(&scanner); 
+    parser_init(&scanner);
 
-    // Запускаем синтаксический анализатор (если он возвращает код ошибки, обрабатываем его)
-    parse_program(&scanner);
+    // Запускаем синтаксический анализатор и получаем корневой узел AST
+    ASTNode* ast_root = parse_program(&scanner);
 
-    // Завершаем генерацию кода
-    codegen_program_end();
-    codegen_finalize();
+    // Печать AST для отладки
+    print_ast(ast_root, 0);
 
     // Освобождаем ресурсы сканера
     scanner_free(&scanner);
+
+    // Освобождаем память AST
+    free_ast_node(ast_root);
 
     // Закрываем исходный файл
     fclose(source_file);

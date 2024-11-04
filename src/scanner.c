@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
 
 #ifdef DEBUG_SCANNER
     #define LOG(...) printf(__VA_ARGS__)
@@ -153,7 +155,6 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
     return token;
 }
 
-// Function to scan an identifier or keyword
 static Token scan_identifier_or_keyword(Scanner *scanner)
 {
     char lexeme_buffer[MAX_LEXEME_LENGTH];
@@ -161,10 +162,24 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
 
     LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
 
-    // First character is already a letter or '_'
-    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@')
+    // Переменная для проверки на префикс ifj
+    bool ifj_prefix = true;
+
+    // Разрешаем буквы, цифры, '_', '@' и '.' (точку только после 'ifj')
+    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || (scanner->current_char == '.' && ifj_prefix))
     {
-        LOG("DEBUG_SCANNER: Processing character in identifier: %c\n", scanner->current_char);
+        // Проверка, что точка возможна только после ifj
+        if (scanner->current_char == '.')
+        {
+            // Если точка появилась, проверяем, что это именно 'ifj'
+            if (index < 3 || strncmp(lexeme_buffer, "ifj", 3) != 0)
+            {
+                error_exit(ERR_LEXICAL, "Invalid usage of '.' in identifier. Only 'ifj' can be followed by a dot.");
+            }
+            // После обработки точки снимаем ограничение
+            ifj_prefix = false;
+        }
+
         if (index < MAX_LEXEME_LENGTH - 1)
         {
             lexeme_buffer[index++] = scanner->current_char;
@@ -174,24 +189,31 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
         {
             error_exit(ERR_LEXICAL, "Identifier too long.");
         }
+        
+        // Считываем следующий символ
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
     }
 
+    // Проверка на пустоту буфера, что свидетельствует об ошибке
     if (index == 0)
     {
         error_exit(ERR_LEXICAL, "Lexeme buffer is empty.");
     }
 
+    // Завершаем строку лексемы
     lexeme_buffer[index] = '\0';
     LOG("DEBUG_SCANNER: Finished scanning identifier: %s\n", lexeme_buffer);
 
+    // Резолвим идентификатор или ключевое слово
     Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
     LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
            t.type, t.lexeme, t.line, t.column);
-    print_token(t); // Выведем отладочную информацию о токене
+    
     return t;
 }
+
+
 
 // Function to scan numeric literals (int and float)
 static Token scan_number(Scanner *scanner)
