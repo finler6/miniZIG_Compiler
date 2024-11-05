@@ -142,7 +142,7 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
         token.type = TOKEN_I32;
     else if (strcmp(lexeme, "f64") == 0)
         token.type = TOKEN_F64;
-    else if (strcmp(lexeme, "u8") == 0)
+    else if (strcmp(lexeme, "[]u8") == 0)
         token.type = TOKEN_U8;
     else if (strcmp(lexeme, "@import") == 0)
         token.type = TOKEN_IMPORT;
@@ -166,7 +166,8 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     bool ifj_prefix = true;
 
     // Разрешаем буквы, цифры, '_', '@' и '.' (точку только после 'ifj')
-    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || (scanner->current_char == '.' && ifj_prefix))
+    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' 
+           || scanner->current_char == ']' || (scanner->current_char == '.' && ifj_prefix))
     {
         // Проверка, что точка возможна только после ifj
         if (scanner->current_char == '.')
@@ -570,6 +571,13 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
+    case '|':
+        token.type = TOKEN_PIPE;
+        token.lexeme[0] = scanner->current_char;
+        token.lexeme[1] = '\0';
+        scanner->current_char = fgetc(scanner->input);
+        scanner->column++;
+        break;
     case ':': // Добавляем поддержку двоеточия
         token.type = TOKEN_COLON;
         token.lexeme[0] = scanner->current_char;
@@ -695,7 +703,8 @@ static Token get_next_token_internal(Scanner *scanner)
         return token;
     }
 
-    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@')
+    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@'
+        || scanner->current_char == '[' || scanner->current_char == ']')
     {
         LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);

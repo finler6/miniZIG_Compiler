@@ -46,6 +46,9 @@ typedef enum {
     TOKEN_COMMA,         // ,
     TOKEN_SEMICOLON,     // ;
     TOKEN_COLON,         // :
+    TOKEN_LEFT_BRACKET,  // [
+    TOKEN_RIGHT_BRACKET, // ]
+    TOKEN_PIPE,          // |
 
     // Special tokens
     TOKEN_EOF,

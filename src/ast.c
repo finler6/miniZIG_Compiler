@@ -8,7 +8,8 @@
 ASTNode* create_program_node() {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_PROGRAM;
-    node->left = node->right = node->next = node->condition = node->body = NULL;
+    node->left = node->right = node->next = node->condition = NULL;
+    node->body = NULL; // Указываем на NULL при создании
     node->name = NULL;
     node->value = NULL;
     node->parameters = NULL;
@@ -64,13 +65,16 @@ ASTNode* create_assignment_node(char* name, ASTNode* value) {
 }
 
 // Функция для создания узла бинарной операции
-ASTNode* create_binary_operation_node(NodeType op_type, ASTNode* left, ASTNode* right) {
+ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_BINARY_OPERATION;
     node->left = left;
     node->right = right;
     node->next = node->condition = node->body = NULL;
-    node->name = NULL;
+
+    // Установка имени операции
+    node->name = string_duplicate(operator_name);  // Добавьте эту строку, чтобы установить имя оператора
+
     node->value = NULL;
     node->parameters = NULL;
     node->param_count = 0;
@@ -78,6 +82,7 @@ ASTNode* create_binary_operation_node(NodeType op_type, ASTNode* left, ASTNode* 
     node->arg_count = 0;
     return node;
 }
+
 
 // Функция для создания узла литерала
 ASTNode* create_literal_node(DataType type, char* value) {
@@ -221,7 +226,18 @@ void print_ast(ASTNode* node, int indent) {
     // Печать имени типа узла и дополнительной информации
     switch (node->type) {
         case NODE_PROGRAM: 
-            printf("Node type: PROGRAM\n"); 
+            printf("Node type: PROGRAM\n");
+            // Дополнительная информация о функциях в программе
+            {
+                ASTNode *current_function = node->body;
+                printf("  Functions:\n");
+                while (current_function) {
+                    if (current_function->type == NODE_FUNCTION) {
+                        printf("    - Function name: %s, return type: %d\n", current_function->name, current_function->data_type);
+                    }
+                    current_function = current_function->next;
+                }
+            }
             break;
         case NODE_FUNCTION: 
             printf("Node type: FUNCTION, name: %s, return type: %d\n", node->name, node->data_type); 
@@ -283,4 +299,3 @@ void print_ast(ASTNode* node, int indent) {
     }
     if (node->next) print_ast(node->next, indent);
 }
-

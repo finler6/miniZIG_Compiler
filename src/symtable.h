@@ -18,6 +18,7 @@ typedef enum {
     TYPE_VOID,
     TYPE_BOOL,
     TYPE_NULL,
+    TYPE_U8,
     TYPE_UNKNOWN
 } DataType;
 

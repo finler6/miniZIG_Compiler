@@ -10,11 +10,12 @@
 #include "error.h"
 #include "symtable.h"
 #include "ast.h" // Подключаем заголовочный файл для работы с AST
+#include "codegen.h" // Подключаем заголовочный файл для генератора кода
 
 int main(int argc, char *argv[]) {
     // Проверяем количество аргументов командной строки
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <source_file>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <source_file> <output_file>\n", argv[0]);
         return ERR_INTERNAL;  // Код 99 согласно спецификации для внутренних ошибок
     }
 
@@ -37,6 +38,15 @@ int main(int argc, char *argv[]) {
 
     // Печать AST для отладки
     print_ast(ast_root, 0);
+
+    // Инициализация генератора кода с указанием выходного файла
+    codegen_init(argv[2]);
+
+    // Генерация кода на основе AST
+    codegen_generate_program(ast_root);
+
+    // Завершаем работу генератора кода и закрываем выходной файл
+    codegen_finalize();
 
     // Освобождаем ресурсы сканера
     scanner_free(&scanner);

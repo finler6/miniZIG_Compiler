@@ -1,0 +1,62 @@
+.IFJcode24
+LABEL main
+PUSHFRAME
+PUSHS int@10
+DEFVAR a
+POPS a
+PUSHS int@20
+DEFVAR b
+POPS b
+PUSHS LF@a
+PUSHS LF@b
+ADDS
+DEFVAR result
+POPS result
+PUSHS string@The result of a + b is: 
+WRITE
+PUSHS LF@result
+WRITE
+PUSHS string@
+
+WRITE
+PUSHS LF@result
+PUSHS int@20
+GTS
+PUSHS bool@true
+JUMPIFNEQS $else_0
+PUSHS string@The result is greater than 20
+
+WRITE
+JUMP $endif_0
+LABEL $else_0
+PUSHS string@The result is 20 or less
+
+WRITE
+LABEL $endif_0
+PUSHS int@3
+DEFVAR counter
+POPS counter
+LABEL $while_start_1
+PUSHS LF@counter
+PUSHS int@0
+GTS
+PUSHS bool@true
+JUMPIFNEQS $while_end_1
+PUSHS string@Counter: 
+WRITE
+PUSHS LF@counter
+WRITE
+PUSHS string@
+
+WRITE
+PUSHS LF@counter
+PUSHS int@1
+SUBS
+POPS counter
+JUMP $while_start_1
+LABEL $while_end_1
+PUSHS string@Loop finished!
+
+WRITE
+POPFRAME
+RETURN

@@ -44,7 +44,7 @@ ASTNode* create_program_node();
 ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parameters, int param_count, ASTNode* body);
 ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNode* initializer);
 ASTNode* create_assignment_node(char* name, ASTNode* value);
-ASTNode* create_binary_operation_node(NodeType op_type, ASTNode* left, ASTNode* right);
+ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right);
 ASTNode* create_literal_node(DataType type, char* value);
 ASTNode* create_identifier_node(char* name);
 ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block);
