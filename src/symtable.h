@@ -12,12 +12,12 @@ typedef enum {
 
 // Data types
 typedef enum {
+    TYPE_NULL,
     TYPE_INT,
     TYPE_FLOAT,
     TYPE_STRING,
     TYPE_VOID,
     TYPE_BOOL,
-    TYPE_NULL,
     TYPE_U8,
     TYPE_UNKNOWN
 } DataType;

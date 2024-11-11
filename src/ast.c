@@ -116,6 +116,7 @@ ASTNode* create_identifier_node(char* name) {
 ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_IF;
+    node->data_type = true_block->data_type;
     node->condition = condition;
     node->body = true_block;
     node->left = false_block;  // Используем `left` для хранения блока `else`, если он есть
@@ -155,6 +156,13 @@ ASTNode* create_return_node(ASTNode* value) {
     node->param_count = 0;
     node->arguments = NULL;
     node->arg_count = 0;
+    if(value != NULL)
+    {
+    node->data_type = value->data_type;
+    }
+    else{
+    node->data_type = TYPE_VOID;
+    }
     return node;
 }
 
@@ -172,9 +180,10 @@ ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_coun
     return node;
 }
 
-ASTNode* create_block_node(ASTNode* statements) {
+ASTNode* create_block_node(ASTNode* statements, DataType return_type) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_BLOCK;
+    node->data_type = return_type;
     node->body = statements;
     node->left = node->right = node->next = node->condition = NULL;
     node->name = NULL;

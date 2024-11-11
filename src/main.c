@@ -14,7 +14,7 @@
 
 int main(int argc, char *argv[]) {
     // Проверяем количество аргументов командной строки
-    if (argc != 3) {
+   if (argc != 3) {
         fprintf(stderr, "Usage: %s <source_file> <output_file>\n", argv[0]);
         return ERR_INTERNAL;  // Код 99 согласно спецификации для внутренних ошибок
     }
