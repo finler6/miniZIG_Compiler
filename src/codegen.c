@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h> 
+#include "scanner.h"
 
 // Глобальная переменная для хранения выходного файла
 static FILE *output_file;
@@ -20,6 +22,7 @@ void codegen_generate_return(FILE *output, ASTNode *return_node);
 void codegen_generate_if(FILE *output, ASTNode *if_node);
 void codegen_generate_while(FILE *output, ASTNode *while_node);
 
+char *escape_ifj24_string(const char *input);
 static int label_counter = 0;
 
 int generate_unique_label() {
@@ -100,9 +103,12 @@ void codegen_generate_expression(FILE *output, ASTNode *node) {
             if (node->data_type == TYPE_INT) {
                 fprintf(output, "PUSHS int@%s\n", node->value);
             } else if (node->data_type == TYPE_FLOAT) {
-                fprintf(output, "PUSHS float@%s\n", node->value);
+                double float_value = atof(node->value); // Преобразуем строку в число
+                fprintf(output, "PUSHS float@%.13a\n", float_value);
             } else if (node->data_type == TYPE_STRING) {
-                fprintf(output, "PUSHS string@%s\n", node->value);
+                char *escaped_value = escape_ifj24_string(node->value);
+                fprintf(output, "PUSHS string@%s\n", escaped_value);
+                free(escaped_value); 
             }
             break;
 
@@ -171,8 +177,6 @@ void codegen_generate_function_call(FILE *output, ASTNode *node) {
         codegen_generate_expression(output, node->arguments[i]);
     }
 
-    // Проверка на встроенную функцию
-    if (is_builtin_function(node->name)) {
         if (strcmp(node->name, "ifj.readi32") == 0) {
             fprintf(output, "READS int\n");
         } else if (strcmp(node->name, "ifj.readf64") == 0) {
@@ -203,10 +207,6 @@ void codegen_generate_function_call(FILE *output, ASTNode *node) {
             fprintf(output, "MOVE LF@result LF@%s\n", node->arguments[0]->name); // Предположим, что первый аргумент - это имя переменной
             // Здесь вы можете добавить дополнительные инструкции для обработки строки
             // Например, вы можете использовать PUSHS для переменных строк
-        } else {
-            fprintf(stderr, "Unsupported built-in function: %s\n", node->name);
-            exit(1);
-        }
     } else {
         // Генерация пользовательского вызова функции
         fprintf(output, "CALL %s\n", node->name);
@@ -346,4 +346,32 @@ void codegen_generate_while(FILE *output, ASTNode *while_node) {
     fprintf(output, "JUMP $while_start_%d\n", current_label);
     
     fprintf(output, "LABEL $while_end_%d\n", current_label);
+}
+
+char *escape_ifj24_string(const char *input) {
+    size_t length = strlen(input);
+    size_t buffer_size = length * 4 + 1; // запас для экранирования
+    char *escaped_string = malloc(buffer_size);
+    if (!escaped_string) {
+        fprintf(stderr, "Memory allocation failed for escaped string.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t index = 0;
+    for (size_t i = 0; i < length; i++) {
+        unsigned char c = input[i];
+
+        // Проверяем, нужно ли экранировать символ
+        if (c <= 32 || c == 35 || c == 92) { // ASCII 0-32, 35 (#), 92 (\)
+            index += snprintf(escaped_string + index, buffer_size - index, "\\%03d", c);
+        } else if (isprint(c)) {
+            escaped_string[index++] = c;
+        } else {
+            fprintf(stderr, "Unsupported character in string literal.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    escaped_string[index] = '\0';
+    return escaped_string;
 }

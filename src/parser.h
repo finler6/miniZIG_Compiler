@@ -15,7 +15,7 @@ void parser_init(Scanner *scanner);
 ASTNode* parse_program(Scanner *scanner);
 
 // Parses a single function
-ASTNode* parse_function(Scanner *scanner);
+ASTNode* parse_function(Scanner *scanner, bool is_definition);
 
 // Parses a statement (expression, if, while, return, etc.)
 ASTNode* parse_statement(Scanner *scanner);
@@ -35,6 +35,6 @@ typedef struct {
 extern BuiltinFunctionInfo builtin_functions[];
 
 // Объявляем функцию
-bool is_builtin_function(const char *identifier);
+bool is_builtin_function(const char *identifier, Scanner *scanner);
 
 #endif // PARSER_H

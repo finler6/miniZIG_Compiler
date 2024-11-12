@@ -161,26 +161,11 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     int index = 0;
 
     LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
-
-    // Переменная для проверки на префикс ifj
-    bool ifj_prefix = true;
-
-    // Разрешаем буквы, цифры, '_', '@' и '.' (точку только после 'ifj')
+    // Разрешаем буквы, цифры, '_', '@' и '[' ']'
     while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' 
-           || scanner->current_char == ']' || (scanner->current_char == '.' && ifj_prefix))
+           || scanner->current_char == ']')
     {
         // Проверка, что точка возможна только после ifj
-        if (scanner->current_char == '.')
-        {
-            // Если точка появилась, проверяем, что это именно 'ifj'
-            if (index < 3 || strncmp(lexeme_buffer, "ifj", 3) != 0)
-            {
-                error_exit(ERR_LEXICAL, "Invalid usage of '.' in identifier. Only 'ifj' can be followed by a dot.");
-            }
-            // После обработки точки снимаем ограничение
-            ifj_prefix = false;
-        }
-
         if (index < MAX_LEXEME_LENGTH - 1)
         {
             lexeme_buffer[index++] = scanner->current_char;
@@ -644,6 +629,13 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         break;
     case ',': // Добавляем поддержку запятой
         token.type = TOKEN_COMMA;
+        token.lexeme[0] = scanner->current_char;
+        token.lexeme[1] = '\0';
+        scanner->current_char = fgetc(scanner->input);
+        scanner->column++;
+        break;
+    case '.':
+        token.type = TOKEN_DOT;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
         scanner->current_char = fgetc(scanner->input);
