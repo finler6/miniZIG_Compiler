@@ -138,6 +138,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
 
         // Сравнение ключа с именем символа
         if (strcmp(current->name, key) == 0) {
+            current->is_used = true;
             return current;  // Символ найден
         }
 

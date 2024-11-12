@@ -463,6 +463,10 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
         name = new_name;
     }
 
+    if (symbol->is_constant)
+    {
+        error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+    }
     // Сохраняем имя для создания узла AST
 
     current_token = get_next_token(scanner);
@@ -1090,7 +1094,10 @@ bool type_convertion(ASTNode *main_node)
     remove_decimal(main_node->right->value);
     remove_decimal(main_node->left->value);*/
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> d71bfd361c4196504c4c641fa87e02684ddd10cb
 
 // Function to expect a specific token type
 static void expect_token(TokenType expected_type, Scanner *scanner)
