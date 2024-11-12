@@ -30,6 +30,9 @@ static ASTNode *parse_binary_operation(Scanner *scanner, ASTNode *left_node);
 DataType parse_type(Scanner *scanner);        // Объявляем функцию заранее
 DataType parse_return_type(Scanner *scanner); // Объявляем функцию заранее
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
+bool type_convertion(ASTNode *main_node);
+void parse_functions_declaration(Scanner *scanner);
+
 
 // Global token storage
 static Token current_token;
@@ -98,12 +101,13 @@ ASTNode *parse_program(Scanner *scanner)
     ASTNode *import_node = parse_import(scanner);
     program_node->next = import_node;
 
+    parse_functions_declaration(scanner);
     // Продолжаем парсить остальную часть программы
     while (current_token.type != TOKEN_EOF)
     {
         if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
-            ASTNode *function_node = parse_function(scanner);
+            ASTNode *function_node = parse_function(scanner, true);
             if (program_node->body == NULL)
             {
                 program_node->body = function_node; // Устанавливаем первую функцию
@@ -120,10 +124,36 @@ ASTNode *parse_program(Scanner *scanner)
         }
     }
 
+    if (!is_symtable_all_used(&symtable))
+    {
+        error_exit(ERR_SYNTAX, "Unused variable");
+    }
     return program_node;
 }
 
-ASTNode *parse_function(Scanner *scanner)
+void parse_functions_declaration(Scanner *scanner)
+{
+    Scanner saved_scanner_state = *scanner;
+    FILE saved_input = *scanner->input;
+    Token saved_token = current_token;
+    
+    while (current_token.type != TOKEN_EOF)
+    {
+        if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
+        {
+            parse_function(scanner, false);
+        }
+        else
+        {
+            error_exit(ERR_SYNTAX, "Expected function definition.");
+        }
+    }
+    *scanner = saved_scanner_state;
+    *scanner->input = saved_input;
+    current_token = saved_token;
+}
+
+ASTNode *parse_function(Scanner *scanner, bool is_definition)
 {
     LOG("DEBUG_PARSER: Parsing function\n");
     expect_token(TOKEN_PUB, scanner); // Ожидаем ключевое слово 'pub'
@@ -162,13 +192,24 @@ ASTNode *parse_function(Scanner *scanner)
 
     // Ожидаем возвращаемый тип
     DataType return_type = parse_return_type(scanner);
+    ASTNode *function_node = NULL;
 
-    // Создаем узел функции
-    ASTNode *body_node = parse_block(scanner);
-    ASTNode *function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
+    if (is_definition)
+    {
+        // Создаем узел функции
+        ASTNode *body_node = parse_block(scanner);
+        function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
 
-    int block_layer = 0;
-    check_return_types(function_node->body->body, return_type, &block_layer);
+        int block_layer = 0;
+        check_return_types(function_node->body->body, return_type, &block_layer);
+    }
+    else
+    {
+        while(current_token.type != TOKEN_RIGHT_BRACE){
+            current_token = get_next_token(scanner);
+        }
+        current_token = get_next_token(scanner);
+    
     // Добавляем функцию в таблицу символов
     Symbol *function_symbol = symtable_search(&symtable, function_name);
     if (function_symbol != NULL)
@@ -192,10 +233,11 @@ ASTNode *parse_function(Scanner *scanner)
     new_function->symbol_type = SYMBOL_FUNCTION;
     new_function->data_type = return_type;
     new_function->is_defined = true;
-    new_function->is_used = false;
+    new_function->is_used = strcmp(new_function->name, "main") == 0 ? true : false;
     new_function->next = NULL;
 
     symtable_insert(&symtable, function_name, new_function);
+    }
 
     return function_node;
 }
@@ -392,6 +434,10 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
         error_exit(ERR_SYNTAX, "Variable or function %s is not defined.", current_token.lexeme);
     }
 
+    if (symbol->is_constant)
+    {
+        error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+    }
     // Сохраняем имя для создания узла AST
     char *name = string_duplicate(current_token.lexeme);
     current_token = get_next_token(scanner);
@@ -512,6 +558,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner)
     new_var->symbol_type = SYMBOL_VARIABLE;
     new_var->data_type = expr_type;
     new_var->is_defined = true;
+    new_var->is_constant = (var_type == TOKEN_CONST) ? true : false;
     new_var->next = NULL;
 
     symtable_insert(&symtable, variable_name, new_var);
@@ -682,9 +729,10 @@ ASTNode *parse_expression(Scanner *scanner)
         {
             left_node->data_type = TYPE_BOOL;
         }
-        else if (left_node->data_type != right_node->data_type)
+        else if (left_node->left->data_type != right_node->data_type)
         {
-            error_exit(ERR_SEMANTIC, "Conflicting types of expression, line: %d, column: %d", current_token.line, current_token.column);
+            if (!type_convertion(left_node))
+                error_exit(ERR_SEMANTIC, "Conflicting types of expression, line: %d, column: %d", current_token.line, current_token.column);
         }
     }
 
@@ -914,21 +962,23 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
 {
     if (return_type == TYPE_VOID)
     {
-        if (function_node->type == NODE_RETURN)
+        if (function_node != NULL)
         {
-            if (function_node->data_type != TYPE_VOID)
+            if (function_node->type == NODE_RETURN)
             {
-                error_exit(ERR_SEMANTIC_RETURN, "Function VOID expects return(void)");
+                if (function_node->data_type != TYPE_VOID)
+                {
+                    error_exit(ERR_SEMANTIC_RETURN, "Function VOID expects return(void)");
+                }
             }
         }
         if (function_node->body != NULL)
         {
-            check_return_types(function_node->body, return_type, block_layer );
+            check_return_types(function_node->body, return_type, block_layer);
         }
-                if(function_node->left != NULL)
+        if (function_node->left != NULL)
         {
-                        check_return_types(function_node->left, return_type, block_layer);
-
+            check_return_types(function_node->left, return_type, block_layer);
         }
         if (function_node->next != NULL)
         {
@@ -938,6 +988,10 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
     }
     else
     {
+        if (function_node == NULL && *block_layer == 0)
+        {
+            error_exit(ERR_SEMANTIC_RETURN, "Missing return statement");
+        }
         if (function_node->type == NODE_RETURN)
         {
             if (function_node->data_type != return_type)
@@ -956,13 +1010,11 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
             check_return_types(function_node->body, return_type, block_layer);
             (*block_layer)--;
         }
-        if(function_node->left != NULL)
+        if (function_node->left != NULL)
         {
-                        (*block_layer)++;
+            (*block_layer)++;
             check_return_types(function_node->left, return_type, block_layer);
-                        (*block_layer)--;
-
-
+            (*block_layer)--;
         }
         if (function_node->next != NULL)
         {
@@ -975,6 +1027,29 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
     }
 }
 
+bool type_convertion(ASTNode *main_node)
+{
+    if (main_node->left->data_type == TYPE_FLOAT && main_node->right->data_type == TYPE_INT && main_node->right->type == NODE_LITERAL)
+    {
+        add_decimal(main_node->right->value);
+        main_node->right->data_type = TYPE_FLOAT;
+        main_node->data_type = TYPE_FLOAT;
+        return true;
+    }
+    else if (main_node->left->data_type == TYPE_INT && main_node->right->data_type == TYPE_FLOAT && main_node->left->type == NODE_LITERAL)
+    {
+        add_decimal(main_node->left->value);
+        main_node->left->data_type = TYPE_FLOAT;
+        main_node->data_type = TYPE_FLOAT;
+        return true;
+    }
+
+    return false;
+    /*
+    else if(ma)
+    remove_decimal(main_node->right->value);
+    remove_decimal(main_node->left->value);*/
+}
 
 // Function to expect a specific token type
 static void expect_token(TokenType expected_type, Scanner *scanner)

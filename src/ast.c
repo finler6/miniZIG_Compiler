@@ -68,6 +68,7 @@ ASTNode* create_assignment_node(char* name, ASTNode* value) {
 ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_BINARY_OPERATION;
+    node->data_type = left->data_type;
     node->left = left;
     node->right = right;
     node->next = node->condition = node->body = NULL;

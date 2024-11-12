@@ -138,6 +138,7 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
 
         // Сравнение ключа с именем символа
         if (strcmp(current->name, key) == 0) {
+            current->is_used = true;
             return current;  // Символ найден
         }
 
@@ -146,6 +147,22 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
 
     return NULL;  // Символ не найден
 }
+
+// Checks if all symbols in the table have is_used set to true
+bool is_symtable_all_used(SymTable *symtable) {
+    for (int i = 0; i < symtable->size; i++) {
+        Symbol *current = symtable->table[i];
+        while (current != NULL) {
+            // Проверка флага is_used для каждого символа
+            if (current->is_used == false) {
+                return false; // Если хотя бы один символ не использован
+            }
+            current = current->next;
+        }
+    }
+    return true; // Все символы использованы
+}
+
 
 
 // Removes a symbol from the symbol table
