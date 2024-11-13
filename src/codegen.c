@@ -171,20 +171,35 @@ void codegen_generate_function_call(FILE *output, ASTNode *node) {
         fprintf(stderr, "Invalid function call node for code generation\n");
         exit(1);
     }
-
-    // Генерация кода для аргументов функции (обратный порядок для стека)
-    for (int i = node->arg_count - 1; i >= 0; --i) {
-        codegen_generate_expression(output, node->arguments[i]);
-    }
-
+    if (strcmp(node->name, "ifj.write") == 0) {
+            // Генерация аргумента для WRITE без использования стека
+            ASTNode *arg = node->arguments[0];
+            
+            if (arg->type == NODE_LITERAL) {
+                if (arg->data_type == TYPE_STRING) {
+                    char *escaped_value = escape_ifj24_string(arg->value);
+                    fprintf(output, "WRITE string@%s\n", escaped_value);
+                    free(escaped_value);
+                } else if (arg->data_type == TYPE_INT) {
+                    fprintf(output, "WRITE int@%s\n", arg->value);
+                } else if (arg->data_type == TYPE_FLOAT) {
+                    double float_value = atof(arg->value);
+                    fprintf(output, "WRITE float@%.13a\n", float_value);
+                }
+            } else if (arg->type == NODE_IDENTIFIER) {
+                fprintf(output, "WRITE LF@%s\n", arg->name);
+            }
+            // Если нужно, добавь обработку для других типов аргументов
+    } else {
+        for (int i = node->arg_count - 1; i >= 0; --i) {
+            codegen_generate_expression(output, node->arguments[i]);
+        }
         if (strcmp(node->name, "ifj.readi32") == 0) {
             fprintf(output, "READS int\n");
         } else if (strcmp(node->name, "ifj.readf64") == 0) {
             fprintf(output, "READS float\n");
         } else if (strcmp(node->name, "ifj.readstr") == 0) {
             fprintf(output, "READS string\n");
-        } else if (strcmp(node->name, "ifj.write") == 0) {
-            fprintf(output, "WRITE\n");
         } else if (strcmp(node->name, "ifj.i2f") == 0) {
             fprintf(output, "INT2FLOATS\n");
         } else if (strcmp(node->name, "ifj.f2i") == 0) {
@@ -207,9 +222,10 @@ void codegen_generate_function_call(FILE *output, ASTNode *node) {
             fprintf(output, "MOVE LF@result LF@%s\n", node->arguments[0]->name); // Предположим, что первый аргумент - это имя переменной
             // Здесь вы можете добавить дополнительные инструкции для обработки строки
             // Например, вы можете использовать PUSHS для переменных строк
-    } else {
-        // Генерация пользовательского вызова функции
-        fprintf(output, "CALL %s\n", node->name);
+        } else {
+            // Генерация пользовательского вызова функции
+            fprintf(output, "CALL %s\n", node->name);
+        }
     }
 }
 
@@ -226,25 +242,25 @@ void codegen_generate_statement(FILE *output, ASTNode *node) {
             if (node->left != NULL) {
                 // Генерация кода для инициализатора
                 codegen_generate_expression(output, node->left);
-                fprintf(output, "DEFVAR %s\n", node->name);
-                fprintf(output, "POPS %s\n", node->name);
+                fprintf(output, "DEFVAR LF@%s\n", node->name);
+                fprintf(output, "POPS LF@%s\n", node->name);
             } else {
-                fprintf(output, "DEFVAR %s\n", node->name);
+                fprintf(output, "DEFVAR LF@%s\n", node->name);
             }
             break;
 
         case NODE_ASSIGNMENT:
             // Генерация кода для присваивания
             codegen_generate_expression(output, node->left);
-            fprintf(output, "POPS %s\n", node->name);
+            fprintf(output, "POPS LF@%s\n", node->name);
             break;
 
         case NODE_RETURN:
             // Генерация кода для оператора возврата
             if (node->left != NULL) {
                 codegen_generate_expression(output, node->left);
-                fprintf(output, "RETURN\n");
             }
+            fprintf(output, "RETURN\n");
             break;
 
         case NODE_IF:
@@ -252,7 +268,6 @@ void codegen_generate_statement(FILE *output, ASTNode *node) {
             {
                 int label_num = generate_unique_label();
                 codegen_generate_expression(output, node->condition);
-                fprintf(output, "PUSHS bool@true\n");
                 fprintf(output, "JUMPIFNEQS $else_%d\n", label_num);
                 codegen_generate_block(output, node->body); // Генерация кода для тела if
                 fprintf(output, "JUMP $endif_%d\n", label_num);
@@ -270,7 +285,6 @@ void codegen_generate_statement(FILE *output, ASTNode *node) {
                 int label_num = generate_unique_label();
                 fprintf(output, "LABEL $while_start_%d\n", label_num);
                 codegen_generate_expression(output, node->condition);
-                fprintf(output, "PUSHS bool@true\n");
                 fprintf(output, "JUMPIFNEQS $while_end_%d\n", label_num);
                 codegen_generate_block(output, node->body);
                 fprintf(output, "JUMP $while_start_%d\n", label_num);

@@ -2,56 +2,47 @@
 LABEL main
 PUSHFRAME
 PUSHS int@10
-DEFVAR a
-POPS a
+DEFVAR LF@a
+POPS LF@a
 PUSHS int@20
-DEFVAR b
-POPS b
+DEFVAR LF@b
+POPS LF@b
 PUSHS LF@a
 PUSHS LF@b
 ADDS
-DEFVAR result
-POPS result
-PUSHS string@The\032result\032of\032a\032+\032b\032is:\032
-WRITE
-PUSHS LF@result
-WRITE
-PUSHS string@\010
-WRITE
+DEFVAR LF@result
+POPS LF@result
+WRITE string@The\032result\032of\032a\032+\032b\032is:\032
+WRITE LF@result
+WRITE string@\010
 PUSHS LF@result
 PUSHS int@20
 GTS
-PUSHS bool@true
 JUMPIFNEQS $else_0
-PUSHS string@The\032result\032is\032greater\032than\03220\010
-WRITE
+WRITE string@The\032result\032is\032greater\032than\03220\010
 JUMP $endif_0
 LABEL $else_0
-PUSHS string@The\032result\032is\03220\032or\032less\010
-WRITE
+WRITE string@The\032result\032is\03220\032or\032less\010
 LABEL $endif_0
 PUSHS int@3
-DEFVAR counter
-POPS counter
+DEFVAR LF@counter
+POPS LF@counter
 LABEL $while_start_1
 PUSHS LF@counter
 PUSHS int@0
 GTS
-PUSHS bool@true
 JUMPIFNEQS $while_end_1
-PUSHS string@Counter:\032
-WRITE
-PUSHS LF@counter
-WRITE
-PUSHS string@\010
-WRITE
+WRITE string@Counter:\032
+WRITE LF@counter
+WRITE string@\010
 PUSHS LF@counter
 PUSHS int@1
 SUBS
-POPS counter
+POPS LF@counter
 JUMP $while_start_1
 LABEL $while_end_1
-PUSHS string@Loop\032finished!\010
-WRITE
+READS string
+WRITE string@Loop\032finished!\010
+RETURN
 POPFRAME
 RETURN
