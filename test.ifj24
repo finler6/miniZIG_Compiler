@@ -23,13 +23,7 @@ pub fn main() void {
         ifj.write("\n");
         counter = counter - 1;
     }
-    ifj.readstr();
-    ifj.write("Loop finished!\n");
+    a = ifj.write("Loop finished!\n");
     // Returning from main (dummy return value)
     return;
 }
-
-
-
-
-

@@ -8,6 +8,7 @@
 #include <string.h>
 #include "symtable.h"
 #include "error.h"
+#include "parser.h"
 
 #ifdef DEBUG_SYMTABLE
     #define LOG(...) printf(__VA_ARGS__)
@@ -18,7 +19,8 @@
 #define INITIAL_SYMTABLE_SIZE 64
 #define LOAD_FACTOR 0.75
 
-// Internal function to grow the symbol table
+extern BuiltinFunctionInfo builtin_functions[];
+
 static void symtable_grow(SymTable *symtable);
 
 // Initializes the symbol table
@@ -32,7 +34,39 @@ void symtable_init(SymTable *symtable) {
     for (int i = 0; i < symtable->size; i++) {
         symtable->table[i] = NULL;
     }
+
+    load_builtin_functions(symtable);
 }
+
+void load_builtin_functions(SymTable *symtable) {
+    size_t num_functions = get_num_builtin_functions();
+
+    for (size_t i = 0; i < num_functions; i++) {
+        char *name_with_prefix = (char *)malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
+        if (name_with_prefix == NULL) {
+            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function name.");
+        }
+
+        strcpy(name_with_prefix, "ifj.");
+        strcat(name_with_prefix, builtin_functions[i].name);
+
+        Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
+        if (new_function == NULL) {
+            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function symbol.");
+        }
+
+        new_function->name = name_with_prefix;
+        new_function->symbol_type = SYMBOL_FUNCTION;
+        new_function->data_type = builtin_functions[i].return_type;
+        new_function->is_defined = true;
+        new_function->is_used = false;
+        new_function->is_constant = true;
+        new_function->next = NULL;
+
+        symtable_insert(symtable, name_with_prefix, new_function);
+    }
+}
+
 
 // Frees all memory allocated for the symbol table
 void symtable_free(SymTable *symtable) {
@@ -153,8 +187,8 @@ bool is_symtable_all_used(SymTable *symtable) {
     for (int i = 0; i < symtable->size; i++) {
         Symbol *current = symtable->table[i];
         while (current != NULL) {
-            // Проверка флага is_used для каждого символа
-            if (current->is_used == false) {
+            // Проверка флага is_used для каждого символа, кроме встроенных функций
+            if (!current->is_used && strncmp(current->name, "ifj.", 4) != 0) {
                 return false; // Если хотя бы один символ не использован
             }
             current = current->next;
@@ -162,7 +196,6 @@ bool is_symtable_all_used(SymTable *symtable) {
     }
     return true; // Все символы использованы
 }
-
 
 
 // Removes a symbol from the symbol table

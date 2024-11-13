@@ -41,8 +41,8 @@ SUBS
 POPS LF@counter
 JUMP $while_start_1
 LABEL $while_end_1
-READS string
 WRITE string@Loop\032finished!\010
+POPS LF@a
 RETURN
 POPFRAME
 RETURN

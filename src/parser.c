@@ -39,7 +39,7 @@ static Token current_token;
 static SymTable symtable; // Global symbol table for the program
 
 BuiltinFunctionInfo builtin_functions[] = {
-    {"readstr", TYPE_STRING, {}, 0},
+    {"readstr", TYPE_U8, {}, 0},
     {"readi32", TYPE_INT, {}, 0},
     {"readf64", TYPE_FLOAT, {}, 0},
     {"write", TYPE_VOID, {TYPE_UNKNOWN}, 1},
@@ -54,6 +54,9 @@ BuiltinFunctionInfo builtin_functions[] = {
     {"chr", TYPE_STRING, {TYPE_INT}, 1}
     // Добавьте другие функции по необходимости
 };
+size_t get_num_builtin_functions() {
+    return sizeof(builtin_functions) / sizeof(builtin_functions[0]);
+}
 
 bool is_builtin_function(const char *identifier, Scanner *scanner)
 {
@@ -83,6 +86,7 @@ DataType get_builtin_function_type(const char *function_name)
     {
         if (strcmp(function_name, builtin_functions[i].name) == 0)
         {
+            LOG("DEBUG_PARSER: Function return type: %d\n", builtin_functions[i].return_type);
             return builtin_functions[i].return_type;
         }
     }
@@ -447,8 +451,6 @@ ASTNode *parse_statement(Scanner *scanner)
 ASTNode *parse_variable_assigning(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
-
-    // Проверяем существование переменной или функции в таблице символов
     Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
     bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
     if (symbol == NULL && !(is_builtin))
@@ -459,9 +461,11 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
         if (symbol->is_constant)
         {
             error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
-        }    
+        }
+        LOG("DEBUG_PARSER: Is function or variable %d\n", symbol->symbol_type);
     }
     char *name = string_duplicate(current_token.lexeme);
+    char *temp_name = string_duplicate(current_token.lexeme);
     if (is_builtin) {
         // Adding ifj. to the name of the function
         char *new_name = (char *)malloc(strlen(name) + 5);
@@ -474,13 +478,21 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
         strcat(new_name, name);
         free(name);
         name = new_name;
+        symbol = symtable_search(&symtable, name);
     }
 
     current_token = get_next_token(scanner);
 
     // Проверяем, является ли это вызовом функции
-    if (current_token.type == TOKEN_LEFT_PAREN)
+    if (current_token.type == TOKEN_LEFT_PAREN && symbol->symbol_type == SYMBOL_FUNCTION)
     {
+        // Checks if function return type is void
+        if (is_builtin){
+            if (get_builtin_function_type(temp_name) != TYPE_VOID && get_builtin_function_type(temp_name) != TYPE_UNKNOWN)
+            {
+                error_exit(ERR_SEMANTIC, "Function %s has return type %d, expected void", temp_name, get_builtin_function_type(temp_name));
+            }
+        }
         current_token = get_next_token(scanner); // Пропускаем '('
 
         // Парсим аргументы функции
@@ -809,16 +821,18 @@ ASTNode *parse_primary_expression(Scanner *scanner)
     {
         // Проверяем, существует ли идентификатор в таблице символов
         char *identifier_name = string_duplicate(current_token.lexeme);
-        Symbol *symbol = symtable_search(&symtable, identifier_name);
         DataType data_type = TYPE_UNKNOWN;
-
-        if (symbol == NULL && !(is_builtin_function(identifier_name, scanner)))
+        bool is_builtin = is_builtin_function(identifier_name, scanner);
+        Symbol *symbol = symtable_search(&symtable, identifier_name);
+        free(identifier_name);
+        identifier_name = string_duplicate(current_token.lexeme);
+        if (symbol == NULL && !(is_builtin))
         {
             error_exit(ERR_SEMANTIC, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
         }
-        else if (is_builtin_function(identifier_name, scanner))
+        else if (is_builtin)
         {
-            data_type = get_builtin_function_type(identifier_name);
+            data_type = get_builtin_function_type(current_token.lexeme);
             LOG("DEBUG_PARSER: Builtin function found: %s\n", identifier_name);
             char *new_identifier_name = (char *)malloc(strlen(identifier_name) + 5);
             if (new_identifier_name == NULL) {
@@ -837,7 +851,7 @@ ASTNode *parse_primary_expression(Scanner *scanner)
         {
             data_type = symbol->data_type;
         }
-
+        
         LOG("DEBUG_PARSER: BEFORE Primary parsing got token type: %d\n", current_token.type);
         current_token = get_next_token(scanner);
         LOG("DEBUG_PARSER: Primary parsing got token type: %d\n", current_token.type);

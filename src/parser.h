@@ -37,4 +37,6 @@ extern BuiltinFunctionInfo builtin_functions[];
 // Объявляем функцию
 bool is_builtin_function(const char *identifier, Scanner *scanner);
 
+size_t get_num_builtin_functions();
+
 #endif // PARSER_H

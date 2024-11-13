@@ -42,6 +42,7 @@ typedef struct {
 
 // Function prototypes
 void symtable_init(SymTable *symtable);
+void load_builtin_functions(SymTable *symtable);
 void symtable_free(SymTable *symtable);
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol);
 Symbol *symtable_search(SymTable *symtable, char *key);
