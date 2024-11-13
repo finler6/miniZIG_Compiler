@@ -1,12 +1,6 @@
 const ifj = @import("ifj24.zig");
 
-<<<<<<< HEAD
 pub fn main() void {
-    // Variable declaration and initialization
-    var x: i32 = 42;
-    var y: i32 = 16;
-    var z: i32 = x + y;
-    return;
     // Variable declarations and assignments
     var a: i32 = 10;
     var b: i32 = 20;
@@ -33,26 +27,8 @@ pub fn main() void {
     // Returning from main (dummy return value)
     return;
 }
-=======
-pub fn foo() i32 {
-    var f = oof();
-    f = 1;
-    return 0;
-}
-
-pub fn oof() i32 {
-    return 0;
-}
-
-pub fn main() f64 {
-    const a : f64 = 0.1;
-    var b = foo(); 
-    b = 1;
-    b = oof();
-    return a;
-}
 
 
 
 
->>>>>>> d71bfd361c4196504c4c641fa87e02684ddd10cb
+

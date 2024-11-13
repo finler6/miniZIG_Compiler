@@ -129,7 +129,7 @@ ASTNode *parse_program(Scanner *scanner)
         }
         else
         {
-            error_exit(ERR_SYNTAX, "Expected function definition.");
+            error_exit(ERR_SYNTAX, "Expected function definition. Line: %d, Column: %d", current_token.line, current_token.column);
         }
     }
 
@@ -154,7 +154,8 @@ void parse_functions_declaration(Scanner *scanner)
         }
         else
         {
-            error_exit(ERR_SYNTAX, "Expected function definition.");
+            printf("current_token.type: %d\n", current_token.type);
+            error_exit(ERR_SYNTAX, "Expected function definition in declaration. Line: %d, Column: %d", current_token.line, current_token.column);
         }
     }
     *scanner = saved_scanner_state;
@@ -214,38 +215,49 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     }
     else
     {
-        while(current_token.type != TOKEN_RIGHT_BRACE){
-            current_token = get_next_token(scanner);
+        if (current_token.type != TOKEN_LEFT_BRACE) {
+            error_exit(ERR_SYNTAX, "Expected '{' at the start of function body.");
         }
+        int brace_count = 1; // Начинаем с уровня вложенности 1 для первой открывающей скобки
+
+        while (brace_count > 0) {
+            current_token = get_next_token(scanner);
+
+            if (current_token.type == TOKEN_LEFT_BRACE) {
+                brace_count++; // Встретили новую `{`, увеличиваем счетчик
+            } else if (current_token.type == TOKEN_RIGHT_BRACE) {
+                brace_count--; // Встретили `}`, уменьшаем счетчик
+            }
+        }
+        LOG("!!!DEBUG_PARSER: Brace count passed\n");
+        // Добавляем функцию в таблицу символов
+        Symbol *function_symbol = symtable_search(&symtable, function_name);
+        if (function_symbol != NULL)
+        {
+            error_exit(ERR_SEMANTIC, "Function already defined.");
+        }
+
+        Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
+        if (new_function == NULL)
+        {
+            error_exit(ERR_INTERNAL, "Memory allocation failed for new function symbol");
+        }
+
+        new_function->name = string_duplicate(function_name);
+        if (new_function->name == NULL)
+        {
+            free(new_function);
+            error_exit(ERR_INTERNAL, "Memory allocation failed for function name");
+        }
+
+        new_function->symbol_type = SYMBOL_FUNCTION;
+        new_function->data_type = return_type;
+        new_function->is_defined = true;
+        new_function->is_used = strcmp(new_function->name, "main") == 0 ? true : false;
+        new_function->next = NULL;
+
+        symtable_insert(&symtable, function_name, new_function);
         current_token = get_next_token(scanner);
-    
-    // Добавляем функцию в таблицу символов
-    Symbol *function_symbol = symtable_search(&symtable, function_name);
-    if (function_symbol != NULL)
-    {
-        error_exit(ERR_SEMANTIC, "Function already defined.");
-    }
-
-    Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
-    if (new_function == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for new function symbol");
-    }
-
-    new_function->name = string_duplicate(function_name);
-    if (new_function->name == NULL)
-    {
-        free(new_function);
-        error_exit(ERR_INTERNAL, "Memory allocation failed for function name");
-    }
-
-    new_function->symbol_type = SYMBOL_FUNCTION;
-    new_function->data_type = return_type;
-    new_function->is_defined = true;
-    new_function->is_used = strcmp(new_function->name, "main") == 0 ? true : false;
-    new_function->next = NULL;
-
-    symtable_insert(&symtable, function_name, new_function);
     }
 
     return function_node;
@@ -443,10 +455,11 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
     {
         error_exit(ERR_SYNTAX, "Variable or function %s is not defined.", current_token.lexeme);
     } 
-
-    if (symbol->is_constant)
-    {
-        error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+    if (!(is_builtin)){
+        if (symbol->is_constant)
+        {
+            error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+        }    
     }
     char *name = string_duplicate(current_token.lexeme);
     if (is_builtin) {
@@ -462,12 +475,6 @@ ASTNode *parse_variable_assigning(Scanner *scanner)
         free(name);
         name = new_name;
     }
-
-    if (symbol->is_constant)
-    {
-        error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
-    }
-    // Сохраняем имя для создания узла AST
 
     current_token = get_next_token(scanner);
 
@@ -812,8 +819,6 @@ ASTNode *parse_primary_expression(Scanner *scanner)
         else if (is_builtin_function(identifier_name, scanner))
         {
             data_type = get_builtin_function_type(identifier_name);
-            // Adding ifj. to the beginning of the identifier_name. Example - identifier was write, now it is ifj.write. Using identifier_name.
-            // Добавляем "ifj." в начало identifier_name
             LOG("DEBUG_PARSER: Builtin function found: %s\n", identifier_name);
             char *new_identifier_name = (char *)malloc(strlen(identifier_name) + 5);
             if (new_identifier_name == NULL) {
@@ -1094,10 +1099,7 @@ bool type_convertion(ASTNode *main_node)
     remove_decimal(main_node->right->value);
     remove_decimal(main_node->left->value);*/
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> d71bfd361c4196504c4c641fa87e02684ddd10cb
 
 // Function to expect a specific token type
 static void expect_token(TokenType expected_type, Scanner *scanner)
