@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "utils.h"
 
 // Function to duplicate a string
@@ -31,4 +32,20 @@ void add_decimal(char* str) {
         // Если точки нет, добавляем ".0" в конец строки
         strcat(str, ".0");
     }
+}
+
+char* construct_variable_name(const char* str1, const char* str2) {
+    // Вычисление необходимой длины результирующей строки
+    int len = strlen(str1) + strlen(str2) + (2*sizeof(char)); // Запас для точки, подчеркивания и числа
+    char* result = (char*)malloc(len);
+
+    if (result == NULL) {
+        printf("Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Форматируем строку по шаблону "str1.str2_number"
+    snprintf(result, len, "%s.%s", str1, str2);
+
+    return result;
 }

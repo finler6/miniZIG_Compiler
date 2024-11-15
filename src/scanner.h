@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "tokens.h"
 
+
 // Структура для хранения состояния сканера
 typedef struct {
     FILE *input;         // Входной поток

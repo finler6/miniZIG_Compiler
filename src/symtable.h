@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+struct ASTNode;
+typedef struct ASTNode ASTNode;
 // Symbol types
 typedef enum {
     SYMBOL_VARIABLE,
@@ -30,6 +32,7 @@ typedef struct Symbol {
     bool is_defined;
     bool is_used;
     bool is_constant;
+    ASTNode *declaration_node;
     struct Symbol *next; // Linked list for collision resolution
 } Symbol;
 

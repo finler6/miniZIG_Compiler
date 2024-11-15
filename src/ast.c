@@ -231,81 +231,128 @@ void free_ast_node(ASTNode* node) {
 void print_ast(ASTNode* node, int indent) {
     if (!node) return;
 
+    // Печать отступов
     for (int i = 0; i < indent; ++i) printf("  ");
 
-    // Печать имени типа узла и дополнительной информации
+    // Печать типа узла и дополнительной информации
     switch (node->type) {
-        case NODE_PROGRAM: 
+        case NODE_PROGRAM:
             printf("Node type: PROGRAM\n");
-            // Дополнительная информация о функциях в программе
-            {
-                ASTNode *current_function = node->body;
-                printf("  Functions:\n");
-                while (current_function) {
-                    if (current_function->type == NODE_FUNCTION) {
-                        printf("    - Function name: %s, return type: %d\n", current_function->name, current_function->data_type);
-                    }
-                    current_function = current_function->next;
+
+            // Печать функций в программе
+            ASTNode *current_function = node->body;
+            printf("  Functions:\n");
+            while (current_function) {
+                if (current_function->type == NODE_FUNCTION) {
+                    for (int i = 0; i < indent + 2; ++i) printf("  ");
+                    printf("- Function name: %s, return type: %d\n", current_function->name, current_function->data_type);
                 }
+                current_function = current_function->next;
             }
             break;
-        case NODE_FUNCTION: 
-            printf("Node type: FUNCTION, name: %s, return type: %d\n", node->name, node->data_type); 
+
+        case NODE_FUNCTION:
+            printf("Node type: FUNCTION\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Name: %s, Return type: %d\n", node->name, node->data_type);
             break;
-        case NODE_VARIABLE_DECLARATION: 
-            printf("Node type: VARIABLE_DECLARATION, name: %s, data type: %d\n", node->name, node->data_type); 
+
+        case NODE_VARIABLE_DECLARATION:
+            printf("Node type: VARIABLE_DECLARATION\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Name: %s, Data type: %d\n", node->name, node->data_type);
             break;
-        case NODE_ASSIGNMENT: 
-            printf("Node type: ASSIGNMENT, variable: %s\n", node->name); 
+
+        case NODE_ASSIGNMENT:
+            printf("Node type: ASSIGNMENT\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Variable: %s\n", node->name);
             break;
-        case NODE_BINARY_OPERATION: 
-            printf("Node type: BINARY_OPERATION, data type: %d\n", node->data_type); 
+
+        case NODE_BINARY_OPERATION:
+            printf("Node type: BINARY_OPERATION\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Data type: %d\n", node->data_type);
             break;
-        case NODE_LITERAL: 
-            printf("Node type: LITERAL, value: %s, data type: %d\n", node->value, node->data_type); 
+
+        case NODE_LITERAL:
+            printf("Node type: LITERAL\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Value: %s, Data type: %d\n", node->value, node->data_type);
             break;
-        case NODE_IDENTIFIER: 
-            printf("Node type: IDENTIFIER, name: %s\n", node->name); 
+
+        case NODE_IDENTIFIER:
+            printf("Node type: IDENTIFIER\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Name: %s\n", node->name);
             break;
-        case NODE_IF: 
-            printf("Node type: IF, condition type: %d\n", node->condition ? node->condition->data_type : -1); 
+
+        case NODE_IF:
+            printf("Node type: IF\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
             break;
-        case NODE_WHILE: 
-            printf("Node type: WHILE, condition type: %d\n", node->condition ? node->condition->data_type : -1); 
+
+        case NODE_WHILE:
+            printf("Node type: WHILE\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
             break;
-        case NODE_RETURN: 
-            printf("Node type: RETURN\n"); 
+
+        case NODE_RETURN:
+            printf("Node type: RETURN\n");
             break;
-        case NODE_FUNCTION_CALL: 
-            printf("Node type: FUNCTION_CALL, name: %s, arg count: %d\n", node->name, node->arg_count);
+
+        case NODE_FUNCTION_CALL:
+            printf("Node type: FUNCTION_CALL\n");
+            for (int i = 0; i < indent + 1; ++i) printf("  ");
+            printf("Name: %s, Arg count: %d\n", node->name, node->arg_count);
             if (node->arguments) {
                 for (int i = 0; i < node->arg_count; ++i) {
-                    printf("  ");
-                    for (int j = 0; j < indent + 1; ++j) printf("  ");
+                    for (int j = 0; j < indent + 2; ++j) printf("  ");
                     printf("Argument %d:\n", i + 1);
-                    print_ast(node->arguments[i], indent + 2);
+                    print_ast(node->arguments[i], indent + 3);
                 }
             }
             break;
-        case NODE_BLOCK: 
-            printf("Node type: BLOCK\n"); 
+
+        case NODE_BLOCK:
+            printf("Node type: BLOCK\n");
             break;
-        default: 
-            printf("Node type: UNKNOWN\n"); 
+
+        default:
+            printf("Node type: UNKNOWN\n");
             break;
     }
 
-    if (node->left) print_ast(node->left, indent + 1);
-    if (node->right) print_ast(node->right, indent + 1);
+    // Рекурсивный вызов для дочерних узлов с отступом
+    if (node->left) {
+        for (int i = 0; i < indent + 1; ++i) printf("  ");
+        printf("Left:\n");
+        print_ast(node->left, indent + 2);
+    }
+
+    if (node->right) {
+        for (int i = 0; i < indent + 1; ++i) printf("  ");
+        printf("Right:\n");
+        print_ast(node->right, indent + 2);
+    }
+
     if (node->condition) {
         for (int i = 0; i < indent + 1; ++i) printf("  ");
         printf("Condition:\n");
         print_ast(node->condition, indent + 2);
     }
+
     if (node->body) {
         for (int i = 0; i < indent + 1; ++i) printf("  ");
         printf("Body:\n");
         print_ast(node->body, indent + 2);
     }
-    if (node->next) print_ast(node->next, indent);
+
+    if (node->next) {
+        for (int i = 0; i < indent; ++i) printf("  ");
+        printf("Next:\n");
+        print_ast(node->next, indent);
+    }
 }

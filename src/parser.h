@@ -18,11 +18,11 @@ ASTNode* parse_program(Scanner *scanner);
 ASTNode* parse_function(Scanner *scanner, bool is_definition);
 
 // Parses a statement (expression, if, while, return, etc.)
-ASTNode* parse_statement(Scanner *scanner);
+ASTNode* parse_statement(Scanner *scanner, char *function_name);
 
-ASTNode* parse_parameter(Scanner *scanner);
+ASTNode* parse_parameter(Scanner *scanner, char *function_name);
 
-ASTNode* parse_expression(Scanner *scanner);
+ASTNode* parse_expression(Scanner *scanner, char *function_name);
 
 typedef struct {
     const char *name;             // Имя функции
@@ -30,6 +30,7 @@ typedef struct {
     DataType param_types[3];      // Массив типов параметров (максимум 3 для примера)
     size_t param_count;           // Количество параметров
 } BuiltinFunctionInfo;
+
 
 // Объявляем переменную как extern
 extern BuiltinFunctionInfo builtin_functions[];
