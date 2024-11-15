@@ -32,8 +32,8 @@ DataType parse_return_type(Scanner *scanner); // Объявляем функци
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
 bool type_convertion(ASTNode *main_node);
 void parse_functions_declaration(Scanner *scanner);
-void scope_check_identifiers_in_tree(ASTNode* root);
-bool scope_check(ASTNode* node_decl, ASTNode* node_identifier);
+void scope_check_identifiers_in_tree(ASTNode *root);
+bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
 
 // Global token storage
 static Token current_token;
@@ -146,21 +146,24 @@ ASTNode *parse_program(Scanner *scanner)
     }
 
     scope_check_identifiers_in_tree(program_node);
-    
+
     return program_node;
 }
 
-void scope_check_identifiers_in_tree(ASTNode* root) {
-    if (!root) {
+void scope_check_identifiers_in_tree(ASTNode *root)
+{
+    if (!root)
+    {
         return;
     }
 
     // Если узел является идентификатором, выполняем проверку области видимости
-    if (root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT) {
+    if (root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT)
+    {
         Symbol *symbol = symtable_search(&symtable, root->name);
         ASTNode *declaration_node = symbol->declaration_node;
         bool found = scope_check(declaration_node, root);
-        if(!found)
+        if (!found)
         {
             error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
         }
@@ -174,36 +177,43 @@ void scope_check_identifiers_in_tree(ASTNode* root) {
     scope_check_identifiers_in_tree(root->condition);
 }
 
-bool scope_check(ASTNode* node_decl, ASTNode* node_identifier) {
-    if (!node_decl || !node_identifier) {
+bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
+{
+    if (!node_decl || !node_identifier)
+    {
         return false;
     }
 
     // Сравниваем текущий узел с идентификатором
-    if (node_decl == node_identifier) {
+    if (node_decl == node_identifier)
+    {
         return true; // Совпадение найдено
     }
 
     // Рекурсивный вызов для дочерних узлов
-    if (scope_check(node_decl->left, node_identifier)) {
+    if (scope_check(node_decl->left, node_identifier))
+    {
         return true;
     }
-    if (scope_check(node_decl->right, node_identifier)) {
+    if (scope_check(node_decl->right, node_identifier))
+    {
         return true;
     }
-    if (scope_check(node_decl->body, node_identifier)) {
+    if (scope_check(node_decl->body, node_identifier))
+    {
         return true;
     }
-    if (scope_check(node_decl->next, node_identifier)) {
+    if (scope_check(node_decl->next, node_identifier))
+    {
         return true;
     }
-    if (scope_check(node_decl->condition, node_identifier)) {
+    if (scope_check(node_decl->condition, node_identifier))
+    {
         return true;
     }
 
     return false; // Совпадение не найдено
 }
-
 
 void parse_functions_declaration(Scanner *scanner)
 {
@@ -518,7 +528,15 @@ ASTNode *parse_statement(Scanner *scanner, char *function_name)
 ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
-    char *name = construct_variable_name(current_token.lexeme, function_name);
+    char *name;
+    if (strcmp(current_token.lexeme, "ifj") != 0)
+    {
+        name = construct_variable_name(current_token.lexeme, function_name);
+    }
+    else
+    {
+        name = string_duplicate(current_token.lexeme);
+    }
     Symbol *symbol = symtable_search(&symtable, name);
     bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
     if (symbol == NULL && !(is_builtin))
@@ -544,7 +562,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             error_exit(ERR_INTERNAL, "Memory allocation failed for new function name.");
         }
         strcpy(new_name, "ifj.");
-        strcat(new_name, name);
+        strcat(new_name, current_token.lexeme);
         free(name);
         name = new_name;
         symbol = symtable_search(&symtable, name);
@@ -596,7 +614,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         // Парсим выражение для присваивания
         ASTNode *value_node = parse_expression(scanner, function_name);
 
-        if(value_node->data_type != symbol->data_type)
+        if (value_node->data_type != symbol->data_type)
         {
             error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
         }
