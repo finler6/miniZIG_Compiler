@@ -34,6 +34,7 @@ bool type_convertion(ASTNode *main_node);
 void parse_functions_declaration(Scanner *scanner);
 void scope_check_identifiers_in_tree(ASTNode *root);
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
+int get_builtin_function_index(const char *function_name);
 
 // Global token storage
 static Token current_token;
@@ -43,16 +44,16 @@ BuiltinFunctionInfo builtin_functions[] = {
     {"readstr", TYPE_U8, {}, 0},
     {"readi32", TYPE_INT, {}, 0},
     {"readf64", TYPE_FLOAT, {}, 0},
-    {"write", TYPE_VOID, {TYPE_UNKNOWN}, 1},
+    {"write", TYPE_VOID, {TYPE_ALL}, 1},
     {"i2f", TYPE_FLOAT, {TYPE_INT}, 1},
     {"f2i", TYPE_INT, {TYPE_FLOAT}, 1},
-    {"string", TYPE_U8, {TYPE_UNKNOWN}, 1},
-    {"length", TYPE_INT, {TYPE_STRING}, 1},
+    {"string", TYPE_U8, {TYPE_U8}, 1},
+    {"length", TYPE_INT, {TYPE_U8}, 1},
     {"concat", TYPE_U8, {TYPE_U8, TYPE_U8}, 2},
-    {"substring", TYPE_STRING, {TYPE_STRING, TYPE_INT, TYPE_INT}, 3},
+    {"substring", TYPE_U8, {TYPE_U8, TYPE_INT, TYPE_INT}, 3},
     {"strcmp", TYPE_INT, {TYPE_U8, TYPE_U8}, 2},
-    {"ord", TYPE_INT, {TYPE_STRING, TYPE_INT}, 2},
-    {"chr", TYPE_STRING, {TYPE_INT}, 1}
+    {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
+    {"chr", TYPE_U8, {TYPE_INT}, 1}
     // Добавьте другие функции по необходимости
 };
 size_t get_num_builtin_functions()
@@ -96,6 +97,20 @@ DataType get_builtin_function_type(const char *function_name)
     return TYPE_UNKNOWN; // Неизвестная функция
 }
 
+int get_builtin_function_index(const char *function_name)
+{
+    size_t num_functions = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
+    for (size_t i = 0; i < num_functions; i++)
+    {
+        if (strcmp(function_name, builtin_functions[i].name) == 0)
+        {
+            LOG("DEBUG_PARSER: Function return index: %d\n", builtin_functions[i].return_type);
+            return i;
+        }
+    }
+    return -1; // Неизвестная функция
+}
+
 void parser_init(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Initializing parser...\n");
@@ -116,8 +131,11 @@ ASTNode *parse_program(Scanner *scanner)
     // Парсим обязательное выражение импорта и добавляем его в дерево
     ASTNode *import_node = parse_import(scanner);
     program_node->next = import_node;
+    load_builtin_functions(&symtable, import_node);
 
+    // Парсим только функции для их декларации
     parse_functions_declaration(scanner);
+
     // Продолжаем парсить остальную часть программы
     while (current_token.type != TOKEN_EOF)
     {
@@ -145,6 +163,7 @@ ASTNode *parse_program(Scanner *scanner)
         error_exit(ERR_SYNTAX, "Unused variable");
     }
 
+    // Рекурсивно проверяем если все переменные не выходят за зону декларации своих блоков
     scope_check_identifiers_in_tree(program_node);
 
     return program_node;
@@ -158,14 +177,32 @@ void scope_check_identifiers_in_tree(ASTNode *root)
     }
 
     // Если узел является идентификатором, выполняем проверку области видимости
-    if (root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT)
+    if ((root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT) && strcmp(root->name, "_") != 0)
     {
+        // Ищем символ
         Symbol *symbol = symtable_search(&symtable, root->name);
-        ASTNode *declaration_node = symbol->declaration_node;
-        bool found = scope_check(declaration_node, root);
-        if (!found)
+        ASTNode *declaration_node;
+
+        // Если символ является параметром функции
+        if (symbol->symbol_type == SYMBOL_PARAMETER)
         {
-            error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
+            // Берем значение узла функции и из симтейбла и рекурсивно ищем наш узел
+            Symbol *parent_function = symtable_search(&symtable, symbol->parent_function);
+            declaration_node = parent_function->declaration_node;
+            bool found = scope_check(declaration_node, root);
+            if (!found)
+            {
+                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
+            }
+        }
+        else // если же является обычным идентификатором, то ищем узел декларации переменной
+        {    // и с его помощью рекурсивно ищем узел
+            declaration_node = symbol->declaration_node;
+            bool found = scope_check(declaration_node, root);
+            if (!found)
+            {
+                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
+            }
         }
     }
 
@@ -217,14 +254,17 @@ bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
 
 void parse_functions_declaration(Scanner *scanner)
 {
+    // Сохраняем состояние сканера для дальнейшего возврата после декларации функций
     Scanner saved_scanner_state = *scanner;
     FILE saved_input = *scanner->input;
     Token saved_token = current_token;
 
+    // Парсим функции
     while (current_token.type != TOKEN_EOF)
     {
         if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
+            // Парсим функцию без создания узла
             parse_function(scanner, false);
         }
         else
@@ -233,9 +273,13 @@ void parse_functions_declaration(Scanner *scanner)
             error_exit(ERR_SYNTAX, "Expected function definition in declaration. Line: %d, Column: %d", current_token.line, current_token.column);
         }
     }
+
+    // Восстанавливаем состояние сканера
     *scanner = saved_scanner_state;
     *scanner->input = saved_input;
     current_token = saved_token;
+
+    return;
 }
 
 ASTNode *parse_function(Scanner *scanner, bool is_definition)
@@ -261,17 +305,24 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     // Парсим параметры функции
     ASTNode **parameters = NULL;
     int param_count = 0;
-    if (current_token.type != TOKEN_RIGHT_PAREN)
+    if (is_definition)
     {
-        parameters = (ASTNode **)malloc(sizeof(ASTNode *));
-        parameters[param_count++] = parse_parameter(scanner, function_name);
-
-        while (current_token.type == TOKEN_COMMA)
+        if (current_token.type != TOKEN_RIGHT_PAREN)
         {
-            current_token = get_next_token(scanner);
-            parameters = (ASTNode **)realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
+            parameters = (ASTNode **)malloc(sizeof(ASTNode *));
             parameters[param_count++] = parse_parameter(scanner, function_name);
+            while (current_token.type == TOKEN_COMMA)
+            {
+                current_token = get_next_token(scanner);
+                parameters = (ASTNode **)realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
+                parameters[param_count++] = parse_parameter(scanner, function_name);
+            }
         }
+    }
+    else
+    {
+        while (current_token.type != TOKEN_RIGHT_PAREN)
+            current_token = get_next_token(scanner);
     }
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
@@ -284,6 +335,8 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         // Создаем узел функции
         ASTNode *body_node = parse_block(scanner, function_name);
         function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
+        Symbol *symbol = symtable_search(&symtable, function_name);
+        symbol->declaration_node = function_node;
 
         int block_layer = 0;
         check_return_types(function_node->body->body, return_type, &block_layer);
@@ -332,6 +385,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         }
 
         new_function->symbol_type = SYMBOL_FUNCTION;
+        new_function->parent_function = string_duplicate(function_name);
         new_function->data_type = return_type;
         new_function->is_defined = true;
         new_function->is_used = strcmp(new_function->name, "main") == 0 ? true : false;
@@ -379,6 +433,7 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name)
     }
 
     // Создаем новый символ и добавляем его в таблицу символов
+    ASTNode *param_node = create_variable_declaration_node(param_name, param_type, NULL);
     Symbol *new_param = (Symbol *)malloc(sizeof(Symbol));
     if (new_param == NULL)
     {
@@ -388,14 +443,15 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name)
 
     new_param->name = param_name;
     new_param->symbol_type = SYMBOL_PARAMETER;
+    new_param->parent_function = string_duplicate(function_name);
     new_param->data_type = param_type;
     new_param->is_defined = true;
     new_param->next = NULL;
+    new_param->declaration_node = param_node;
 
     symtable_insert(&symtable, param_name, new_param);
 
     // Создаем узел параметра AST
-    ASTNode *param_node = create_variable_declaration_node(param_name, param_type, NULL);
 
     return param_node;
 }
@@ -529,102 +585,190 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
     char *name;
-    if (strcmp(current_token.lexeme, "ifj") != 0)
+    Symbol *symbol;
+    if (strcmp(current_token.lexeme, "ifj") == 0 || strcmp(current_token.lexeme, "_") == 0)
     {
-        name = construct_variable_name(current_token.lexeme, function_name);
+        bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
+        if (is_builtin)
+        {
+            name = construct_builtin_name("ifj", current_token.lexeme);
+            symbol = symtable_search(&symtable, name);
+            if (symbol == NULL)
+            {
+                error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
+            }
+            char *builtin_function_name = string_duplicate(current_token.lexeme);
+
+            current_token = get_next_token(scanner);
+            expect_token(TOKEN_LEFT_PAREN, scanner);
+            ASTNode **arguments;
+            int arg_count = 0;
+            int builtin_index = get_builtin_function_index(builtin_function_name);
+            int params_count = builtin_functions[builtin_index].param_count;
+
+            if (current_token.type != TOKEN_RIGHT_PAREN)
+            {
+                arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+                arguments[arg_count++] = parse_expression(scanner, function_name);
+                // Проверка если тип данных соответствует
+                if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                }
+
+                while (current_token.type == TOKEN_COMMA)
+                {
+                    if (arg_count >= params_count)
+                    {
+                        error_exit(ERR_SEMANTIC_RETURN, "Invalid number of arguments");
+                    }
+                    current_token = get_next_token(scanner);
+                    arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                    arguments[arg_count++] = parse_expression(scanner, function_name);
+                    if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
+                    {
+                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                    }
+                }
+            }
+            expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
+
+            // Проверка если количество аргументов соответствует
+            if (arg_count != builtin_functions[builtin_index].param_count)
+            {
+                error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
+            }
+
+            // Создаем узел вызова функции
+            ASTNode *func_call_node = create_function_call_node(name, arguments, arg_count);
+            func_call_node->data_type = builtin_functions[builtin_index].return_type; // Устанавливаем тип данных на основе встроенной функции или символа
+
+            expect_token(TOKEN_SEMICOLON, scanner);
+            return func_call_node;
+        }
+        else
+        {
+            name = string_duplicate(current_token.lexeme);
+            symbol = symtable_search(&symtable, name);
+
+            // Логика для присваивания
+            expect_token(TOKEN_ASSIGN, scanner);
+
+            // Парсим выражение для присваивания
+            ASTNode *value_node = parse_expression(scanner, function_name);
+
+            if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
+            {
+                error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
+            }
+
+            // Ожидаем точку с запятой в конце оператора
+           // expect_token(TOKEN_SEMICOLON, scanner);
+
+            // Создаем узел присваивания и возвращаем его
+            expect_token(TOKEN_SEMICOLON, scanner);
+            return create_assignment_node(name, value_node);
+        }
     }
     else
     {
-        name = string_duplicate(current_token.lexeme);
-    }
-    Symbol *symbol = symtable_search(&symtable, name);
-    bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
-    if (symbol == NULL && !(is_builtin))
-    {
-        error_exit(ERR_SYNTAX, "Variable or function %s is not defined.", current_token.lexeme);
-    }
-    if (!(is_builtin))
-    {
+        name = construct_variable_name(current_token.lexeme, function_name);
+        symbol = symtable_search(&symtable, name);
+        if (symbol == NULL)
+        {
+            error_exit(ERR_SYNTAX, "Variable or function %s is not defined.", current_token.lexeme);
+        }
         if (symbol->is_constant)
         {
             error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
         }
-        LOG("DEBUG_PARSER: Is function or variable %d\n", symbol->symbol_type);
-    }
-    char *temp_name = string_duplicate(current_token.lexeme);
-    if (is_builtin)
-    {
-        // Adding ifj. to the name of the function
-        char *new_name = (char *)malloc(strlen(name) + 5);
-        if (new_name == NULL)
-        {
-            free(name);
-            error_exit(ERR_INTERNAL, "Memory allocation failed for new function name.");
-        }
-        strcpy(new_name, "ifj.");
-        strcat(new_name, current_token.lexeme);
-        free(name);
-        name = new_name;
-        symbol = symtable_search(&symtable, name);
-    }
+        current_token = get_next_token(scanner);
 
-    current_token = get_next_token(scanner);
-
-    // Проверяем, является ли это вызовом функции
-    if (current_token.type == TOKEN_LEFT_PAREN && symbol->symbol_type == SYMBOL_FUNCTION)
-    {
-        // Checks if function return type is void
-        if (is_builtin)
-        {
-            if (get_builtin_function_type(temp_name) != TYPE_VOID && get_builtin_function_type(temp_name) != TYPE_UNKNOWN)
-            {
-                error_exit(ERR_SEMANTIC, "Function %s has return type %d, expected void", temp_name, get_builtin_function_type(temp_name));
-            }
-        }
-        current_token = get_next_token(scanner); // Пропускаем '('
-
-        // Парсим аргументы функции
-        ASTNode **arguments = NULL;
-        int arg_count = 0;
-
-        if (current_token.type != TOKEN_RIGHT_PAREN)
-        {
-            arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-            arguments[arg_count++] = parse_expression(scanner, function_name);
-
-            while (current_token.type == TOKEN_COMMA)
-            {
-                current_token = get_next_token(scanner);
-                arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                arguments[arg_count++] = parse_expression(scanner, function_name);
-            }
-        }
-
-        expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
-        expect_token(TOKEN_SEMICOLON, scanner);   // Ожидаем ';' после вызова функции
-
-        // Создаем узел для вызова функции и возвращаем его
-        return create_function_call_node(name, arguments, arg_count);
-    }
-    else
-    {
         // Логика для присваивания
         expect_token(TOKEN_ASSIGN, scanner);
 
         // Парсим выражение для присваивания
         ASTNode *value_node = parse_expression(scanner, function_name);
 
-        if (value_node->data_type != symbol->data_type)
+        if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
         {
             error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
         }
 
         // Ожидаем точку с запятой в конце оператора
+        //expect_token(TOKEN_SEMICOLON, scanner);
         expect_token(TOKEN_SEMICOLON, scanner);
-
         // Создаем узел присваивания и возвращаем его
         return create_assignment_node(name, value_node);
-    }
+    } /*
+     if (!(is_builtin))
+     {
+         if (symbol->is_constant)
+         {
+             error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+         }
+         LOG("DEBUG_PARSER: Is function or variable %d\n", symbol->symbol_type);
+     }
+     char *temp_name = string_duplicate(current_token.lexeme);
+
+     current_token = get_next_token(scanner);
+
+     // Проверяем, является ли это вызовом функции
+     if (current_token.type == TOKEN_LEFT_PAREN && symbol->symbol_type == SYMBOL_FUNCTION)
+     {
+         // Checks if function return type is void
+         if (is_builtin)
+         {
+             if (get_builtin_function_type(temp_name) != TYPE_VOID && get_builtin_function_type(temp_name) != TYPE_UNKNOWN)
+             {
+                 error_exit(ERR_SEMANTIC, "Function %s has return type %d, expected void", temp_name, get_builtin_function_type(temp_name));
+             }
+         }
+         current_token = get_next_token(scanner); // Пропускаем '('
+
+         // Парсим аргументы функции
+         ASTNode **arguments = NULL;
+         int arg_count = 0;
+
+         // Сделать проверку аргументов встроеных функций
+         if (current_token.type != TOKEN_RIGHT_PAREN)
+         {
+             arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+             arguments[arg_count++] = parse_expression(scanner, function_name);
+
+             while (current_token.type == TOKEN_COMMA)
+             {
+                 current_token = get_next_token(scanner);
+                 arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                 arguments[arg_count++] = parse_expression(scanner, function_name);
+             }
+         }
+
+         expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
+         expect_token(TOKEN_SEMICOLON, scanner);   // Ожидаем ';' после вызова функции
+
+         // Создаем узел для вызова функции и возвращаем его
+         return create_function_call_node(name, arguments, arg_count);
+     }
+     else
+     {
+         // Логика для присваивания
+         expect_token(TOKEN_ASSIGN, scanner);
+
+         // Парсим выражение для присваивания
+         ASTNode *value_node = parse_expression(scanner, function_name);
+
+         if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
+         {
+             error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
+         }
+
+         // Ожидаем точку с запятой в конце оператора
+         expect_token(TOKEN_SEMICOLON, scanner);
+
+         // Создаем узел присваивания и возвращаем его
+         return create_assignment_node(name, value_node);
+     }*/
 }
 
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
@@ -698,6 +842,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     }
     new_var->name = variable_name;
     new_var->symbol_type = SYMBOL_VARIABLE;
+    new_var->parent_function = string_duplicate(function_name);
     new_var->data_type = expr_type;
     new_var->is_defined = true;
     new_var->is_constant = (var_type == TOKEN_CONST) ? true : false;
@@ -908,90 +1053,146 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
     {
         // Создаем узел для строкового литерала
         char *value = string_duplicate(current_token.lexeme);
-        ASTNode *literal_node = create_literal_node(TYPE_STRING, value);
+        ASTNode *literal_node = create_literal_node(TYPE_U8, value);
         current_token = get_next_token(scanner);
         return literal_node;
     }
     else if (current_token.type == TOKEN_IDENTIFIER)
     {
         // Проверяем, существует ли идентификатор в таблице символов
-        bool is_builtin = false;
         DataType data_type;
         char *identifier_name;
-        Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
-        if (symbol != NULL)
+        Symbol *symbol;
+        bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
+        if (is_builtin)
         {
-            identifier_name = current_token.lexeme;
-        }
-        else
-        {
-            identifier_name = construct_variable_name(current_token.lexeme, function_name);
-            data_type = TYPE_UNKNOWN;
-            is_builtin = is_builtin_function(identifier_name, scanner);
+            identifier_name = construct_builtin_name("ifj", current_token.lexeme);
             symbol = symtable_search(&symtable, identifier_name);
-        }
-        if (symbol == NULL && !(is_builtin))
-        {
-            error_exit(ERR_SEMANTIC, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
-        }
-        else if (is_builtin)
-        {
-            data_type = get_builtin_function_type(current_token.lexeme);
-            LOG("DEBUG_PARSER: Builtin function found: %s\n", identifier_name);
-            char *new_identifier_name = (char *)malloc(strlen(identifier_name) + 5);
-            if (new_identifier_name == NULL)
+            if (symbol == NULL)
             {
-                error_exit(ERR_INTERNAL, "Memory allocation failed");
+                error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
             }
+            char *builtin_function_name = string_duplicate(current_token.lexeme);
 
-            strcpy(new_identifier_name, "ifj.");
-            strcat(new_identifier_name, identifier_name);
-
-            // Освобождаем старую память и переопределяем identifier_name
-            free(identifier_name);
-            identifier_name = new_identifier_name;
-        }
-        else
-        {
-            data_type = symbol->data_type;
-        }
-
-        LOG("DEBUG_PARSER: BEFORE Primary parsing got token type: %d\n", current_token.type);
-        current_token = get_next_token(scanner);
-        LOG("DEBUG_PARSER: Primary parsing got token type: %d\n", current_token.type);
-
-        // Если это вызов функции
-        if (current_token.type == TOKEN_LEFT_PAREN)
-        {
-            current_token = get_next_token(scanner); // Пропускаем '('
-
-            ASTNode **arguments = NULL;
+            current_token = get_next_token(scanner);
+            expect_token(TOKEN_LEFT_PAREN, scanner);
+            ASTNode **arguments;
             int arg_count = 0;
+            int builtin_index = get_builtin_function_index(builtin_function_name);
+            int params_count = builtin_functions[builtin_index].param_count;
 
             if (current_token.type != TOKEN_RIGHT_PAREN)
             {
                 arguments = (ASTNode **)malloc(sizeof(ASTNode *));
                 arguments[arg_count++] = parse_expression(scanner, function_name);
+                // Проверка если тип данных соответствует
+                if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                }
 
                 while (current_token.type == TOKEN_COMMA)
                 {
+                    if (arg_count >= params_count)
+                    {
+                        error_exit(ERR_SEMANTIC_RETURN, "Invalid number of arguments");
+                    }
                     current_token = get_next_token(scanner);
                     arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                     arguments[arg_count++] = parse_expression(scanner, function_name);
+                    if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
+                    {
+                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                    }
                 }
             }
             expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
 
+            // Проверка если количество аргументов соответствует
+            if (arg_count != builtin_functions[builtin_index].param_count)
+            {
+                error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
+            }
+
             // Создаем узел вызова функции
             ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
-            func_call_node->data_type = data_type; // Устанавливаем тип данных на основе встроенной функции или символа
+            func_call_node->data_type = builtin_functions[builtin_index].return_type; // Устанавливаем тип данных на основе встроенной функции или символа
+            //expect_token(TOKEN_SEMICOLON, scanner);
             return func_call_node;
         }
+        else
+        {
+            symbol = symtable_search(&symtable, current_token.lexeme);
 
-        // Создаем узел идентификатора
-        ASTNode *identifier_node = create_identifier_node(identifier_name);
-        identifier_node->data_type = data_type; // Устанавливаем тип данных для идентификатора
-        return identifier_node;
+            // Проверяем елси найденый символ является функцией
+            if (symbol != NULL)
+            {
+                identifier_name = current_token.lexeme;
+                current_token = get_next_token(scanner);
+                // Если это вызов функции
+
+                expect_token(TOKEN_LEFT_PAREN, scanner); // Пропускаем '('
+
+                // Получаем значение списка параметров через найденый символ, в котором есть ссылка на инициализируемый узел функции в котором есть ссылка на поле параметров
+                ASTNode **arguments = symbol->declaration_node->parameters;
+                int arg_count = 0;
+
+                if (current_token.type != TOKEN_RIGHT_PAREN)
+                {
+                    arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+                    arguments[arg_count++] = parse_expression(scanner, function_name);
+                    // Проверка если тип данных соответствует
+                    if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
+                    {
+                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                    }
+
+                    while (current_token.type == TOKEN_COMMA)
+                    {
+                        current_token = get_next_token(scanner);
+                        arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                        arguments[arg_count++] = parse_expression(scanner, function_name);
+                        if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
+                        {
+                            error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+                        }
+                    }
+                }
+                expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
+
+                // Проверка если количество аргументов соответствует
+                if (arg_count != symbol->declaration_node->param_count)
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
+                }
+
+                // Создаем узел вызова функции
+                ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
+                func_call_node->data_type = symbol->data_type; // Устанавливаем тип данных на основе встроенной функции или символа
+                //expect_token(TOKEN_SEMICOLON, scanner);
+                return func_call_node;
+            }
+            else // если не является, то повторяем поиск, с расчетом на то что это переменная
+            {
+                identifier_name = construct_variable_name(current_token.lexeme, function_name);
+                symbol = symtable_search(&symtable, identifier_name);
+                if (symbol == NULL)
+                {
+                    error_exit(ERR_SEMANTIC, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
+                }
+                ASTNode *identifier_node = create_identifier_node(identifier_name);
+                identifier_node->data_type = symbol->data_type; // Устанавливаем тип данных для идентификатора
+
+                //expect_token(TOKEN_SEMICOLON, scanner);
+                current_token = get_next_token(scanner);
+                return identifier_node;
+            }
+            LOG("DEBUG_PARSER: BEFORE Primary parsing got token type: %d\n", current_token.type);
+            current_token = get_next_token(scanner);
+            LOG("DEBUG_PARSER: Primary parsing got token type: %d\n", current_token.type);
+
+            // Создаем узел идентификатора
+        }
     }
     else if (current_token.type == TOKEN_LEFT_PAREN)
     {
@@ -1116,7 +1317,7 @@ ASTNode *parse_import(Scanner *scanner)
     LOG("DEBUG_PARSER: Finished parsing import statement\n");
 
     // Создаем узел AST для оператора импорта
-    return create_literal_node(TYPE_STRING, import_value);
+    return create_literal_node(TYPE_U8, import_value);
 }
 
 /*

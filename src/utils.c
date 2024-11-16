@@ -45,6 +45,22 @@ char* construct_variable_name(const char* str1, const char* str2) {
     }
 
     // Форматируем строку по шаблону "str1.str2_number"
+    snprintf(result, len, "%s_%s", str1, str2);
+
+    return result;
+}
+
+char* construct_builtin_name(const char* str1, const char* str2) {
+    // Вычисление необходимой длины результирующей строки
+    int len = strlen(str1) + strlen(str2) + (2*sizeof(char)); // Запас для точки, подчеркивания и числа
+    char* result = (char*)malloc(len);
+
+    if (result == NULL) {
+        printf("Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Форматируем строку по шаблону "str1.str2_number"
     snprintf(result, len, "%s.%s", str1, str2);
 
     return result;

@@ -35,10 +35,10 @@ void symtable_init(SymTable *symtable) {
         symtable->table[i] = NULL;
     }
 
-    load_builtin_functions(symtable);
+    insert_underscore(symtable);
 }
 
-void load_builtin_functions(SymTable *symtable) {
+void load_builtin_functions(SymTable *symtable, ASTNode *import_node) {
     size_t num_functions = get_num_builtin_functions();
 
     for (size_t i = 0; i < num_functions; i++) {
@@ -65,6 +65,20 @@ void load_builtin_functions(SymTable *symtable) {
 
         symtable_insert(symtable, name_with_prefix, new_function);
     }
+}
+
+void insert_underscore(SymTable *symtable)
+{
+    Symbol *underscore = (Symbol *)malloc(sizeof(Symbol));
+        underscore->name = "_";
+        underscore->symbol_type = SYMBOL_VARIABLE;
+        underscore->data_type = TYPE_VOID;
+        underscore->is_defined = true;
+        underscore->is_used = true;
+        underscore->is_constant = false;
+        underscore->next = NULL;
+
+        symtable_insert(symtable, "_", underscore);
 }
 
 

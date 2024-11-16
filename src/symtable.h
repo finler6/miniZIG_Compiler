@@ -17,7 +17,7 @@ typedef enum {
     TYPE_NULL,
     TYPE_INT,
     TYPE_FLOAT,
-    TYPE_STRING,
+    TYPE_ALL,
     TYPE_VOID,
     TYPE_BOOL,
     TYPE_U8,
@@ -29,6 +29,7 @@ typedef struct Symbol {
     char *name;
     SymbolType symbol_type;
     DataType data_type;
+    char *parent_function;
     bool is_defined;
     bool is_used;
     bool is_constant;
@@ -45,7 +46,8 @@ typedef struct {
 
 // Function prototypes
 void symtable_init(SymTable *symtable);
-void load_builtin_functions(SymTable *symtable);
+void load_builtin_functions(SymTable *symtable, ASTNode *import_node);
+void insert_underscore(SymTable *symtable);
 void symtable_free(SymTable *symtable);
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol);
 Symbol *symtable_search(SymTable *symtable, char *key);

@@ -28,7 +28,7 @@ typedef struct {
     const char *name;             // Имя функции
     DataType return_type;         // Тип возвращаемого значения
     DataType param_types[3];      // Массив типов параметров (максимум 3 для примера)
-    size_t param_count;           // Количество параметров
+    int param_count;           // Количество параметров
 } BuiltinFunctionInfo;
 
 
