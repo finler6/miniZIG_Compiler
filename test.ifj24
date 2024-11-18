@@ -1,0 +1,13 @@
+const ifj = @import("ifj24.zig");
+
+
+pub fn main() ?i32 {
+    var a : i32 = 0;
+    var b : ?i32 = null;
+    while(b) |b_beznull| 
+    {
+        a = b_beznull - 1;
+        b = b - 1;
+    }
+    return a;
+}

@@ -21,7 +21,12 @@ typedef enum {
     TYPE_VOID,
     TYPE_BOOL,
     TYPE_U8,
-    TYPE_UNKNOWN
+    TYPE_UNKNOWN,
+
+    TYPE_INT_NULLABLE,
+    TYPE_FLOAT_NULLABLE,
+    TYPE_U8_NULLABLE
+
 } DataType;
 
 // Symbol structure

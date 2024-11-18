@@ -49,7 +49,8 @@ typedef enum {
     TOKEN_LEFT_BRACKET,  // [
     TOKEN_RIGHT_BRACKET, // ]
     TOKEN_PIPE,          // |
-    TOKEN_DOT,
+    TOKEN_DOT,           // .
+    TOKEN_QUESTION,      // ?
 
     // Special tokens
     TOKEN_EOF,

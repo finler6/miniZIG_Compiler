@@ -31,6 +31,9 @@ DataType parse_type(Scanner *scanner);        // Объявляем функци
 DataType parse_return_type(Scanner *scanner); // Объявляем функцию заранее
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
 bool type_convertion(ASTNode *main_node);
+bool is_subtype_nullable(DataType type_nullable, DataType type);
+bool is_nullable(DataType type_nullable);
+DataType detach_nullable(DataType type_nullable);
 void parse_functions_declaration(Scanner *scanner);
 void scope_check_identifiers_in_tree(ASTNode *root);
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
@@ -483,11 +486,28 @@ DataType parse_type(Scanner *scanner)
         current_token = get_next_token(scanner);
         return TYPE_UNKNOWN;
     }
-    else
+    else if (current_token.type == TOKEN_QUESTION)
     {
-        error_exit(ERR_SYNTAX, "Expected type.");
-        return TYPE_UNKNOWN;
+        current_token = get_next_token(scanner);
+        if (current_token.type == TOKEN_I32)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_INT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_F64)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_FLOAT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_U8)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_U8_NULLABLE;
+        }
     }
+
+    error_exit(ERR_SYNTAX, "Expected type.");
+    return TYPE_UNKNOWN;
 }
 // Function to parse the return type (same as parameter type parsing)
 DataType parse_return_type(Scanner *scanner)
@@ -512,11 +532,28 @@ DataType parse_return_type(Scanner *scanner)
         current_token = get_next_token(scanner);
         return TYPE_VOID;
     }
-    else
+    else if (current_token.type == TOKEN_QUESTION)
     {
-        error_exit(ERR_SYNTAX, "Expected return type.");
-        return TYPE_UNKNOWN;
+        current_token = get_next_token(scanner);
+        if (current_token.type == TOKEN_I32)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_INT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_F64)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_FLOAT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_U8)
+        {
+            current_token = get_next_token(scanner); // Обновляем токен после разбора типа
+            return TYPE_U8_NULLABLE;
+        }
     }
+
+    error_exit(ERR_SYNTAX, "Expected return type.");
+    return TYPE_UNKNOWN;
 }
 
 // Parses a block of statements enclosed in {}
@@ -663,7 +700,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             }
 
             // Ожидаем точку с запятой в конце оператора
-           // expect_token(TOKEN_SEMICOLON, scanner);
+            // expect_token(TOKEN_SEMICOLON, scanner);
 
             // Создаем узел присваивания и возвращаем его
             expect_token(TOKEN_SEMICOLON, scanner);
@@ -690,13 +727,13 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         // Парсим выражение для присваивания
         ASTNode *value_node = parse_expression(scanner, function_name);
 
-        if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
+        if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID && !is_subtype_nullable(symbol->data_type, value_node->data_type))
         {
             error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
         }
 
         // Ожидаем точку с запятой в конце оператора
-        //expect_token(TOKEN_SEMICOLON, scanner);
+        // expect_token(TOKEN_SEMICOLON, scanner);
         expect_token(TOKEN_SEMICOLON, scanner);
         // Создаем узел присваивания и возвращаем его
         return create_assignment_node(name, value_node);
@@ -808,7 +845,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     DataType expr_type = initializer_node->data_type;
 
     // Проверка на совпадение типов
-    if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type)
+    if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !is_subtype_nullable(declaration_type, expr_type))
     {
         error_exit(ERR_SEMANTIC, "Declared type of variable does not match the assigned type. %d %d,\n Line and column: %d %d\n", declaration_type, expr_type, current_token.line, current_token.column);
     }
@@ -843,7 +880,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     new_var->name = variable_name;
     new_var->symbol_type = SYMBOL_VARIABLE;
     new_var->parent_function = string_duplicate(function_name);
-    new_var->data_type = expr_type;
+    new_var->data_type = declaration_type;
     new_var->is_defined = true;
     new_var->is_constant = (var_type == TOKEN_CONST) ? true : false;
     new_var->declaration_node = variable_declaration_node;
@@ -863,17 +900,58 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 
     // Парсим условие
     ASTNode *condition_node = parse_expression(scanner, function_name);
+    ASTNode *variable_declaration_node;
 
     // Семантическая проверка на тип bool для условия
-    if (condition_node->data_type != TYPE_BOOL)
+    if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
         error_exit(ERR_SEMANTIC, "Condition in if statement must be boolean.");
     }
 
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
+    if (current_token.type == TOKEN_PIPE)
+    {
+        current_token = get_next_token(scanner);
+        if (current_token.type != TOKEN_IDENTIFIER)
+        {
+            error_exit(ERR_SEMANTIC_OTHER, "Expected identifier |id|");
+        }
+        char *variable_name = construct_variable_name(current_token.lexeme, function_name);
+        Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
+        if (symbol != NULL)
+        {
+            error_exit(ERR_SEMANTIC, "Variable is already defined");
+        }
+        variable_declaration_node = create_variable_declaration_node(current_token.lexeme, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
+        // Создаем новый символ и добавляем его в таблицу символов
+        Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
+        if (new_var == NULL)
+        {
+            free(variable_name);
+            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
+        }
+        new_var->name = variable_name;
+        new_var->symbol_type = SYMBOL_VARIABLE;
+        new_var->parent_function = string_duplicate(function_name);
+        new_var->data_type = detach_nullable(condition_node->data_type);
+        new_var->is_defined = true;
+        new_var->is_constant = true;
+        new_var->declaration_node = variable_declaration_node;
+        new_var->next = NULL;
+
+        symtable_insert(&symtable, variable_name, new_var);
+
+        current_token = get_next_token(scanner);
+        expect_token(TOKEN_PIPE, scanner);
+    }
+
     // Парсим тело 'if'
     ASTNode *true_block = parse_block(scanner, function_name);
+
+    ASTNode *tmp = true_block->body;
+    true_block->body = variable_declaration_node;
+    variable_declaration_node->next = tmp;
 
     // Парсим необязательный блок 'else', если он есть
     ASTNode *false_block = NULL;
@@ -891,7 +969,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         }
     }
     // Создаем узел 'if' и возвращаем его
-    return create_if_node(condition_node, true_block, false_block);
+    return create_if_node(condition_node, true_block, false_block, variable_declaration_node);
 }
 
 // Function to parse a while statement
@@ -903,17 +981,57 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
 
     // Парсим условие
     ASTNode *condition_node = parse_expression(scanner, function_name);
-
+    ASTNode *variable_declaration_node;
     // Семантическая проверка на тип bool для условия
-    if (condition_node->data_type != TYPE_BOOL)
+    if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
         error_exit(ERR_SEMANTIC, "Condition in while statement must be boolean.");
     }
 
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
+        if (current_token.type == TOKEN_PIPE)
+    {
+        current_token = get_next_token(scanner);
+        if (current_token.type != TOKEN_IDENTIFIER)
+        {
+            error_exit(ERR_SEMANTIC_OTHER, "Expected identifier |id|");
+        }
+        char *variable_name = construct_variable_name(current_token.lexeme, function_name);
+        Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
+        if (symbol != NULL)
+        {
+            error_exit(ERR_SEMANTIC, "Variable is already defined");
+        }
+        variable_declaration_node = create_variable_declaration_node(current_token.lexeme, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
+        // Создаем новый символ и добавляем его в таблицу символов
+        Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
+        if (new_var == NULL)
+        {
+            free(variable_name);
+            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
+        }
+        new_var->name = variable_name;
+        new_var->symbol_type = SYMBOL_VARIABLE;
+        new_var->parent_function = string_duplicate(function_name);
+        new_var->data_type = detach_nullable(condition_node->data_type);
+        new_var->is_defined = true;
+        new_var->is_constant = true;
+        new_var->declaration_node = variable_declaration_node;
+        new_var->next = NULL;
+
+        symtable_insert(&symtable, variable_name, new_var);
+
+        current_token = get_next_token(scanner);
+        expect_token(TOKEN_PIPE, scanner);
+    }
+
     // Парсим тело 'while'
     ASTNode *body_node = parse_block(scanner, function_name);
+    
+    ASTNode *tmp = body_node->body;
+    body_node->body = variable_declaration_node;
+    variable_declaration_node->next = tmp;
 
     // Создаем узел 'while' и возвращаем его
     return create_while_node(condition_node, body_node);
@@ -1117,14 +1235,14 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
             // Создаем узел вызова функции
             ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
             func_call_node->data_type = builtin_functions[builtin_index].return_type; // Устанавливаем тип данных на основе встроенной функции или символа
-            //expect_token(TOKEN_SEMICOLON, scanner);
+            // expect_token(TOKEN_SEMICOLON, scanner);
             return func_call_node;
         }
         else
         {
+            // Проверяем елси найденый символ является функцией
             symbol = symtable_search(&symtable, current_token.lexeme);
 
-            // Проверяем елси найденый символ является функцией
             if (symbol != NULL)
             {
                 identifier_name = current_token.lexeme;
@@ -1169,7 +1287,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                 // Создаем узел вызова функции
                 ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
                 func_call_node->data_type = symbol->data_type; // Устанавливаем тип данных на основе встроенной функции или символа
-                //expect_token(TOKEN_SEMICOLON, scanner);
+                // expect_token(TOKEN_SEMICOLON, scanner);
                 return func_call_node;
             }
             else // если не является, то повторяем поиск, с расчетом на то что это переменная
@@ -1183,7 +1301,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                 ASTNode *identifier_node = create_identifier_node(identifier_name);
                 identifier_node->data_type = symbol->data_type; // Устанавливаем тип данных для идентификатора
 
-                //expect_token(TOKEN_SEMICOLON, scanner);
+                // expect_token(TOKEN_SEMICOLON, scanner);
                 current_token = get_next_token(scanner);
                 return identifier_node;
             }
@@ -1201,6 +1319,14 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
         ASTNode *expr_node = parse_expression(scanner, function_name); // Парсим выражение в скобках
         expect_token(TOKEN_RIGHT_PAREN, scanner);                      // Ожидаем ')'
         return expr_node;
+    }
+    else if (current_token.type == TOKEN_NULL)
+    {
+        // Создаем узел для целочисленного литерала
+        char *value = string_duplicate(current_token.lexeme);
+        ASTNode *literal_node = create_literal_node(TYPE_NULL, value);
+        current_token = get_next_token(scanner);
+        return literal_node;
     }
     else
     {
@@ -1362,7 +1488,7 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
         }
         if (function_node->type == NODE_RETURN)
         {
-            if (function_node->data_type != return_type)
+            if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type))
             {
                 error_exit(ERR_SEMANTIC_PARAMS, "Incompatible types of return statement");
             }
@@ -1417,6 +1543,30 @@ bool type_convertion(ASTNode *main_node)
     else if(ma)
     remove_decimal(main_node->right->value);
     remove_decimal(main_node->left->value);*/
+}
+
+bool is_subtype_nullable(DataType type_nullable, DataType type)
+{
+    return ((type_nullable == TYPE_INT_NULLABLE && (type == TYPE_INT || type == TYPE_NULL)) ||
+            (type_nullable == TYPE_FLOAT_NULLABLE && (type == TYPE_FLOAT || type == TYPE_NULL)) ||
+            (type_nullable == TYPE_U8_NULLABLE && (type == TYPE_U8 || type == TYPE_NULL)));
+}
+
+bool is_nullable(DataType type_nullable)
+{
+    return (type_nullable == TYPE_INT_NULLABLE || type_nullable == TYPE_FLOAT_NULLABLE || type_nullable == TYPE_U8_NULLABLE);
+}
+
+DataType detach_nullable(DataType type_nullable)
+{
+    if (type_nullable == TYPE_INT_NULLABLE)
+        type_nullable = TYPE_INT;
+    else if (type_nullable == TYPE_FLOAT_NULLABLE)
+        type_nullable = TYPE_FLOAT;
+    else if (type_nullable == TYPE_U8_NULLABLE)
+        type_nullable = TYPE_U8;
+
+    return type_nullable;
 }
 
 // Function to expect a specific token type

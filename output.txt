@@ -1,0 +1,26 @@
+.IFJcode24
+CREATEFRAME
+PUSHFRAME
+LABEL main
+DEFVAR LF@%retval
+DEFVAR LF@a_main
+PUSHS int@0
+POPS LF@a_main
+DEFVAR LF@b_main
+PUSHS nil@nil
+POPS LF@b_main
+LABEL $while_start_0
+PUSHS LF@b_main
+PUSHS bool@true
+JUMPIFNEQS $while_end_0
+DEFVAR LF@b_beznull
+PUSHS LF@b_beznull_main
+PUSHS int@1
+SUBS
+POPS LF@a_main
+JUMP $while_start_0
+LABEL $while_end_0
+PUSHS LF@a_main
+POPS LF@%retval
+RETURN
+EXIT int@0

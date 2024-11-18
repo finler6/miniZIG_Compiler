@@ -8,16 +8,15 @@
 #include "tokens.h"
 #include "utils.h"
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-
 
 #ifdef DEBUG_SCANNER
-    #define LOG(...) printf(__VA_ARGS__)
+#define LOG(...) printf(__VA_ARGS__)
 #else
-    #define LOG(...)
+#define LOG(...)
 #endif
 
 // Maximum length for a lexeme
@@ -38,12 +37,12 @@ void print_token(Token token)
     if (token.lexeme == NULL)
     {
         LOG("DEBUG_SCANNER: Token type: %d, lexeme: (null), line: %d, column: %d\n",
-               token.type, token.line, token.column);
+            token.type, token.line, token.column);
     }
     else
     {
         LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
-               token.type, token.lexeme, token.line, token.column);
+            token.type, token.lexeme, token.line, token.column);
     }
 }
 
@@ -162,8 +161,7 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
 
     LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
     // Разрешаем буквы, цифры, '_', '@' и '[' ']'
-    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' 
-           || scanner->current_char == ']')
+    while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']')
     {
         // Проверка, что точка возможна только после ifj
         if (index < MAX_LEXEME_LENGTH - 1)
@@ -175,7 +173,7 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
         {
             error_exit(ERR_LEXICAL, "Identifier too long.");
         }
-        
+
         // Считываем следующий символ
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
@@ -194,12 +192,10 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     // Резолвим идентификатор или ключевое слово
     Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
     LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
-           t.type, t.lexeme, t.line, t.column);
-    
+        t.type, t.lexeme, t.line, t.column);
+
     return t;
 }
-
-
 
 // Function to scan numeric literals (int and float)
 static Token scan_number(Scanner *scanner)
@@ -641,6 +637,13 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
+    case '?':
+        token.type = TOKEN_QUESTION;
+        token.lexeme[0] = scanner->current_char;
+        token.lexeme[1] = '\0';
+        scanner->current_char = fgetc(scanner->input);
+        scanner->column++;
+        break;
     case '!':
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
@@ -695,8 +698,7 @@ static Token get_next_token_internal(Scanner *scanner)
         return token;
     }
 
-    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@'
-        || scanner->current_char == '[' || scanner->current_char == ']')
+    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']')
     {
         LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);

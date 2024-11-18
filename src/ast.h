@@ -47,7 +47,7 @@ ASTNode* create_assignment_node(char* name, ASTNode* value);
 ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right);
 ASTNode* create_literal_node(DataType type, char* value);
 ASTNode* create_identifier_node(char* name);
-ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block);
+ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block, ASTNode *var_without_null);
 ASTNode* create_while_node(ASTNode* condition, ASTNode* body);
 ASTNode* create_return_node(ASTNode* value);
 ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_count);

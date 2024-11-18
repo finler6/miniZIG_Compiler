@@ -114,7 +114,7 @@ ASTNode* create_identifier_node(char* name) {
     return node;
 }
 
-ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block) {
+ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block, ASTNode *var_without_null) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_IF;
     node->data_type = true_block->data_type;
@@ -124,7 +124,8 @@ ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_
     node->right = node->next = NULL;
     node->name = NULL;
     node->value = NULL;
-    node->parameters = NULL;
+    node->parameters = (ASTNode **)malloc(sizeof(ASTNode *));
+    node->parameters[0] = var_without_null;
     node->param_count = 0;
     node->arguments = NULL;
     node->arg_count = 0;
