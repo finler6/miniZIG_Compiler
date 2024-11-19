@@ -2,11 +2,16 @@ const ifj = @import("ifj24.zig");
 
 pub fn main() void{
     var b: f64 = 5 + 1.5;    
-    var c = 5 + 1.5;    
-    var c_main = 5;     
-    var k = ifj.i2f(f) + 2.4;
-    k = c + 2;
-    ifj.write(b + c);
-    ifj.write(c);
-    ifj.write(k);
+    var c = 5 + 1.5;  
+    var c_main_main = 1;  
+    var c_main = 5.2;     
+    var k = 4 + 2.4;
+    k = c_main + 2;
+    _ = ifj.write(b + c);
+    _ = ifj.write(c);
+    _ = ifj.write(k);
+    _ = ifj.write(c_main);
+    _ = ifj.write(c_main_main);
+    _ = ifj.i2f(c_main_main);
+    _ = ifj.i2f(c_main_main);
 }

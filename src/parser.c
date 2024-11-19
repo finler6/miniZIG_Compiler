@@ -688,6 +688,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             name = string_duplicate(current_token.lexeme);
             symbol = symtable_search(&symtable, name);
 
+            current_token = get_next_token(scanner);
             // Логика для присваивания
             expect_token(TOKEN_ASSIGN, scanner);
 
@@ -1270,7 +1271,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
             // Проверяем елси найденый символ является функцией
             symbol = symtable_search(&symtable, current_token.lexeme);
 
-            if (symbol != NULL)
+            if (symbol != NULL && symbol->symbol_type == SYMBOL_FUNCTION)
             {
                 identifier_name = current_token.lexeme;
                 current_token = get_next_token(scanner);
