@@ -26,13 +26,27 @@ void remove_decimal(char* str) {
     }
 }
 
-void add_decimal(char* str) {
-    // Ищем позицию точки
-    if (strchr(str, '.') == NULL) {
-        // Если точки нет, добавляем ".0" в конец строки
-        strcat(str, ".0");
+char *add_decimal(const char *str) {
+    if (!str) {
+        return NULL;
     }
+
+    // Проверяем, есть ли уже точка в строке
+    if (strchr(str, '.') != NULL) {
+        return string_duplicate(str);  // Просто возвращаем копию
+    }
+
+    // Добавляем ".0" к числу
+    size_t new_len = strlen(str) + 3; // 2 символа для ".0" и 1 для \0
+    char *new_str = (char *)malloc(new_len);
+    if (!new_str) {
+        return NULL;
+    }
+
+    snprintf(new_str, new_len, "%s.0", str);  // Форматируем строку
+    return new_str;
 }
+
 
 char* construct_variable_name(const char* str1, const char* str2) {
     // Вычисление необходимой длины результирующей строки

@@ -1,13 +1,12 @@
 const ifj = @import("ifj24.zig");
 
-
-pub fn main() ?i32 {
-    var a : i32 = 0;
-    var b : ?i32 = null;
-    while(b) |b_beznull| 
-    {
-        a = b_beznull - 1;
-        b = b - 1;
-    }
-    return a;
+pub fn main() void{
+    var b: f64 = 5 + 1.5;    
+    var c = 5 + 1.5;    
+    var c_main = 5;     
+    var k = ifj.i2f(f) + 2.4;
+    k = c + 2;
+    ifj.write(b + c);
+    ifj.write(c);
+    ifj.write(k);
 }

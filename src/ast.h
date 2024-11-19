@@ -52,6 +52,7 @@ ASTNode* create_while_node(ASTNode* condition, ASTNode* body);
 ASTNode* create_return_node(ASTNode* value);
 ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_count);
 ASTNode* create_block_node(ASTNode* statements, DataType return_type);
+ASTNode *create_conversion_node(DataType target_type, ASTNode *operand);
 
 // Функции для освобождения памяти
 void free_ast_node(ASTNode* node);

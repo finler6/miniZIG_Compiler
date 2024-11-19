@@ -1057,94 +1057,121 @@ ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
     return create_return_node(return_value_node);
 }
 
-// Function to parse an expression and return its data type
-ASTNode *parse_expression(Scanner *scanner, char *fucntion_name)
-{
+ASTNode *convert_to_float_node(ASTNode *node) {
+    if (node->data_type != TYPE_INT) {
+        error_exit(ERR_INTERNAL, "Attempted to convert non-integer node to float.");
+    }
+
+    // Создаем новую строку с добавлением ".0"
+    char *new_value = string_duplicate(node->value);
+    if (!new_value) {
+        error_exit(ERR_INTERNAL, "Failed to allocate memory for float conversion.");
+    }
+    add_decimal(new_value);  // Модифицируем копию строки
+
+    // Создаем новый узел с новой строкой
+    ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, new_value);
+    free(new_value);  // Освобождаем временную строку
+    return conversion_node;
+}
+
+
+
+ASTNode *parse_expression(Scanner *scanner, char *function_name) {
     LOG("DEBUG_PARSER: Parsing expression. Current token: %d\n. Line and column: %d %d\n", current_token.type, current_token.line, current_token.column);
 
     // Разбор первой части выражения и создание узла AST
-    ASTNode *left_node = parse_primary_expression(scanner, fucntion_name);
+    ASTNode *left_node = parse_primary_expression(scanner, function_name);
     bool is_boolean_expression = false;
-    DataType expression_type = left_node->data_type;
 
     // Проверка наличия бинарного оператора и создание узлов для бинарных операций
     while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS ||
            current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE ||
            current_token.type == TOKEN_LESS || current_token.type == TOKEN_LESS_EQUAL ||
            current_token.type == TOKEN_GREATER || current_token.type == TOKEN_GREATER_EQUAL ||
-           current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL)
-    {
+           current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL) {
 
         NodeType op_type;
 
         // Определяем тип узла операции на основе токена
-        switch (current_token.type)
-        {
+        switch (current_token.type) {
         case TOKEN_PLUS:
-            op_type = NODE_BINARY_OPERATION;
-            break;
         case TOKEN_MINUS:
-            op_type = NODE_BINARY_OPERATION;
-            break;
         case TOKEN_MULTIPLY:
-            op_type = NODE_BINARY_OPERATION;
-            break;
         case TOKEN_DIVIDE:
             op_type = NODE_BINARY_OPERATION;
             break;
         case TOKEN_LESS:
-            op_type = NODE_BINARY_OPERATION;
-            is_boolean_expression = true;
-            break;
         case TOKEN_LESS_EQUAL:
-            op_type = NODE_BINARY_OPERATION;
-            is_boolean_expression = true;
-            break;
         case TOKEN_GREATER:
-            op_type = NODE_BINARY_OPERATION;
-            is_boolean_expression = true;
-            break;
         case TOKEN_GREATER_EQUAL:
-            op_type = NODE_BINARY_OPERATION;
-            is_boolean_expression = true;
-            break;
         case TOKEN_EQUAL:
-            op_type = NODE_BINARY_OPERATION;
-            is_boolean_expression = true;
-            break;
         case TOKEN_NOT_EQUAL:
             op_type = NODE_BINARY_OPERATION;
             is_boolean_expression = true;
             break;
         default:
             error_exit(ERR_SYNTAX, "Unknown operator type.");
-            break;
         }
 
         const char *operator_name = current_token.lexeme;
 
         current_token = get_next_token(scanner); // Пропускаем оператор
 
-        ASTNode *right_node = parse_primary_expression(scanner, fucntion_name);
+        ASTNode *right_node = parse_primary_expression(scanner, function_name);
 
-        // Создаем узел для бинарной операции
+        // Проверка типов и выполнение конверсии
+        if (left_node->data_type != right_node->data_type) {
+            if (left_node->type == NODE_IDENTIFIER && right_node->type == NODE_IDENTIFIER) {
+                // Оба операнда — переменные, ошибка
+                error_exit(ERR_SEMANTIC, "Implicit conversion between variables is not allowed.");
+            }
+
+            if (left_node->data_type == TYPE_INT && right_node->data_type == TYPE_FLOAT) {
+                if (left_node->type == NODE_LITERAL) {
+                    // Левый операнд — литерал i32, преобразуем в f64
+                    left_node = convert_to_float_node(left_node);
+                } else {
+                    error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
+                }
+            } else if (left_node->data_type == TYPE_FLOAT && right_node->data_type == TYPE_INT) {
+                if (right_node->type == NODE_LITERAL) {
+                    // Правый операнд — литерал i32, преобразуем в f64
+                    right_node = convert_to_float_node(right_node);
+                } else {
+                    error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
+                }
+            } else {
+                error_exit(ERR_SEMANTIC, "Type mismatch in binary operation.");
+            }
+        }
+
+        // Проверка на null для nullable-типов
+        if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE) &&
+            left_node->value == NULL) {
+            error_exit(ERR_SEMANTIC, "Nullable variable is null.");
+        }
+        if ((right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) &&
+            right_node->value == NULL) {
+            error_exit(ERR_SEMANTIC, "Nullable variable is null.");
+        }
+
+        // Создаём узел для бинарной операции
         left_node = create_binary_operation_node(operator_name, left_node, right_node);
 
         // Обновляем тип выражения
-        if (is_boolean_expression)
-        {
-            left_node->data_type = TYPE_BOOL;
-        }
-        else if (left_node->left->data_type != right_node->data_type)
-        {
-            if (!type_convertion(left_node))
-                error_exit(ERR_SEMANTIC, "Conflicting types of expression, line: %d, column: %d", current_token.line, current_token.column);
+        if (is_boolean_expression) {
+            left_node->data_type = TYPE_BOOL; // Логические операции возвращают bool
+        } else {
+            left_node->data_type = left_node->left->data_type; // Обновляем тип данных выражения
         }
     }
 
     // Возвращаем узел AST итогового выражения
     return left_node;
 }
+
+
 
 // Parses a primary expression (literal, identifier, or parenthesized expression)
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
@@ -1575,7 +1602,7 @@ static void expect_token(TokenType expected_type, Scanner *scanner)
     LOG("DEBUG_PARSER: Expected token: %d, got token: %d\nLine and column: %d %d\n", expected_type, current_token.type, current_token.line, current_token.column);
     if (current_token.type != expected_type)
     {
-        error_exit(ERR_SYNTAX, "Unexpected token.");
+        error_exit(ERR_SYNTAX, "Unexpected token. Expected: %d, got: %d\nLine and column: %d %d\n", expected_type, current_token.type, current_token.line, current_token.column);
     }
     current_token = get_next_token(scanner);
 }
