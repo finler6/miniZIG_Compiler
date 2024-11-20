@@ -48,6 +48,9 @@ int main(int argc, char *argv[]) {
     // Завершаем работу генератора кода и закрываем выходной файл
     codegen_finalize();
 
+    // удалем префиксы
+    //remove_prefixes_in_file_inplace(argv[2]);
+
     // Освобождаем ресурсы сканера
     scanner_free(&scanner);
 

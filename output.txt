@@ -2,7 +2,6 @@
 LABEL main
 CREATEFRAME
 PUSHFRAME
-DEFVAR LF@%retval
 DEFVAR LF@a_main
 PUSHS int@2
 POPS LF@a_main
@@ -10,29 +9,21 @@ DEFVAR LF@b_main
 PUSHS LF@a_main
 CALL foo
 POPS LF@b_main
-PUSHS LF@a_main
-POPS LF@a_main
 WRITE LF@a_main
-PUSHS LF@b_main
-POPS LF@b_main
 WRITE LF@b_main
-RETURN
 POPFRAME
-RETURN
+EXIT int@0
 LABEL foo
 CREATEFRAME
 PUSHFRAME
 DEFVAR LF@j_foo
 POPS LF@j_foo
-DEFVAR LF@%retval
 DEFVAR LF@a_foo
 PUSHS LF@j_foo
 PUSHS int@2
 MULS
 POPS LF@a_foo
 PUSHS LF@a_foo
-POPS LF@%retval
-RETURN
 POPFRAME
 RETURN
 CALL main

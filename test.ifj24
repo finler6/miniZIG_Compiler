@@ -22,4 +22,12 @@ pub fn main() void {
     } else { // a == null
         ifj.write("Faktorial pro null nelze spocitat\n");
     }
+    //var a = ?i32 = 0;
+    //if (a != null) {
+    //const a_beznull = a;
+    //a = a + 1;
+    //}
+
+     //if (a) |a_beznull| {
+     //}
 }

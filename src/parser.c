@@ -990,7 +990,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         {
             error_exit(ERR_SEMANTIC, "Variable is already defined");
         }
-        variable_declaration_node = create_variable_declaration_node(current_token.lexeme, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
+        variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         // Создаем новый символ и добавляем его в таблицу символов
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
         if (new_var == NULL)
@@ -1075,7 +1075,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         {
             error_exit(ERR_SEMANTIC, "Variable is already defined");
         }
-        variable_declaration_node = create_variable_declaration_node(current_token.lexeme, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
+        variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         // Создаем новый символ и добавляем его в таблицу символов
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
         if (new_var == NULL)
@@ -1234,7 +1234,7 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
             }
             else
             {
-                error_exit(ERR_SEMANTIC, "Type mismatch in binary operation.");
+                error_exit(ERR_SEMANTIC, "Type mismatch in binary operation: %s %s %s.", left_node->value, operator_name, right_node->name);
             }
         }
 

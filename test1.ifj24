@@ -1,0 +1,11 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    var input: ?[]u8 = ifj.readstr();
+    var a: i32 = 5;
+    if (a > 4) {
+        ifj.write(input);
+    } else {
+        ifj.write("No input received\n");
+    }
+}
