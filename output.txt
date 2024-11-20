@@ -1,61 +1,39 @@
 .IFJcode24
+LABEL main
 CREATEFRAME
 PUSHFRAME
-LABEL main
 DEFVAR LF@%retval
-WRITE string@Zadejte\032cislo\032pro\032vypocet\032faktorialu\010
 DEFVAR LF@a_main
-READ LF@%retval int
-MOVE LF@a_main LF@%retval
+PUSHS int@2
+POPS LF@a_main
+DEFVAR LF@b_main
 PUSHS LF@a_main
-PUSHS bool@true
-JUMPIFNEQS $else_0
-DEFVAR LF@val
-PUSHS LF@val_main
-PUSHS int@0
-LTS
-PUSHS bool@true
-JUMPIFNEQS $else_1
-WRITE string@Faktorial\032
-WRITE LF@val_main
-WRITE string@\032nelze\032spocitat\010
-JUMP $endif_1
-LABEL $else_1
-DEFVAR LF@d_main
-PUSHS LF@val_main
-CALL ifj.i2f
-POPS LF@d_main
-DEFVAR LF@vysl_main
-PUSHS float@0x1.0000000000000p+0
-POPS LF@vysl_main
-LABEL $while_start_2
-PUSHS LF@d_main
-PUSHS float@0x0.0000000000000p+0
-GTS
-PUSHS bool@true
-JUMPIFNEQS $while_end_2
-PUSHS LF@vysl_main
-PUSHS LF@d_main
+CALL foo
+POPS LF@b_main
+PUSHS LF@a_main
+POPS LF@a_main
+WRITE LF@a_main
+PUSHS LF@b_main
+POPS LF@b_main
+WRITE LF@b_main
+RETURN
+POPFRAME
+RETURN
+LABEL foo
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@j_foo
+POPS LF@j_foo
+DEFVAR LF@%retval
+DEFVAR LF@a_foo
+PUSHS LF@j_foo
+PUSHS int@2
 MULS
-POPS LF@vysl_main
-PUSHS LF@d_main
-PUSHS float@0x1.0000000000000p+0
-SUBS
-POPS LF@d_main
-JUMP $while_start_2
-LABEL $while_end_2
-WRITE string@Vysledek:\032
-WRITE LF@vysl_main
-WRITE string@\032=\032
-DEFVAR LF@vysl_i32_main
-PUSHS LF@vysl_main
-CALL ifj.f2i
-POPS LF@vysl_i32_main
-WRITE LF@vysl_i32_main
-WRITE string@\010
-LABEL $endif_1
-JUMP $endif_0
-LABEL $else_0
-WRITE string@Faktorial\032pro\032null\032nelze\032spocitat\010
-LABEL $endif_0
+POPS LF@a_foo
+PUSHS LF@a_foo
+POPS LF@%retval
+RETURN
+POPFRAME
+RETURN
+CALL main
 EXIT int@0
