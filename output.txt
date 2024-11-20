@@ -3,68 +3,59 @@ CREATEFRAME
 PUSHFRAME
 LABEL main
 DEFVAR LF@%retval
-DEFVAR LF@b_main
-PUSHS float@0x1.4000000000000p+2
-PUSHS float@0x1.8000000000000p+0
-ADDS
-POPS LF@b_main
-DEFVAR LF@c_main
-PUSHS float@0x1.4000000000000p+2
-PUSHS float@0x1.8000000000000p+0
-ADDS
-POPS LF@c_main
-DEFVAR LF@c_main_main_main
-PUSHS int@1
-POPS LF@c_main_main_main
-DEFVAR LF@c_main_main
-PUSHS float@0x1.4cccccccccccdp+2
-POPS LF@c_main_main
-DEFVAR LF@k_main
-PUSHS float@0x1.0000000000000p+2
-PUSHS float@0x1.3333333333333p+1
-ADDS
-POPS LF@k_main
-PUSHS LF@c_main_main
-PUSHS float@0x1.0000000000000p+1
-ADDS
-POPS LF@k_main
-PUSHS int@1
-PUSHS int@0
-GTS
+WRITE string@Zadejte\032cislo\032pro\032vypocet\032faktorialu\010
+DEFVAR LF@a_main
+READ LF@%retval int
+MOVE LF@a_main LF@%retval
+PUSHS LF@a_main
 PUSHS bool@true
 JUMPIFNEQS $else_0
-DEFVAR LF@c_main_main_main_main
-PUSHS int@5
-POPS LF@c_main_main_main_main
-WRITE LF@c_main_main_main_main
-PUSHS int@2
+DEFVAR LF@val
+PUSHS LF@val_main
 PUSHS int@0
-GTS
+LTS
 PUSHS bool@true
 JUMPIFNEQS $else_1
-PUSHS float@0x0.0000000000000p+0
-POPS LF@k_main
+WRITE string@Faktorial\032
+WRITE LF@val_main
+WRITE string@\032nelze\032spocitat\010
 JUMP $endif_1
 LABEL $else_1
+DEFVAR LF@d_main
+PUSHS LF@val_main
+CALL ifj.i2f
+POPS LF@d_main
+DEFVAR LF@vysl_main
 PUSHS float@0x1.0000000000000p+0
-POPS LF@k_main
+POPS LF@vysl_main
+LABEL $while_start_2
+PUSHS LF@d_main
+PUSHS float@0x0.0000000000000p+0
+GTS
+PUSHS bool@true
+JUMPIFNEQS $while_end_2
+PUSHS LF@vysl_main
+PUSHS LF@d_main
+MULS
+POPS LF@vysl_main
+PUSHS LF@d_main
+PUSHS float@0x1.0000000000000p+0
+SUBS
+POPS LF@d_main
+JUMP $while_start_2
+LABEL $while_end_2
+WRITE string@Vysledek:\032
+WRITE LF@vysl_main
+WRITE string@\032=\032
+DEFVAR LF@vysl_i32_main
+PUSHS LF@vysl_main
+CALL ifj.f2i
+POPS LF@vysl_i32_main
+WRITE LF@vysl_i32_main
+WRITE string@\010
 LABEL $endif_1
 JUMP $endif_0
 LABEL $else_0
+WRITE string@Faktorial\032pro\032null\032nelze\032spocitat\010
 LABEL $endif_0
-POPS LF@_
-WRITE LF@c_main
-POPS LF@_
-WRITE LF@k_main
-POPS LF@_
-WRITE LF@c_main_main
-POPS LF@_
-WRITE LF@c_main_main_main
-POPS LF@_
-PUSHS LF@c_main_main_main
-CALL ifj.i2f
-POPS LF@_
-PUSHS LF@c_main_main_main
-CALL ifj.i2f
-POPS LF@_
 EXIT int@0

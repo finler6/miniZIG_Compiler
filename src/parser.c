@@ -45,16 +45,16 @@ static Token current_token;
 static SymTable symtable; // Global symbol table for the program
 
 BuiltinFunctionInfo builtin_functions[] = {
-    {"readstr", TYPE_U8, {}, 0},
-    {"readi32", TYPE_INT, {}, 0},
-    {"readf64", TYPE_FLOAT, {}, 0},
+    {"readstr", TYPE_U8_NULLABLE, {}, 0},
+    {"readi32", TYPE_INT_NULLABLE, {}, 0},
+    {"readf64", TYPE_FLOAT_NULLABLE, {}, 0},
     {"write", TYPE_VOID, {TYPE_ALL}, 1},
     {"i2f", TYPE_FLOAT, {TYPE_INT}, 1},
     {"f2i", TYPE_INT, {TYPE_FLOAT}, 1},
     {"string", TYPE_U8, {TYPE_U8}, 1},
     {"length", TYPE_INT, {TYPE_U8}, 1},
     {"concat", TYPE_U8, {TYPE_U8, TYPE_U8}, 2},
-    {"substring", TYPE_U8, {TYPE_U8, TYPE_INT, TYPE_INT}, 3},
+    {"substring", TYPE_U8_NULLABLE, {TYPE_U8, TYPE_INT, TYPE_INT}, 3},
     {"strcmp", TYPE_INT, {TYPE_U8, TYPE_U8}, 2},
     {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
     {"chr", TYPE_U8, {TYPE_INT}, 1}
@@ -1316,7 +1316,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 
             current_token = get_next_token(scanner);
             expect_token(TOKEN_LEFT_PAREN, scanner);
-            ASTNode **arguments;
+            ASTNode **arguments = NULL;
             int arg_count = 0;
             int builtin_index = get_builtin_function_index(builtin_function_name);
             int params_count = builtin_functions[builtin_index].param_count;

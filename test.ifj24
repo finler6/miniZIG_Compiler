@@ -1,27 +1,25 @@
+// Program 1: Vypocet faktorialu (iterativne)
 const ifj = @import("ifj24.zig");
-
-pub fn main() void{
-    var b: f64 = 5 + 1.5;    
-    var c = 5 + 1.5;  
-    var c_main_main = 1;  
-    var c_main = 5.2;     
-    var k = 4 + 2.4;
-    k = c_main + 2;
-    if (1 > 0) {
-        var c_main_main_main = 5;
-        ifj.write(c_main_main_main);
-        if (2 > 0) {
-            k = 0.0;
+// Hlavni telo programu - funkce main
+pub fn main() void {
+    ifj.write("Zadejte cislo pro vypocet faktorialu\n");
+    const a = ifj.readi32();
+    if (a) |val| {
+        if (val < 0) {
+            ifj.write("Faktorial "); ifj.write(val);
+            ifj.write(" nelze spocitat\n");
+        } else {
+            var d: f64 = ifj.i2f(val);
+            var vysl: f64 = 1.0;
+            while (d > 0) {
+                vysl = vysl * d;
+                d = d - 1.0;
+            }
+            ifj.write("Vysledek: "); ifj.write(vysl); ifj.write(" = ");
+            const vysl_i32 = ifj.f2i(vysl);
+            ifj.write(vysl_i32); ifj.write("\n");
         }
-        else {
-            k = 1.0;
-        }
+    } else { // a == null
+        ifj.write("Faktorial pro null nelze spocitat\n");
     }
-    _ = ifj.write(b + c);
-    _ = ifj.write(c);
-    _ = ifj.write(k);
-    _ = ifj.write(c_main);
-    _ = ifj.write(c_main_main);
-    _ = ifj.i2f(c_main_main);
-    _ = ifj.i2f(c_main_main);
 }
