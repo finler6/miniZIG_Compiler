@@ -903,6 +903,8 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     ASTNode *condition_node = parse_expression(scanner, function_name);
     ASTNode *variable_declaration_node;
 
+    bool is_pipe = false;
+
     // Семантическая проверка на тип bool для условия
     if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
@@ -945,15 +947,19 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 
         current_token = get_next_token(scanner);
         expect_token(TOKEN_PIPE, scanner);
+
+        is_pipe = true;
     }
 
     // Парсим тело 'if'
     ASTNode *true_block = parse_block(scanner, function_name);
 
-    ASTNode *tmp = true_block->body;
-    true_block->body = variable_declaration_node;
-    variable_declaration_node->next = tmp;
-
+    if (is_pipe)
+    {
+        ASTNode *tmp = true_block->body;
+        true_block->body = variable_declaration_node;
+        variable_declaration_node->next = tmp;
+    }
     // Парсим необязательный блок 'else', если он есть
     ASTNode *false_block = NULL;
     if (current_token.type == TOKEN_ELSE)
@@ -983,6 +989,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
     // Парсим условие
     ASTNode *condition_node = parse_expression(scanner, function_name);
     ASTNode *variable_declaration_node;
+    bool is_pipe = false;
     // Семантическая проверка на тип bool для условия
     if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
@@ -991,7 +998,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
 
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
-        if (current_token.type == TOKEN_PIPE)
+    if (current_token.type == TOKEN_PIPE)
     {
         current_token = get_next_token(scanner);
         if (current_token.type != TOKEN_IDENTIFIER)
@@ -1025,15 +1032,18 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
 
         current_token = get_next_token(scanner);
         expect_token(TOKEN_PIPE, scanner);
+        is_pipe = true;
     }
 
     // Парсим тело 'while'
     ASTNode *body_node = parse_block(scanner, function_name);
-    
-    ASTNode *tmp = body_node->body;
-    body_node->body = variable_declaration_node;
-    variable_declaration_node->next = tmp;
 
+    if (is_pipe)
+    {
+        ASTNode *tmp = body_node->body;
+        body_node->body = variable_declaration_node;
+        variable_declaration_node->next = tmp;
+    }
     // Создаем узел 'while' и возвращаем его
     return create_while_node(condition_node, body_node);
 }
@@ -1058,27 +1068,29 @@ ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
     return create_return_node(return_value_node);
 }
 
-ASTNode *convert_to_float_node(ASTNode *node) {
-    if (node->data_type != TYPE_INT) {
+ASTNode *convert_to_float_node(ASTNode *node)
+{
+    if (node->data_type != TYPE_INT)
+    {
         error_exit(ERR_INTERNAL, "Attempted to convert non-integer node to float.");
     }
 
     // Создаем новую строку с добавлением ".0"
     char *new_value = string_duplicate(node->value);
-    if (!new_value) {
+    if (!new_value)
+    {
         error_exit(ERR_INTERNAL, "Failed to allocate memory for float conversion.");
     }
-    add_decimal(new_value);  // Модифицируем копию строки
+    add_decimal(new_value); // Модифицируем копию строки
 
     // Создаем новый узел с новой строкой
     ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, new_value);
-    free(new_value);  // Освобождаем временную строку
+    free(new_value); // Освобождаем временную строку
     return conversion_node;
 }
 
-
-
-ASTNode *parse_expression(Scanner *scanner, char *function_name) {
+ASTNode *parse_expression(Scanner *scanner, char *function_name)
+{
     LOG("DEBUG_PARSER: Parsing expression. Current token: %d\n. Line and column: %d %d\n", current_token.type, current_token.line, current_token.column);
 
     // Разбор первой части выражения и создание узла AST
@@ -1090,12 +1102,14 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name) {
            current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE ||
            current_token.type == TOKEN_LESS || current_token.type == TOKEN_LESS_EQUAL ||
            current_token.type == TOKEN_GREATER || current_token.type == TOKEN_GREATER_EQUAL ||
-           current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL) {
+           current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL)
+    {
 
         NodeType op_type;
 
         // Определяем тип узла операции на основе токена
-        switch (current_token.type) {
+        switch (current_token.type)
+        {
         case TOKEN_PLUS:
         case TOKEN_MINUS:
         case TOKEN_MULTIPLY:
@@ -1122,38 +1136,53 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name) {
         ASTNode *right_node = parse_primary_expression(scanner, function_name);
 
         // Проверка типов и выполнение конверсии
-        if (left_node->data_type != right_node->data_type) {
-            if (left_node->type == NODE_IDENTIFIER && right_node->type == NODE_IDENTIFIER) {
+        if (left_node->data_type != right_node->data_type)
+        {
+            if (left_node->type == NODE_IDENTIFIER && right_node->type == NODE_IDENTIFIER)
+            {
                 // Оба операнда — переменные, ошибка
                 error_exit(ERR_SEMANTIC, "Implicit conversion between variables is not allowed.");
             }
 
-            if (left_node->data_type == TYPE_INT && right_node->data_type == TYPE_FLOAT) {
-                if (left_node->type == NODE_LITERAL) {
+            if (left_node->data_type == TYPE_INT && right_node->data_type == TYPE_FLOAT)
+            {
+                if (left_node->type == NODE_LITERAL)
+                {
                     // Левый операнд — литерал i32, преобразуем в f64
                     left_node = convert_to_float_node(left_node);
-                } else {
+                }
+                else
+                {
                     error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
                 }
-            } else if (left_node->data_type == TYPE_FLOAT && right_node->data_type == TYPE_INT) {
-                if (right_node->type == NODE_LITERAL) {
+            }
+            else if (left_node->data_type == TYPE_FLOAT && right_node->data_type == TYPE_INT)
+            {
+                if (right_node->type == NODE_LITERAL)
+                {
                     // Правый операнд — литерал i32, преобразуем в f64
                     right_node = convert_to_float_node(right_node);
-                } else {
+                }
+                else
+                {
                     error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
                 }
-            } else {
+            }
+            else
+            {
                 error_exit(ERR_SEMANTIC, "Type mismatch in binary operation.");
             }
         }
 
         // Проверка на null для nullable-типов
         if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE) &&
-            left_node->value == NULL) {
+            left_node->value == NULL)
+        {
             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
         }
         if ((right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) &&
-            right_node->value == NULL) {
+            right_node->value == NULL)
+        {
             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
         }
 
@@ -1161,9 +1190,12 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name) {
         left_node = create_binary_operation_node(operator_name, left_node, right_node);
 
         // Обновляем тип выражения
-        if (is_boolean_expression) {
+        if (is_boolean_expression)
+        {
             left_node->data_type = TYPE_BOOL; // Логические операции возвращают bool
-        } else {
+        }
+        else
+        {
             left_node->data_type = left_node->left->data_type; // Обновляем тип данных выражения
         }
     }
@@ -1171,8 +1203,6 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name) {
     // Возвращаем узел AST итогового выражения
     return left_node;
 }
-
-
 
 // Parses a primary expression (literal, identifier, or parenthesized expression)
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)

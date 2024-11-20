@@ -28,6 +28,30 @@ PUSHS LF@c_main_main
 PUSHS float@0x1.0000000000000p+1
 ADDS
 POPS LF@k_main
+PUSHS int@1
+PUSHS int@0
+GTS
+PUSHS bool@true
+JUMPIFNEQS $else_0
+DEFVAR LF@c_main_main_main_main
+PUSHS int@5
+POPS LF@c_main_main_main_main
+WRITE LF@c_main_main_main_main
+PUSHS int@2
+PUSHS int@0
+GTS
+PUSHS bool@true
+JUMPIFNEQS $else_1
+PUSHS float@0x0.0000000000000p+0
+POPS LF@k_main
+JUMP $endif_1
+LABEL $else_1
+PUSHS float@0x1.0000000000000p+0
+POPS LF@k_main
+LABEL $endif_1
+JUMP $endif_0
+LABEL $else_0
+LABEL $endif_0
 POPS LF@_
 WRITE LF@c_main
 POPS LF@_
