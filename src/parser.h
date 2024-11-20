@@ -37,6 +37,7 @@ extern BuiltinFunctionInfo builtin_functions[];
 
 // Объявляем функцию
 bool is_builtin_function(const char *identifier, Scanner *scanner);
+ASTNode *convert_to_float_node(ASTNode *node);
 
 size_t get_num_builtin_functions();
 

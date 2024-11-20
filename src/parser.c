@@ -27,6 +27,7 @@ static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_import(Scanner *scanner);
 static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
 static ASTNode *parse_binary_operation(Scanner *scanner, ASTNode *left_node, char *function_name);
+static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
 DataType parse_type(Scanner *scanner);        // Объявляем функцию заранее
 DataType parse_return_type(Scanner *scanner); // Объявляем функцию заранее
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
@@ -695,10 +696,21 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             // Парсим выражение для присваивания
             ASTNode *value_node = parse_expression(scanner, function_name);
 
-            if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
-            {
-                error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
+            // Если переменная ожидает float, а выражение int, выполняем неявную конверсию
+            if (symbol->data_type != TYPE_ALL) {
+                if (is_nullable(symbol->data_type) && value_node->data_type == TYPE_NULL) {
+                    // Допускаем присваивание null, если переменная поддерживает nullable-тип.
+                } else if (!is_subtype_nullable(symbol->data_type, value_node->data_type)) {
+                    error_exit(ERR_SEMANTIC_TYPE, "Cannot assign null to non-nullable variable %s.", name);
+                }
             }
+
+            // Проверка и выполнение неявной конверсии
+                if (symbol->data_type == TYPE_FLOAT && value_node->data_type == TYPE_INT) {
+                    value_node = convert_to_float_node(value_node);
+            }
+
+
 
             // Ожидаем точку с запятой в конце оператора
             // expect_token(TOKEN_SEMICOLON, scanner);
@@ -718,7 +730,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         }
         if (symbol->is_constant)
         {
-            error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
+            error_exit(ERR_SEMANTIC_OTHER, "Constant variable can't be modified");
         }
         current_token = get_next_token(scanner);
 
@@ -728,10 +740,8 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         // Парсим выражение для присваивания
         ASTNode *value_node = parse_expression(scanner, function_name);
 
-        if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID && !is_subtype_nullable(symbol->data_type, value_node->data_type))
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
-        }
+        // Рекурсивная проверка и приведение типов
+        value_node = check_and_convert_expression(value_node, symbol->data_type, name);
 
         // Ожидаем точку с запятой в конце оператора
         // expect_token(TOKEN_SEMICOLON, scanner);
@@ -808,6 +818,60 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
          return create_assignment_node(name, value_node);
      }*/
 }
+ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name)
+{
+    if (!node) return NULL;
+
+    // Если узел — бинарная операция, рекурсивно проверяем подузлы
+    if (node->type == NODE_BINARY_OPERATION)
+    {
+        node->left = check_and_convert_expression(node->left, expected_type, variable_name);
+        node->right = check_and_convert_expression(node->right, expected_type, variable_name);
+
+        // Обновляем тип результата операции
+        if (node->left->data_type == TYPE_FLOAT || node->right->data_type == TYPE_FLOAT)
+        {
+            node->data_type = TYPE_FLOAT;
+        }
+        else if (node->left->data_type == TYPE_INT && node->right->data_type == TYPE_INT)
+        {
+            node->data_type = TYPE_INT;
+        }
+        else
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in binary operation for variable %s.", variable_name);
+        }
+    }
+    else if (node->type == NODE_LITERAL || node->type == NODE_IDENTIFIER)
+    {
+        // Проверяем, требуется ли преобразование
+        if (node->data_type == TYPE_INT && expected_type == TYPE_FLOAT)
+        {
+            LOG("DEBUG: Converting int to float for variable %s, name of value node: %s\n", variable_name, node->value);
+            node = convert_to_float_node(node);
+        }
+        else if (node->data_type != expected_type)
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "1 Type mismatch in assignment to variable %s.", variable_name);
+        }
+    }
+    else
+    {
+        // Для остальных типов узлов (вызовы функций и т.д.)
+        if (node->data_type == TYPE_INT && expected_type == TYPE_FLOAT)
+        {
+            LOG("DEBUG: Converting int to float for variable %s in function call\n", variable_name);
+            node = convert_to_float_node(node);
+        }
+        else if (node->data_type != expected_type)
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "2 Type mismatch in assignment to variable %s.", variable_name);
+        }
+    }
+
+    return node;
+}
+
 
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 {
@@ -1391,69 +1455,6 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
         error_exit(ERR_SYNTAX, "Expected literal, identifier, or '(' for expression.");
         return NULL; // На случай ошибки, хотя сюда выполнение не дойдет
     }
-}
-
-// Parses a binary operation and returns the resulting type
-ASTNode *parse_binary_operation(Scanner *scanner, ASTNode *left_node, char *function_name)
-{
-    LOG("DEBUG_PARSER: Parsing binary operation. Current token: %s\n Line and column: %d %d\n", current_token.lexeme, current_token.line, current_token.column);
-
-    // Сохраняем тип оператора и создаем узел операции
-    TokenType operator_type = current_token.type;
-    NodeType op_node_type;
-
-    switch (operator_type)
-    {
-    case TOKEN_PLUS:
-    case TOKEN_MINUS:
-    case TOKEN_MULTIPLY:
-    case TOKEN_DIVIDE:
-    case TOKEN_LESS:
-    case TOKEN_LESS_EQUAL:
-    case TOKEN_GREATER:
-    case TOKEN_GREATER_EQUAL:
-    case TOKEN_EQUAL:
-    case TOKEN_NOT_EQUAL:
-        op_node_type = NODE_BINARY_OPERATION;
-        break;
-    default:
-        error_exit(ERR_SYNTAX, "Unknown operator type.");
-    }
-
-    current_token = get_next_token(scanner); // Переходим к правой части выражения
-
-    // Парсим правую часть выражения
-    ASTNode *right_node = parse_primary_expression(scanner, function_name);
-
-    // Проверка совместимости типов для арифметических операций
-    if ((operator_type == TOKEN_PLUS || operator_type == TOKEN_MINUS ||
-         operator_type == TOKEN_MULTIPLY || operator_type == TOKEN_DIVIDE) &&
-        (right_node->data_type != TYPE_INT && right_node->data_type != TYPE_FLOAT))
-    {
-
-        error_exit(ERR_SEMANTIC, "Invalid operand type for arithmetic operation, line: %d, column: %d", current_token.line, current_token.column);
-    }
-
-    // Проверка и установка типа данных для логических операций
-    if (operator_type == TOKEN_LESS || operator_type == TOKEN_LESS_EQUAL ||
-        operator_type == TOKEN_GREATER || operator_type == TOKEN_GREATER_EQUAL ||
-        operator_type == TOKEN_EQUAL || operator_type == TOKEN_NOT_EQUAL)
-    {
-
-        left_node->data_type = TYPE_BOOL; // Логические операции возвращают тип BOOL
-    }
-    else
-    {
-        // Устанавливаем тип данных для арифметических операций
-        if (left_node->data_type != right_node->data_type)
-        {
-            error_exit(ERR_SEMANTIC, "Type mismatch in binary operation, line: %d, column: %d", current_token.line, current_token.column);
-        }
-        left_node->data_type = right_node->data_type;
-    }
-
-    // Создаем и возвращаем узел бинарной операции
-    return create_binary_operation_node(NULL, left_node, right_node);
 }
 
 // Function to parse the import line at the beginning of the program

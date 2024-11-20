@@ -671,7 +671,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         break;
     default:
         free(token.lexeme);
-        error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c", scanner->current_char);
+        error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c, ASCII: %d", scanner->current_char, scanner->current_char);
         break;
     }
 

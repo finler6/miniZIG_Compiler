@@ -72,7 +72,7 @@ void insert_underscore(SymTable *symtable)
     Symbol *underscore = (Symbol *)malloc(sizeof(Symbol));
         underscore->name = "_";
         underscore->symbol_type = SYMBOL_VARIABLE;
-        underscore->data_type = TYPE_VOID;
+        underscore->data_type = TYPE_ALL;
         underscore->is_defined = true;
         underscore->is_used = true;
         underscore->is_constant = false;
