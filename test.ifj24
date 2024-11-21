@@ -1,6 +1,15 @@
 // Program 1: Vypocet faktorialu (iterativne)
 const ifj = @import("ifj24.zig");
-// Hlavni telo programu - funkce main
+
+pub fn factorial(n: i32) i32 {
+    if (n == 0) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+    return 0;
+}
+
 pub fn main() void {
     ifj.write("Zadejte cislo pro vypocet faktorialu\n");
     const a = ifj.readi32();
@@ -18,16 +27,21 @@ pub fn main() void {
             ifj.write("Vysledek: "); ifj.write(vysl); ifj.write(" = ");
             const vysl_i32 = ifj.f2i(vysl);
             ifj.write(vysl_i32); ifj.write("\n");
-        }
-    } else { // a == null
-        ifj.write("Faktorial pro null nelze spocitat\n");
-    }
-    //var a = ?i32 = 0;
-    //if (a != null) {
-    //const a_beznull = a;
-    //a = a + 1;
-    //}
+    ifj.write("Enter a number to calculate factorial:\n");
+    const input = ifj.readi32();
 
-     //if (a) |a_beznull| {
-     //}
+    if (input) |val| {
+        if (val < 0) {
+            ifj.write("Factorial of negative numbers is not defined\n");
+        } else {
+            const result = factorial(val);
+            ifj.write("Factorial of ");
+            ifj.write(val);
+            ifj.write(" is ");
+            ifj.write(result);
+            ifj.write("\n");
+        }
+    } else {
+        ifj.write("Factorial for null is not defined\n");
+    }
 }

@@ -35,7 +35,7 @@ bool type_convertion(ASTNode *main_node);
 bool is_subtype_nullable(DataType type_nullable, DataType type);
 bool is_nullable(DataType type_nullable);
 DataType detach_nullable(DataType type_nullable);
-void parse_functions_declaration(Scanner *scanner);
+void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
 void scope_check_identifiers_in_tree(ASTNode *root);
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
 int get_builtin_function_index(const char *function_name);
@@ -130,31 +130,32 @@ ASTNode *parse_program(Scanner *scanner)
 
     // Создаем узел программы
     ASTNode *program_node = create_program_node();
-    ASTNode *current_function = NULL; // Указатель на текущую функцию
-
+    ASTNode current_function_copy; // Указатель на текущую функцию
+    ASTNode *current_function_carette = NULL;
     // Парсим обязательное выражение импорта и добавляем его в дерево
     ASTNode *import_node = parse_import(scanner);
     program_node->next = import_node;
     load_builtin_functions(&symtable, import_node);
 
     // Парсим только функции для их декларации
-    parse_functions_declaration(scanner);
+    parse_functions_declaration(scanner, program_node);
 
     // Продолжаем парсить остальную часть программы
+
+    current_function_copy = *program_node->body;
+    current_function_carette = program_node->body;
+
     while (current_token.type != TOKEN_EOF)
     {
         if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
-            ASTNode *function_node = parse_function(scanner, true);
-            if (program_node->body == NULL)
-            {
-                program_node->body = function_node; // Устанавливаем первую функцию
-            }
-            else
-            {
-                current_function->next = function_node; // Присоединяем к текущему
-            }
-            current_function = function_node; // Обновляем указатель на текущую функцию
+            *current_function_carette = *(parse_function(scanner, true));
+
+            current_function_carette->next = current_function_copy.next;
+            current_function_carette = current_function_copy.next;
+            if (current_function_copy.next != NULL)
+                current_function_copy = *current_function_copy.next;
+            // Обновляем указатель на текущую функцию
         }
         else
         {
@@ -256,25 +257,33 @@ bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
     return false; // Совпадение не найдено
 }
 
-void parse_functions_declaration(Scanner *scanner)
+void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
 {
     // Сохраняем состояние сканера для дальнейшего возврата после декларации функций
     Scanner saved_scanner_state = *scanner;
     FILE saved_input = *scanner->input;
     Token saved_token = current_token;
 
+    ASTNode *current_function = NULL;
     // Парсим функции
     while (current_token.type != TOKEN_EOF)
     {
         if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
-            // Парсим функцию без создания узла
-            parse_function(scanner, false);
+            ASTNode *function_node = parse_function(scanner, false);
+            if (program_node->body == NULL)
+            {
+                program_node->body = function_node; // Устанавливаем первую функцию
+            }
+            else
+            {
+                current_function->next = function_node; // Присоединяем к текущему
+            }
+            current_function = function_node; // Обновляем указатель на текущую функцию
         }
         else
         {
-            printf("current_token.type: %d\n", current_token.type);
-            error_exit(ERR_SYNTAX, "Expected function definition in declaration. Line: %d, Column: %d", current_token.line, current_token.column);
+            error_exit(ERR_SYNTAX, "Expected function definition. Line: %d, Column: %d", current_token.line, current_token.column);
         }
     }
 
@@ -309,25 +318,25 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     // Парсим параметры функции
     ASTNode **parameters = NULL;
     int param_count = 0;
-    if (is_definition)
+    // if (!is_definition)
+    //{
+    if (current_token.type != TOKEN_RIGHT_PAREN)
     {
-        if (current_token.type != TOKEN_RIGHT_PAREN)
+        parameters = (ASTNode **)malloc(sizeof(ASTNode *));
+        parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
+        while (current_token.type == TOKEN_COMMA)
         {
-            parameters = (ASTNode **)malloc(sizeof(ASTNode *));
-            parameters[param_count++] = parse_parameter(scanner, function_name);
-            while (current_token.type == TOKEN_COMMA)
-            {
-                current_token = get_next_token(scanner);
-                parameters = (ASTNode **)realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
-                parameters[param_count++] = parse_parameter(scanner, function_name);
-            }
+            current_token = get_next_token(scanner);
+            parameters = (ASTNode **)realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
+            parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
         }
     }
-    else
+    //}
+    /*else
     {
         while (current_token.type != TOKEN_RIGHT_PAREN)
             current_token = get_next_token(scanner);
-    }
+    }**/
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
     // Ожидаем возвращаемый тип
@@ -339,8 +348,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         // Создаем узел функции
         ASTNode *body_node = parse_block(scanner, function_name);
         function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
-        Symbol *symbol = symtable_search(&symtable, function_name);
-        symbol->declaration_node = function_node;
+        // Symbol *symbol = symtable_search(&symtable, function_name);
 
         int block_layer = 0;
         check_return_types(function_node->body->body, return_type, &block_layer);
@@ -368,6 +376,8 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         }
         LOG("!!!DEBUG_PARSER: Brace count passed\n");
         // Добавляем функцию в таблицу символов
+        function_node = create_function_node(function_name, return_type, parameters, param_count, NULL);
+
         char *function_name_symtable = string_duplicate(function_name);
         Symbol *function_symbol = symtable_search(&symtable, function_name_symtable);
         if (function_symbol != NULL)
@@ -392,6 +402,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         new_function->parent_function = string_duplicate(function_name);
         new_function->data_type = return_type;
         new_function->is_defined = true;
+        new_function->declaration_node = function_node;
         new_function->is_used = strcmp(new_function->name, "main") == 0 ? true : false;
         new_function->next = NULL;
 
@@ -402,7 +413,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     return function_node;
 }
 
-ASTNode *parse_parameter(Scanner *scanner, char *function_name)
+ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition)
 {
     LOG("DEBUG_PARSER: Parsing parameter\n");
 
@@ -430,7 +441,7 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name)
     // Проверяем существование параметра в таблице символов
     LOG("DEBUG_PARSER: param_name before symtable_search: %s\n", param_name);
     Symbol *param_symbol = symtable_search(&symtable, param_name);
-    if (param_symbol != NULL)
+    if (param_symbol != NULL && is_definition)
     {
         free(param_name);
         error_exit(ERR_SEMANTIC, "Parameter already defined.");
@@ -438,23 +449,25 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name)
 
     // Создаем новый символ и добавляем его в таблицу символов
     ASTNode *param_node = create_variable_declaration_node(param_name, param_type, NULL);
-    Symbol *new_param = (Symbol *)malloc(sizeof(Symbol));
-    if (new_param == NULL)
+    if (is_definition)
     {
-        free(param_name);
-        error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
+        Symbol *new_param = (Symbol *)malloc(sizeof(Symbol));
+        if (new_param == NULL)
+        {
+            free(param_name);
+            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
+        }
+
+        new_param->name = param_name;
+        new_param->symbol_type = SYMBOL_PARAMETER;
+        new_param->parent_function = string_duplicate(function_name);
+        new_param->data_type = param_type;
+        new_param->is_defined = true;
+        new_param->next = NULL;
+        new_param->declaration_node = param_node;
+
+        symtable_insert(&symtable, param_name, new_param);
     }
-
-    new_param->name = param_name;
-    new_param->symbol_type = SYMBOL_PARAMETER;
-    new_param->parent_function = string_duplicate(function_name);
-    new_param->data_type = param_type;
-    new_param->is_defined = true;
-    new_param->next = NULL;
-    new_param->declaration_node = param_node;
-
-    symtable_insert(&symtable, param_name, new_param);
-
     // Создаем узел параметра AST
 
     return param_node;
@@ -697,20 +710,23 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             ASTNode *value_node = parse_expression(scanner, function_name);
 
             // Если переменная ожидает float, а выражение int, выполняем неявную конверсию
-            if (symbol->data_type != TYPE_ALL) {
-                if (is_nullable(symbol->data_type) && value_node->data_type == TYPE_NULL) {
+            if (symbol->data_type != TYPE_ALL)
+            {
+                if (is_nullable(symbol->data_type) && value_node->data_type == TYPE_NULL)
+                {
                     // Допускаем присваивание null, если переменная поддерживает nullable-тип.
-                } else if (!is_subtype_nullable(symbol->data_type, value_node->data_type)) {
+                }
+                else if (!is_subtype_nullable(symbol->data_type, value_node->data_type))
+                {
                     error_exit(ERR_SEMANTIC_TYPE, "Cannot assign null to non-nullable variable %s.", name);
                 }
             }
 
             // Проверка и выполнение неявной конверсии
-                if (symbol->data_type == TYPE_FLOAT && value_node->data_type == TYPE_INT) {
-                    value_node = convert_to_float_node(value_node);
+            if (symbol->data_type == TYPE_FLOAT && value_node->data_type == TYPE_INT)
+            {
+                value_node = convert_to_float_node(value_node);
             }
-
-
 
             // Ожидаем точку с запятой в конце оператора
             // expect_token(TOKEN_SEMICOLON, scanner);
@@ -748,79 +764,12 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         expect_token(TOKEN_SEMICOLON, scanner);
         // Создаем узел присваивания и возвращаем его
         return create_assignment_node(name, value_node);
-    } /*
-     if (!(is_builtin))
-     {
-         if (symbol->is_constant)
-         {
-             error_exit(ERR_SEMANTIC_OTHER, "Constatn variable can't be modified");
-         }
-         LOG("DEBUG_PARSER: Is function or variable %d\n", symbol->symbol_type);
-     }
-     char *temp_name = string_duplicate(current_token.lexeme);
-
-     current_token = get_next_token(scanner);
-
-     // Проверяем, является ли это вызовом функции
-     if (current_token.type == TOKEN_LEFT_PAREN && symbol->symbol_type == SYMBOL_FUNCTION)
-     {
-         // Checks if function return type is void
-         if (is_builtin)
-         {
-             if (get_builtin_function_type(temp_name) != TYPE_VOID && get_builtin_function_type(temp_name) != TYPE_UNKNOWN)
-             {
-                 error_exit(ERR_SEMANTIC, "Function %s has return type %d, expected void", temp_name, get_builtin_function_type(temp_name));
-             }
-         }
-         current_token = get_next_token(scanner); // Пропускаем '('
-
-         // Парсим аргументы функции
-         ASTNode **arguments = NULL;
-         int arg_count = 0;
-
-         // Сделать проверку аргументов встроеных функций
-         if (current_token.type != TOKEN_RIGHT_PAREN)
-         {
-             arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-             arguments[arg_count++] = parse_expression(scanner, function_name);
-
-             while (current_token.type == TOKEN_COMMA)
-             {
-                 current_token = get_next_token(scanner);
-                 arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                 arguments[arg_count++] = parse_expression(scanner, function_name);
-             }
-         }
-
-         expect_token(TOKEN_RIGHT_PAREN, scanner); // Ожидаем ')'
-         expect_token(TOKEN_SEMICOLON, scanner);   // Ожидаем ';' после вызова функции
-
-         // Создаем узел для вызова функции и возвращаем его
-         return create_function_call_node(name, arguments, arg_count);
-     }
-     else
-     {
-         // Логика для присваивания
-         expect_token(TOKEN_ASSIGN, scanner);
-
-         // Парсим выражение для присваивания
-         ASTNode *value_node = parse_expression(scanner, function_name);
-
-         if (value_node->data_type != symbol->data_type && symbol->data_type != TYPE_VOID)
-         {
-             error_exit(ERR_SEMANTIC_TYPE, "Incorrect data type asigning");
-         }
-
-         // Ожидаем точку с запятой в конце оператора
-         expect_token(TOKEN_SEMICOLON, scanner);
-
-         // Создаем узел присваивания и возвращаем его
-         return create_assignment_node(name, value_node);
-     }*/
+    }
 }
 ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name)
 {
-    if (!node) return NULL;
+    if (!node)
+        return NULL;
 
     // Если узел — бинарная операция, рекурсивно проверяем подузлы
     if (node->type == NODE_BINARY_OPERATION)
@@ -871,7 +820,6 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
 
     return node;
 }
-
 
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 {
@@ -991,6 +939,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
             error_exit(ERR_SEMANTIC, "Variable is already defined");
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
+        variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         // Создаем новый символ и добавляем его в таблицу символов
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
         if (new_var == NULL)
@@ -1075,6 +1024,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         {
             error_exit(ERR_SEMANTIC, "Variable is already defined");
         }
+        variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         // Создаем новый символ и добавляем его в таблицу символов
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
@@ -1238,17 +1188,17 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
             }
         }
 
-        // Проверка на null для nullable-типов
+        /* // Проверка на null для nullable-типов
         if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE) &&
-            left_node->value == NULL)
-        {
-            error_exit(ERR_SEMANTIC, "Nullable variable is null.");
-        }
-        if ((right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) &&
-            right_node->value == NULL)
-        {
-            error_exit(ERR_SEMANTIC, "Nullable variable is null.");
-        }
+             left_node->value == NULL)
+         {
+             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
+         }
+         if ((right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) &&
+             right_node->value == NULL)
+         {
+             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
+         }*/
 
         // Создаём узел для бинарной операции
         left_node = create_binary_operation_node(operator_name, left_node, right_node);

@@ -20,7 +20,7 @@ ASTNode* parse_function(Scanner *scanner, bool is_definition);
 // Parses a statement (expression, if, while, return, etc.)
 ASTNode* parse_statement(Scanner *scanner, char *function_name);
 
-ASTNode* parse_parameter(Scanner *scanner, char *function_name);
+ASTNode* parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
 
 ASTNode* parse_expression(Scanner *scanner, char *function_name);
 
