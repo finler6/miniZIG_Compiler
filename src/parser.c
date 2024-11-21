@@ -165,7 +165,7 @@ ASTNode *parse_program(Scanner *scanner)
 
     if (!is_symtable_all_used(&symtable))
     {
-        error_exit(ERR_SYNTAX, "Unused variable");
+        error_exit(ERR_SEMANTIC_UNUSED, "Unused variable");
     }
 
     // Рекурсивно проверяем если все переменные не выходят за зону декларации своих блоков
@@ -382,7 +382,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         Symbol *function_symbol = symtable_search(&symtable, function_name_symtable);
         if (function_symbol != NULL)
         {
-            error_exit(ERR_SEMANTIC, "Function already defined.");
+            error_exit(ERR_SEMANTIC_OTHER, "Function already defined.");
         }
 
         Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
@@ -444,7 +444,7 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     if (param_symbol != NULL && is_definition)
     {
         free(param_name);
-        error_exit(ERR_SEMANTIC, "Parameter already defined.");
+        error_exit(ERR_SEMANTIC_OTHER, "Parameter already defined.");
     }
 
     // Создаем новый символ и добавляем его в таблицу символов
@@ -671,7 +671,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
                 {
                     if (arg_count >= params_count)
                     {
-                        error_exit(ERR_SEMANTIC_RETURN, "Invalid number of arguments");
+                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
                     }
                     current_token = get_next_token(scanner);
                     arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
@@ -742,7 +742,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         symbol = symtable_search(&symtable, name);
         if (symbol == NULL)
         {
-            error_exit(ERR_SYNTAX, "Variable or function %s is not defined.", current_token.lexeme);
+            error_exit(ERR_SEMANTIC_UNDEF, "Variable or function %s is not defined.", current_token.lexeme);
         }
         if (symbol->is_constant)
         {
@@ -860,7 +860,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     // Проверка на совпадение типов
     if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !is_subtype_nullable(declaration_type, expr_type))
     {
-        error_exit(ERR_SEMANTIC, "Declared type of variable does not match the assigned type. %d %d,\n Line and column: %d %d\n", declaration_type, expr_type, current_token.line, current_token.column);
+        error_exit(ERR_SEMANTIC_TYPE, "Declared type of variable does not match the assigned type. %d %d,\n Line and column: %d %d\n", declaration_type, expr_type, current_token.line, current_token.column);
     }
     else if (declaration_type == TYPE_UNKNOWN)
     {
@@ -870,7 +870,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     // Семантическая проверка типа
     if (var_type == TOKEN_VAR && expr_type == TYPE_UNKNOWN)
     {
-        error_exit(ERR_SEMANTIC, "Unknown data type assignment.");
+        error_exit(ERR_SEMANTIC_TYPE, "Unknown data type assignment.");
     }
 
     expect_token(TOKEN_SEMICOLON, scanner); // Ожидаем ';' в конце оператора
@@ -879,7 +879,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     Symbol *symbol = symtable_search(&symtable, variable_name);
     if (symbol != NULL)
     {
-        error_exit(ERR_SEMANTIC, "Variable already defined.");
+        error_exit(ERR_SEMANTIC_OTHER, "Variable already defined.");
     }
 
     ASTNode *variable_declaration_node = create_variable_declaration_node(variable_name, declaration_type, initializer_node);
@@ -920,7 +920,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     // Семантическая проверка на тип bool для условия
     if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
-        error_exit(ERR_SEMANTIC, "Condition in if statement must be boolean.");
+        error_exit(ERR_SEMANTIC_TYPE, "Condition in if statement must be boolean.");
     }
 
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
@@ -930,13 +930,13 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         if (current_token.type != TOKEN_IDENTIFIER)
         {
-            error_exit(ERR_SEMANTIC_OTHER, "Expected identifier |id|");
+            error_exit(ERR_SEMANTIC, "Expected identifier |id|");
         }
         char *variable_name = construct_variable_name(current_token.lexeme, function_name);
         Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
         if (symbol != NULL)
         {
-            error_exit(ERR_SEMANTIC, "Variable is already defined");
+            error_exit(ERR_SEMANTIC_OTHER, "Variable is already defined");
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
@@ -985,7 +985,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     {
         if (true_block->data_type != false_block->data_type)
         {
-            error_exit(ERR_SEMANTIC_PARAMS, "Incompabile type of return expression");
+            error_exit(ERR_SEMANTIC_TYPE, "Incompabile type of return expression");
         }
     }
     // Создаем узел 'if' и возвращаем его
@@ -1006,7 +1006,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
     // Семантическая проверка на тип bool для условия
     if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
     {
-        error_exit(ERR_SEMANTIC, "Condition in while statement must be boolean.");
+        error_exit(ERR_SEMANTIC_TYPE, "Condition in while statement must be boolean.");
     }
 
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
@@ -1016,13 +1016,13 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         if (current_token.type != TOKEN_IDENTIFIER)
         {
-            error_exit(ERR_SEMANTIC_OTHER, "Expected identifier |id|");
+            error_exit(ERR_SEMANTIC, "Expected identifier |id|");
         }
         char *variable_name = construct_variable_name(current_token.lexeme, function_name);
         Symbol *symbol = symtable_search(&symtable, current_token.lexeme);
         if (symbol != NULL)
         {
-            error_exit(ERR_SEMANTIC, "Variable is already defined");
+            error_exit(ERR_SEMANTIC_OTHER, "Variable is already defined");
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
@@ -1086,7 +1086,7 @@ ASTNode *convert_to_float_node(ASTNode *node)
 {
     if (node->data_type != TYPE_INT)
     {
-        error_exit(ERR_INTERNAL, "Attempted to convert non-integer node to float.");
+        error_exit(ERR_SEMANTIC_TYPE, "Attempted to convert non-integer node to float.");
     }
 
     // Создаем новую строку с добавлением ".0"
@@ -1285,7 +1285,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                 {
                     if (arg_count >= params_count)
                     {
-                        error_exit(ERR_SEMANTIC_RETURN, "Invalid number of arguments");
+                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
                     }
                     current_token = get_next_token(scanner);
                     arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
@@ -1368,7 +1368,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                 symbol = symtable_search(&symtable, identifier_name);
                 if (symbol == NULL)
                 {
-                    error_exit(ERR_SEMANTIC, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
+                    error_exit(ERR_SEMANTIC_UNDEF, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
                 }
                 ASTNode *identifier_node = create_identifier_node(identifier_name);
                 identifier_node->data_type = symbol->data_type; // Устанавливаем тип данных для идентификатора

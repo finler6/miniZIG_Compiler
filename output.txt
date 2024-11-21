@@ -3,45 +3,9 @@ LABEL main
 CREATEFRAME
 PUSHFRAME
 DEFVAR LF@%retval
-DEFVAR LF@x_main
-PUSHS int@10
-POPS LF@x_main
-DEFVAR LF@y_main
-PUSHS int@20
-POPS LF@y_main
-DEFVAR LF@max_value_main
-PUSHS LF@y_main
-PUSHS LF@x_main
-CALL max
-POPS LF@max_value_main
-PUSHS string@The\032maximum\032of\032
+PUSHS string@Enter\032a\032number\032to\032calculate\032factorial:\010
 POPS LF@(null)
 WRITE LF@(null)
-PUSHS LF@x_main
-POPS LF@x_main
-WRITE LF@x_main
-PUSHS string@\032and\032
-POPS LF@(null)
-WRITE LF@(null)
-PUSHS LF@y_main
-POPS LF@y_main
-WRITE LF@y_main
-PUSHS string@\032is\032
-POPS LF@(null)
-WRITE LF@(null)
-PUSHS LF@max_value_main
-POPS LF@max_value_main
-WRITE LF@max_value_main
-PUSHS string@\010
-POPS LF@(null)
-WRITE LF@(null)
-POPFRAME
-RETURN
-LABEL max
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@a_max
-POPS LF@a_max
-DEFVAR LF@b_max
-POPS LF@b_max
-DEFVAR LF@%retval
+DEFVAR LF@input_main
+READ LF@%retval int
+POPS LF@input_main

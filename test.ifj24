@@ -30,6 +30,7 @@ pub fn main() void {
     ifj.write("Enter a number to calculate factorial:\n");
     const input = ifj.readi32();
 
+
     if (input) |val| {
         if (val < 0) {
             ifj.write("Factorial of negative numbers is not defined\n");
