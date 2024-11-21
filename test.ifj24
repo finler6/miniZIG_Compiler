@@ -1,35 +1,16 @@
-// Program 1: Vypocet faktorialu (iterativne)
 const ifj = @import("ifj24.zig");
 
 pub fn factorial(n: i32) i32 {
     if (n == 0) {
-        return 1;
+            return 1;
     } else {
         return n * factorial(n - 1);
     }
-    return 0;
 }
 
 pub fn main() void {
-    ifj.write("Zadejte cislo pro vypocet faktorialu\n");
-    const a = ifj.readi32();
-    if (a) |val| {
-        if (val < 0) {
-            ifj.write("Faktorial "); ifj.write(val);
-            ifj.write(" nelze spocitat\n");
-        } else {
-            var d: f64 = ifj.i2f(val);
-            var vysl: f64 = 1.0;
-            while (d > 0) {
-                vysl = vysl * d;
-                d = d - 1.0;
-            }
-            ifj.write("Vysledek: "); ifj.write(vysl); ifj.write(" = ");
-            const vysl_i32 = ifj.f2i(vysl);
-            ifj.write(vysl_i32); ifj.write("\n");
     ifj.write("Enter a number to calculate factorial:\n");
     const input = ifj.readi32();
-
 
     if (input) |val| {
         if (val < 0) {

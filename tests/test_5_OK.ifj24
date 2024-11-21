@@ -1,0 +1,10 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    const a: i32 = 10;
+    if (a > 5) {
+        ifj.write("a больше 5\n");
+    } else {
+        ifj.write("a меньше или равно 5\n");
+    }
+}

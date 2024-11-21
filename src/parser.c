@@ -39,6 +39,8 @@ void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
 void scope_check_identifiers_in_tree(ASTNode *root);
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
 int get_builtin_function_index(const char *function_name);
+bool check_return_types_recursive(ASTNode *function_node, DataType return_type);
+bool check_all_return_types(ASTNode *function_node, DataType return_type);
 
 // Global token storage
 static Token current_token;
@@ -1461,74 +1463,107 @@ A function that recursively traverses an entire AST and:
 2. In case of a function of a type other than void, it checks if all return statements match the given type of the function,
  and looks for a return statement in the main block of the function.
 */
-void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer)
-{
-    if (return_type == TYPE_VOID)
-    {
-        if (function_node != NULL)
-        {
-            if (function_node->type == NODE_RETURN)
-            {
-                if (function_node->data_type != TYPE_VOID)
-                {
+bool check_return_types_recursive(ASTNode *function_node, DataType return_type) {
+    bool has_return = false; // Показывает, есть ли return на текущем уровне
+
+    if (!function_node) {
+        return false;
+    }
+
+    // Если нашли return, проверяем его тип и возвращаем true
+    if (function_node->type == NODE_RETURN) {
+        if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type)) {
+            error_exit(ERR_SEMANTIC_PARAMS, "Incompatible types of return statement");
+        }
+        return true;
+    }
+
+    // Для узлов if проверяем их ветви
+    if (function_node->type == NODE_IF) {
+        bool if_branch = check_return_types_recursive(function_node->body, return_type); // Проверяем ветку if
+        bool else_branch = function_node->left ? check_return_types_recursive(function_node->left, return_type) : false; // Проверяем ветку else (если есть)
+
+        // Если есть return в обеих ветвях if-else, то текущий уровень покрыт
+        has_return = if_branch && else_branch;
+    } 
+    // Для while мы не можем гарантировать выполнение return
+    else if (function_node->type == NODE_WHILE) {
+        check_return_types_recursive(function_node->body, return_type); // Проверяем тело while
+    } 
+    // Для остальных узлов проверяем их подузлы
+    else {
+        // Проверяем блоки текущего узла
+        has_return |= check_return_types_recursive(function_node->body, return_type);
+        has_return |= check_return_types_recursive(function_node->left, return_type);
+    }
+
+    // Если на текущем уровне есть return, возвращаем true
+    if (has_return) {
+        return true;
+    }
+
+    // Проверяем последующий узел на том же уровне
+    return check_return_types_recursive(function_node->next, return_type);
+}
+
+// Проверяет, соответствуют ли все return-выражения указанному типу функции
+bool check_all_return_types(ASTNode *function_node, DataType return_type) {
+    if (!function_node) {
+        return true;
+    }
+
+    // Если это узел return, проверяем тип
+    if (function_node->type == NODE_RETURN) {
+        if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type)) {
+            error_exit(ERR_SEMANTIC_PARAMS, "Incompatible return type. Expected: %d, Got: %d", return_type, function_node->data_type);
+        }
+    }
+
+    // Рекурсивно проверяем все подузлы
+    bool body_check = check_all_return_types(function_node->body, return_type);
+    bool left_check = check_all_return_types(function_node->left, return_type);
+    bool next_check = check_all_return_types(function_node->next, return_type);
+
+    return body_check && left_check && next_check;
+}
+
+// Основная функция проверки return'ов в функции
+void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer) {
+    if (return_type == TYPE_VOID) {
+        // Сохраняем прежнюю логику для функций с типом VOID
+        if (function_node != NULL) {
+            if (function_node->type == NODE_RETURN) {
+                if (function_node->data_type != TYPE_VOID) {
                     error_exit(ERR_SEMANTIC_RETURN, "Function VOID expects return(void)");
                 }
             }
         }
-        if (function_node->body != NULL)
-        {
+        if (function_node->body != NULL) {
             check_return_types(function_node->body, return_type, block_layer);
         }
-        if (function_node->left != NULL)
-        {
+        if (function_node->left != NULL) {
             check_return_types(function_node->left, return_type, block_layer);
         }
-        if (function_node->next != NULL)
-        {
+        if (function_node->next != NULL) {
             check_return_types(function_node->next, return_type, block_layer);
         }
         return;
-    }
-    else
-    {
-        if (function_node == NULL && *block_layer == 0)
-        {
+    } else {
+        // Проверяем наличие return для функций с типом != VOID
+        if (!check_return_types_recursive(function_node, return_type)) {
             error_exit(ERR_SEMANTIC_RETURN, "Missing return statement");
         }
-        if (function_node->type == NODE_RETURN)
-        {
-            if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type))
-            {
-                error_exit(ERR_SEMANTIC_PARAMS, "Incompatible types of return statement");
-            }
-            if (*block_layer == 0) // Здесь проверяем значение на 0
-            {
-                (*block_layer)--; // Корректно уменьшаем значение
-            }
-            return;
-        }
-        if (function_node->body != NULL)
-        {
-            (*block_layer)++;
-            check_return_types(function_node->body, return_type, block_layer);
-            (*block_layer)--;
-        }
-        if (function_node->left != NULL)
-        {
-            (*block_layer)++;
-            check_return_types(function_node->left, return_type, block_layer);
-            (*block_layer)--;
-        }
-        if (function_node->next != NULL)
-        {
-            check_return_types(function_node->next, return_type, block_layer);
-        }
-        if (*block_layer == 0) // Здесь используем разыменование указателя
-        {
-            error_exit(ERR_SEMANTIC_RETURN, "Missing return statement");
+
+        // Проверяем соответствие всех return указанному типу
+        if (!check_all_return_types(function_node, return_type)) {
+            error_exit(ERR_SEMANTIC_PARAMS, "Function contains return statements with incompatible types");
         }
     }
 }
+
+
+
+
 
 bool type_convertion(ASTNode *main_node)
 {
