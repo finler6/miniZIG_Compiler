@@ -1112,6 +1112,7 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
     // Разбор первой части выражения и создание узла AST
     ASTNode *left_node = parse_primary_expression(scanner, function_name);
     bool is_boolean_expression = false;
+    bool is_equality_expression = false;
 
     // Проверка наличия бинарного оператора и создание узлов для бинарных операций
     while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS ||
@@ -1136,10 +1137,14 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
         case TOKEN_LESS_EQUAL:
         case TOKEN_GREATER:
         case TOKEN_GREATER_EQUAL:
+            op_type = NODE_BINARY_OPERATION;
+            is_boolean_expression = true;
+            break;
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
             op_type = NODE_BINARY_OPERATION;
             is_boolean_expression = true;
+            is_equality_expression = true;
             break;
         default:
             error_exit(ERR_SYNTAX, "Unknown operator type.");
@@ -1150,6 +1155,17 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner); // Пропускаем оператор
 
         ASTNode *right_node = parse_primary_expression(scanner, function_name);
+
+        if ((left_node->data_type == TYPE_U8 || left_node->data_type == TYPE_U8_NULLABLE || right_node->data_type == TYPE_U8 || right_node->data_type == TYPE_U8_NULLABLE))
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Invalid operation with u8 type.");
+        }
+
+        if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE || right_node->data_type == TYPE_INT_NULLABLE
+        || right_node->data_type == TYPE_FLOAT_NULLABLE) && !(is_equality_expression))
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Invalid operation with nullable type.");
+        }
 
         // Проверка типов и выполнение конверсии
         if (left_node->data_type != right_node->data_type)
@@ -1183,10 +1199,16 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
                 {
                     error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
                 }
+            } else if (((left_node->data_type == TYPE_U8_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_U8_NULLABLE)
+            || (left_node->data_type == TYPE_INT_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_INT_NULLABLE)
+            || (left_node->data_type == TYPE_FLOAT_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_FLOAT_NULLABLE))
+            && (is_boolean_expression == 1))
+            {
+                // Допускаем операции с nullable-типами
             }
             else
             {
-                error_exit(ERR_SEMANTIC, "Type mismatch in binary operation: %s %s %s.", left_node->value, operator_name, right_node->name);
+                error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in binary operation: %s %s %s.", left_node->value, operator_name, right_node->name);
             }
         }
 
