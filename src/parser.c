@@ -759,6 +759,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         ASTNode *value_node = parse_expression(scanner, function_name);
 
         // Рекурсивная проверка и приведение типов
+        if(!is_subtype_nullable(symbol->data_type,value_node->data_type))
         value_node = check_and_convert_expression(value_node, symbol->data_type, name);
 
         // Ожидаем точку с запятой в конце оператора
@@ -793,7 +794,7 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
             error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in binary operation for variable %s.", variable_name);
         }
     }
-    else if (node->type == NODE_LITERAL || node->type == NODE_IDENTIFIER)
+    else if (node->type == NODE_LITERAL)
     {
         // Проверяем, требуется ли преобразование
         if (node->data_type == TYPE_INT && expected_type == TYPE_FLOAT)
@@ -806,6 +807,14 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
             error_exit(ERR_SEMANTIC_TYPE, "1 Type mismatch in assignment to variable %s.", variable_name);
         }
     }
+    
+    else if (node->type == NODE_IDENTIFIER){
+    // Проверяем совпадают ли типы. Конверсия не происходит - лишь проверка is_subtype_nullable
+        if (!is_subtype_nullable(expected_type, node->data_type))
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in assignment to variable %s.", variable_name);
+        }
+    }
     else
     {
         // Для остальных типов узлов (вызовы функций и т.д.)
@@ -816,12 +825,15 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
         }
         else if (node->data_type != expected_type)
         {
-            error_exit(ERR_SEMANTIC_TYPE, "2 Type mismatch in assignment to variable %s.", variable_name);
+            if(!is_subtype_nullable(expected_type, node->data_type)){
+                error_exit(ERR_SEMANTIC_TYPE, "2 Type mismatch in assignment to variable %s.", variable_name);
+            }
         }
     }
 
     return node;
 }
+
 
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 {
@@ -974,6 +986,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         ASTNode *tmp = true_block->body;
         true_block->body = variable_declaration_node;
         variable_declaration_node->next = tmp;
+        variable_declaration_node->left = create_identifier_node(condition_node->name);
     }
     // Парсим необязательный блок 'else', если он есть
     ASTNode *false_block = NULL;
@@ -1004,6 +1017,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
     // Парсим условие
     ASTNode *condition_node = parse_expression(scanner, function_name);
     ASTNode *variable_declaration_node;
+    ASTNode *variable_value;
     bool is_pipe = false;
     // Семантическая проверка на тип bool для условия
     if (condition_node->data_type != TYPE_BOOL && !is_nullable(condition_node->data_type))
@@ -1059,6 +1073,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         ASTNode *tmp = body_node->body;
         body_node->body = variable_declaration_node;
         variable_declaration_node->next = tmp;
+        variable_declaration_node->left = create_literal_node(variable_declaration_node->data_type, condition_node->value);
     }
     // Создаем узел 'while' и возвращаем его
     return create_while_node(condition_node, body_node);

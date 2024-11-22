@@ -2,10 +2,26 @@
 LABEL main
 CREATEFRAME
 PUSHFRAME
-DEFVAR LF@%retval
-PUSHS string@Enter\032a\032number\032to\032calculate\032factorial:\010
-POPS LF@(null)
-WRITE LF@(null)
-DEFVAR LF@input_main
-READ LF@%retval int
-POPS LF@input_main
+DEFVAR LF@a_main
+PUSHS int@1
+POPS LF@a_main
+DEFVAR LF@b_main
+PUSHS LF@a_main
+POPS LF@b_main
+PUSHS LF@a_main
+PUSHS bool@true
+JUMPIFNEQS $else_0
+DEFVAR LF@val_main
+PUSHS LF@a_main
+POPS LF@val_main
+PUSHS LF@val_main
+POPS LF@a_main
+JUMP $endif_0
+LABEL $else_0
+LABEL $endif_0
+PUSHS int@1
+POPS LF@b_main
+POPFRAME
+EXIT int@0
+CALL main
+EXIT int@0
