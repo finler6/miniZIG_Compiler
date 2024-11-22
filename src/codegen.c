@@ -139,9 +139,10 @@ void codegen_generate_block(FILE *output, ASTNode *block_node, const char *curre
 
 void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL) {
+        printf("Node is NULL\n");
         return;
     }
-
+    printf("Node type: %d\n", node->type);
     switch (node->type) {
         case NODE_LITERAL:
             if (node->data_type == TYPE_INT) {
@@ -155,12 +156,25 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
                 free(escaped_value);
             } else if (node->data_type == SYMBOL_VARIABLE) {
                 fprintf(output, "PUSHS nil@nil\n");
+            } else if (node->data_type == TYPE_BOOL) {
+                fprintf(output, "PUSHS bool@%s\n", strcmp(node->value, "true") == 0 ? "true" : "false");
             }
             break;
 
         case NODE_IDENTIFIER:
         {
-            fprintf(output, "PUSHS LF@%s\n", node->name);
+            if (strcmp(node->name, "nil") == 0) {
+                fprintf(output, "PUSHS nil@nil\n"); // Добавляем nil на стек
+                fprintf(output, "EQS\n");           // Сравниваем с nil
+                fprintf(output, "NOTS\n");          // Инвертируем результат
+            } else if (strcmp(node->name, "true") == 0) {
+                fprintf(output, "PUSHS bool@true\n");
+            } else if (strcmp(node->name, "false") == 0) {
+                fprintf(output, "PUSHS bool@false\n");
+            } else {
+                printf("175");
+                fprintf(output, "PUSHS LF@%s\n", node->name);
+            }
         }
             break;
 
@@ -211,7 +225,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
             break;
 
         default:
-            fprintf(stderr, "Unsupported expression type for code generation\n");
+            fprintf(stderr, "Unsupported expression type for code generation, type: %d, name: %d\n", node->type, node->name);
             exit(1);
     }
 }
@@ -370,17 +384,9 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
         case NODE_IF:
             // Generate code for if statement
         {
-            int label_num = generate_unique_label();
-            codegen_generate_expression(output, node->condition, node->name);
-            fprintf(output, "PUSHS bool@true\n");
-            fprintf(output, "JUMPIFNEQS $else_%d\n", label_num);
-            codegen_generate_block(output, node->body, node->name); // Generate code for if body
-            fprintf(output, "JUMP $endif_%d\n", label_num);
-            fprintf(output, "LABEL $else_%d\n", label_num);
-            if (node->left != NULL) {
-                codegen_generate_block(output, node->left, current_function); // Generate code for else body
-            }
-            fprintf(output, "LABEL $endif_%d\n", label_num);
+            fprintf(stderr, "DEBUG: Entering NODE_IF case\n");
+            // Генерация условия
+            codegen_generate_if(output, node);
         }
             break;
 
@@ -453,6 +459,14 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
 
+    } else if (if_node->condition->type == TYPE_INT_NULLABLE || if_node->condition->type == TYPE_FLOAT_NULLABLE || if_node->condition->type == TYPE_U8_NULLABLE) {
+        fprintf(output, "PUSHS nil@nil\n");
+        fprintf(output, "PUSHS LF@%s\n", if_node->condition->name);
+        fprintf(output, "EQS\n"); // Сравниваем значение с nil
+        fprintf(output, "NOTS\n"); // Инвертируем результат, чтобы получить `!= nil`
+        fprintf(output, "PUSHS bool@true\n");
+        fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
+
     } else if (if_node->condition->type == NODE_BINARY_OPERATION &&
                strcmp(if_node->condition->name, "!=") == 0 &&
                if_node->condition->right->data_type == SYMBOL_VARIABLE) {
@@ -464,11 +478,18 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
 
-    } else {
-        // Обычная генерация условия
-        codegen_generate_expression(output, if_node->condition, if_node->name);
+    } else if (if_node->condition->type == NODE_IDENTIFIER) {
+        fprintf(output, "PUSHS LF@%s\n", if_node->condition->name);
+        fprintf(output, "PUSHS nil@nil\n"); // Кладем nil на стек для сравнения
+        fprintf(output, "EQS\n");           // Сравниваем с nil
+        fprintf(output, "NOTS\n");          // Инвертируем результат (проверяем, что переменная НЕ nil)
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
+    } else {
+            // Обычная генерация условия
+            codegen_generate_expression(output, if_node->condition, if_node->name);
+            fprintf(output, "PUSHS bool@true\n");
+            fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
     }
 
     // Генерация кода для основного блока `if`

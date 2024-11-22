@@ -1,12 +1,29 @@
 const ifj = @import("ifj24.zig");
 
+pub fn factorial(n: i32) i32 {
+    if (n == 0) {
+            return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
 
 pub fn main() void {
-    var a : ?i32 = 1;
-    var b : ?i32 = a;
-    if(a) |val|
-    {
-        a = val;
+    ifj.write("Enter a number to calculate factorial:\n");
+    const input = ifj.readi32();
+
+    if (input) |val| {
+        if (val < 0) {
+            ifj.write("Factorial of negative numbers is not defined\n");
+        } else {
+            const result = factorial(val);
+            ifj.write("Factorial of ");
+            ifj.write(val);
+            ifj.write(" is ");
+            ifj.write(result);
+            ifj.write("\n");
+        }
+    } else {
+        ifj.write("Factorial for null is not defined\n");
     }
-    b = 1;
 }

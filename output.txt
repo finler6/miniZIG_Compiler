@@ -2,26 +2,70 @@
 LABEL main
 CREATEFRAME
 PUSHFRAME
-DEFVAR LF@a_main
-PUSHS int@1
-POPS LF@a_main
-DEFVAR LF@b_main
-PUSHS LF@a_main
-POPS LF@b_main
-PUSHS LF@a_main
+WRITE string@Enter\032a\032number\032to\032calculate\032factorial:\010
+DEFVAR LF@input_main
+DEFVAR LF@%retval
+READ LF@%retval int
+MOVE LF@input_main LF@%retval
+PUSHS LF@input_main
+PUSHS nil@nil
+EQS
+NOTS
 PUSHS bool@true
 JUMPIFNEQS $else_0
 DEFVAR LF@val_main
-PUSHS LF@a_main
+PUSHS LF@input_main
 POPS LF@val_main
 PUSHS LF@val_main
-POPS LF@a_main
+PUSHS int@0
+LTS
+PUSHS bool@true
+JUMPIFNEQS $else_1
+WRITE string@Factorial\032of\032negative\032numbers\032is\032not\032defined\010
+JUMP $endif_1
+LABEL $else_1
+DEFVAR LF@result_main
+PUSHS LF@val_main
+CALL factorial
+POPS LF@result_main
+WRITE string@Factorial\032of\032
+WRITE LF@val_main
+WRITE string@\032is\032
+WRITE LF@result_main
+WRITE string@\010
+LABEL $endif_1
 JUMP $endif_0
 LABEL $else_0
+WRITE string@Factorial\032for\032null\032is\032not\032defined\010
 LABEL $endif_0
-PUSHS int@1
-POPS LF@b_main
 POPFRAME
 EXIT int@0
+LABEL factorial
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n_factorial
+POPS LF@n_factorial
+PUSHS LF@n_factorial
+PUSHS int@0
+PUSHS LF@n_factorial
+PUSHS int@0
+EQS
+DEFVAR LF@temp_condition
+POPS LF@temp_condition
+PUSHS LF@temp_condition
+PUSHS bool@true
+JUMPIFNEQS $else_2
+PUSHS int@1
+JUMP $endif_2
+LABEL $else_2
+PUSHS LF@n_factorial
+PUSHS LF@n_factorial
+PUSHS int@1
+SUBS
+CALL factorial
+MULS
+LABEL $endif_2
+POPFRAME
+RETURN
 CALL main
 EXIT int@0
