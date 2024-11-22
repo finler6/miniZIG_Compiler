@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "symtable.h"
 
-// Типы узлов AST
+
 typedef enum {
     NODE_PROGRAM,
     NODE_FUNCTION,
@@ -20,26 +20,25 @@ typedef enum {
     NODE_BLOCK
 } NodeType;
 
-// Узел AST
+
 typedef struct ASTNode {
-    NodeType type;  // Тип узла
-    DataType data_type;  // Тип данных, если применимо
-    struct ASTNode* left;  // Левый потомок (используется для бинарных операций и условий)
-    struct ASTNode* right; // Правый потомок (используется для бинарных операций)
-    struct ASTNode* next;  // Следующий узел на том же уровне (используется для последовательностей операторов)
-    struct ASTNode* condition; // Условие (например, для IF или WHILE)
-    struct ASTNode* body;  // Тело цикла или условного оператора
+    NodeType type;  
+    DataType data_type;  
+    struct ASTNode* left;  
+    struct ASTNode* right; 
+    struct ASTNode* next;  
+    struct ASTNode* condition; 
+    struct ASTNode* body;  
 
-    char* name;  // Имя функции, переменной или идентификатора
-    char* value; // Значение для литералов
-    struct ASTNode** parameters; // Параметры функции
-    int param_count;  // Количество параметров
+    char* name;  
+    char* value;
+    struct ASTNode** parameters; 
+    int param_count; 
 
-    struct ASTNode** arguments; // Аргументы функции при вызове
-    int arg_count;  // Количество аргументов
+    struct ASTNode** arguments; 
+    int arg_count;  
 } ASTNode;
 
-// Функции для создания различных типов узлов AST
 ASTNode* create_program_node();
 ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parameters, int param_count, ASTNode* body);
 ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNode* initializer);
@@ -54,10 +53,8 @@ ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_coun
 ASTNode* create_block_node(ASTNode* statements, DataType return_type);
 ASTNode *create_conversion_node(DataType target_type, ASTNode *operand);
 
-// Функции для освобождения памяти
 void free_ast_node(ASTNode* node);
 
-// Функции для отладки
 void print_ast(ASTNode* node, int indent);
 
 #endif // AST_H

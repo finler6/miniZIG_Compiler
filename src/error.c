@@ -1,6 +1,6 @@
 /*
- * Project Name: Implementation of the IFJ24 Imperative Language Compiler
- * Authors: [List the names and logins of team members who worked on this file]
+ * Project Name: Implementation of the IFJ24 Compiler
+ * Authors: 
  */
 
 #include <stdio.h>

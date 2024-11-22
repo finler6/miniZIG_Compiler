@@ -158,12 +158,9 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
 {
     char lexeme_buffer[MAX_LEXEME_LENGTH];
     int index = 0;
-
     LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
-    // Разрешаем буквы, цифры, '_', '@' и '[' ']'
     while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']')
     {
-        // Проверка, что точка возможна только после ifj
         if (index < MAX_LEXEME_LENGTH - 1)
         {
             lexeme_buffer[index++] = scanner->current_char;
@@ -173,23 +170,15 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
         {
             error_exit(ERR_LEXICAL, "Identifier too long.");
         }
-
-        // Считываем следующий символ
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
     }
-
-    // Проверка на пустоту буфера, что свидетельствует об ошибке
     if (index == 0)
     {
         error_exit(ERR_LEXICAL, "Lexeme buffer is empty.");
     }
-
-    // Завершаем строку лексемы
     lexeme_buffer[index] = '\0';
     LOG("DEBUG_SCANNER: Finished scanning identifier: %s\n", lexeme_buffer);
-
-    // Резолвим идентификатор или ключевое слово
     Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
     LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
         t.type, t.lexeme, t.line, t.column);
@@ -370,7 +359,6 @@ static Token scan_string(Scanner *scanner)
             }
             else if (scanner->current_char == 'x')
             {
-                // Обработка \xdd, где dd — две шестнадцатеричные цифры
                 char hex_digits[3] = {0};
                 scanner->current_char = fgetc(scanner->input);
                 scanner->column++;
@@ -464,7 +452,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
     }
-    token.lexeme = malloc(2); // Выделяем память для одного символа + '\0'
+    token.lexeme = malloc(2); 
     token.line = scanner->line;
     token.column = scanner->column;
 
@@ -507,7 +495,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); // Освобождаем старую память
+                free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -559,14 +547,14 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
-    case ':': // Добавляем поддержку двоеточия
+    case ':': 
         token.type = TOKEN_COLON;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
-    case ';': // Добавляем поддержку semicolon
+    case ';': 
         token.type = TOKEN_SEMICOLON;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
@@ -582,7 +570,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); // Освобождаем старую память
+                free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -607,7 +595,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); // Освобождаем старую память
+                free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -623,7 +611,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             token.lexeme[1] = '\0';
         }
         break;
-    case ',': // Добавляем поддержку запятой
+    case ',': 
         token.type = TOKEN_COMMA;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
@@ -653,7 +641,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); // Освобождаем старую память
+                free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -702,28 +690,28 @@ static Token get_next_token_internal(Scanner *scanner)
     {
         LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);
-        print_token(t); // Отладочная печать токена
+        print_token(t); 
         return t;
     }
     else if (isdigit(scanner->current_char))
     {
         LOG("DEBUG_SCANNER: Detected number\n");
         Token t = scan_number(scanner);
-        print_token(t); // Отладочная печать токена
+        print_token(t); 
         return t;
     }
     else if (scanner->current_char == '"')
     {
         LOG("DEBUG_SCANNER: Detected string\n");
         Token t = scan_string(scanner);
-        print_token(t); // Отладочная печать токена
+        print_token(t); 
         return t;
     }
     else
     {
         LOG("DEBUG_SCANNER: Detected operator or delimiter\n");
         Token t = get_operator_or_delimiter(scanner);
-        print_token(t); // Отладочная печать токена
+        print_token(t); 
         return t;
     }
 }
@@ -741,13 +729,11 @@ void scanner_init(FILE *input_file, Scanner *scanner)
     scanner->current_char = fgetc(scanner->input);
     scanner->column = 1;
     scanner->line = 1;
-    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char); // Отладка
+    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char); 
     while ((scanner->current_char = fgetc(scanner->input)) != EOF)
     {
         LOG("DEBUG_SCANNER: Reading character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
     }
-
-    // Возвращаемся к началу файла, чтобы начать нормальный процесс анализа
     rewind(scanner->input);
     scanner->current_char = fgetc(scanner->input);
 }
@@ -764,5 +750,5 @@ void free_token(Token *token)
 
 void scanner_free(Scanner *scanner)
 {
-    // Если в будущем вы добавите динамические ресурсы, освобождайте их здесь
+    scanner = scanner;
 }

@@ -25,17 +25,15 @@ ASTNode* parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
 ASTNode* parse_expression(Scanner *scanner, char *function_name);
 
 typedef struct {
-    const char *name;             // Имя функции
-    DataType return_type;         // Тип возвращаемого значения
-    DataType param_types[3];      // Массив типов параметров (максимум 3 для примера)
-    int param_count;           // Количество параметров
+    const char *name;             
+    DataType return_type;         
+    DataType param_types[3];      
+    int param_count;           
 } BuiltinFunctionInfo;
 
 
-// Объявляем переменную как extern
 extern BuiltinFunctionInfo builtin_functions[];
 
-// Объявляем функцию
 bool is_builtin_function(const char *identifier, Scanner *scanner);
 ASTNode *convert_to_float_node(ASTNode *node);
 

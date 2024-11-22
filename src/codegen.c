@@ -23,12 +23,10 @@ void codegen_generate_if(FILE *output, ASTNode *if_node);
 void codegen_generate_while(FILE *output, ASTNode *while_node);
 
 const char* remove_last_prefix(const char* name) {
-    static char buffer[1024]; // Статический буфер, ограниченный размером
+    static char buffer[1024]; 
     if (!name) {
         return NULL;
     }
-
-    // Находим последний символ '_'
     const char* last_underscore = strrchr(name, '_');
     if (last_underscore && *(last_underscore + 1) != '\0') {
         size_t new_len = last_underscore - name;
@@ -36,25 +34,22 @@ const char* remove_last_prefix(const char* name) {
             fprintf(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
             exit(EXIT_FAILURE);
         }
-        strncpy(buffer, name, new_len); // Копируем часть до последнего '_'
-        buffer[new_len] = '\0';         // Завершаем строку
+        strncpy(buffer, name, new_len); 
+        buffer[new_len] = '\0';         
         return buffer;
     }
-
-    // Если символ '_' не найден, возвращаем оригинальную строку
     return name;
 }
 
 
-void collect_functions(ASTNode *program_node) {
+/*void collect_functions(ASTNode *program_node) {
     ASTNode *current_function = program_node->body;
 
-    // Проходим по дереву, собираем функции
     while (current_function) {
         if (current_function->type == NODE_FUNCTION) {
             function_count++;
             functions = realloc(functions, function_count * sizeof(FunctionInfo));
-            functions[function_count - 1].name = strdup(current_function->name);
+            functions[function_count - 1].name = string_duplicate(current_function->name);
             functions[function_count - 1].param_count = current_function->param_count;
 
             if (current_function->param_count > 0) {
@@ -68,7 +63,7 @@ void collect_functions(ASTNode *program_node) {
         }
         current_function = current_function->next;
     }
-}
+}*/
 
 char *escape_ifj24_string(const char *input);
 static int label_counter = 0;
@@ -105,7 +100,6 @@ void codegen_generate_program(ASTNode *program_node) {
 
     ASTNode *current_function = program_node->body;
 
-    // Сначала находим main и генерируем её
     while (current_function) {
         if (current_function->type == NODE_FUNCTION && strcmp(current_function->name, "main") == 0) {
             fprintf(stderr, "DEBUG: Found main function. Generating its code.\n");
@@ -115,7 +109,6 @@ void codegen_generate_program(ASTNode *program_node) {
         current_function = current_function->next;
     }
 
-    // Снова проходим по всем функциям, кроме main
     current_function = program_node->body;
     while (current_function) {
         if (current_function->type == NODE_FUNCTION && strcmp(current_function->name, "main") != 0) {
@@ -124,8 +117,6 @@ void codegen_generate_program(ASTNode *program_node) {
         }
         current_function = current_function->next;
     }
-
-    // Генерируем вызов main
     fprintf(output_file, "CALL main\n");
     fprintf(output_file, "EXIT int@0\n");
 }
@@ -142,7 +133,6 @@ void codegen_generate_function(ASTNode *function) {
 
     codegen_generate_block(output_file,function->body, function->name);
 
-    // Если функция main, то делаем EXIT
     if (strcmp(function->name, "main") == 0) {
         fprintf(output_file, "POPFRAME\n");
         fprintf(output_file, "EXIT int@0\n");
@@ -155,6 +145,7 @@ void codegen_generate_function(ASTNode *function) {
 // Function to generate code for a block of statements
 void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function) {
     ASTNode *current = block_node->body;
+    output = output;
     while (current) {
         codegen_generate_statement(output_file, current, current_function);
         current = current->next;
@@ -178,7 +169,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
                 char *escaped_value = escape_ifj24_string(node->value);
                 fprintf(output, "PUSHS string@%s\n", escaped_value);
                 free(escaped_value);
-            } else if (node->data_type == SYMBOL_VARIABLE) {
+            } else if (node->data_type == TYPE_NULL) {
                 fprintf(output, "PUSHS nil@nil\n");
             } else if (node->data_type == TYPE_BOOL) {
                 fprintf(output, "PUSHS bool@%s\n", strcmp(node->value, "true") == 0 ? "true" : "false");
@@ -188,9 +179,9 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
         case NODE_IDENTIFIER:
         {
             if (strcmp(node->name, "nil") == 0) {
-                fprintf(output, "PUSHS nil@nil\n"); // Добавляем nil на стек
-                fprintf(output, "EQS\n");           // Сравниваем с nil
-                fprintf(output, "NOTS\n");          // Инвертируем результат
+                fprintf(output, "PUSHS nil@nil\n"); 
+                fprintf(output, "EQS\n");           
+                fprintf(output, "NOTS\n");          
             } else if (strcmp(node->name, "true") == 0) {
                 fprintf(output, "PUSHS bool@true\n");
             } else if (strcmp(node->name, "false") == 0) {
@@ -249,7 +240,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
             break;
 
         default:
-            fprintf(stderr, "Unsupported expression type for code generation, type: %d, name: %d\n", node->type, node->name);
+            fprintf(stderr, "Unsupported expression type for code generation, type: %d, name: %s\n", node->type, node->name);
             exit(1);
     }
 }
@@ -259,12 +250,8 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
         fprintf(stderr, "Invalid function call node for code generation\n");
         exit(1);
     }
-
-    // Проверка на встроенную функцию ifj.write
     if (strcmp(node->name, "ifj.write") == 0) {
         ASTNode *arg = node->arguments[0];
-
-        // Обработка вывода, используя аргументы
         if (arg->type == NODE_LITERAL) {
             if (arg->data_type == TYPE_U8) {
                 char *escaped_value = escape_ifj24_string(arg->value);
@@ -280,7 +267,6 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
             fprintf(output, "WRITE LF@%s\n", remove_last_prefix(arg->name));
         }
     }
-        // Обработка только функций чтения ifj.readi32, ifj.readf64, ifj.readstr
     else if (strcmp(node->name, "ifj.readi32") == 0) {
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "READ LF@%%retval int\n");
@@ -292,43 +278,36 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
         fprintf(output, "READ LF@%%retval string\n");
         fprintf(output, "PUSHS LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.concat")) {
-        // Конкатенация строк
         codegen_generate_expression(output, node->arguments[0], current_function);
         codegen_generate_expression(output, node->arguments[1], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "CONCAT LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.length")) {
-        // Длина строки
         codegen_generate_expression(output, node->arguments[0], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "STRLEN LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.i2f")) {
-        // Преобразование int в float
         codegen_generate_expression(output, node->arguments[0], current_function);
-        fprintf(output, "DEFVAR LF@%%retval\n"); // Создаём временную переменную для результата
-        fprintf(output, "INT2FLOAT LF@%%retval LF@%%retval\n"); // Преобразование в float
-        fprintf(output, "PUSHS LF@%%retval\n"); // Помещаем результат обратно в стек
+        fprintf(output, "DEFVAR LF@%%retval\n"); 
+        fprintf(output, "INT2FLOAT LF@%%retval LF@%%retval\n"); 
+        fprintf(output, "PUSHS LF@%%retval\n"); 
     } else if (!strcmp(node->name, "ifj.f2i")) {
-        // Преобразование float в int
         codegen_generate_expression(output, node->arguments[0], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "FLOAT2INT LF@%%retval LF@%%retval\n");
         fprintf(output, "PUSHS LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.substring")) {
-        // Подстрока
         codegen_generate_expression(output, node->arguments[0], current_function);
         codegen_generate_expression(output, node->arguments[1], current_function);
         codegen_generate_expression(output, node->arguments[2], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "SUBSTR LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.ord")) {
-        // Получение кода символа
         codegen_generate_expression(output, node->arguments[0], current_function);
         codegen_generate_expression(output, node->arguments[1], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "ORD LF@%%retval\n");
     } else if (!strcmp(node->name, "ifj.chr")) {
-        // Получение символа по коду
         codegen_generate_expression(output, node->arguments[0], current_function);
         fprintf(output, "DEFVAR LF@%%retval\n");
         fprintf(output, "INT2CHAR LF@%%retval\n");
@@ -339,7 +318,7 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
 
         fprintf(output, "CALL %s\n", node->name);
 
-        if (node->left) { // Если функция возвращает значение
+        if (node->left) { 
             fprintf(output, "POPS LF@%s\n", node->left->name);
         }
     }
@@ -409,7 +388,6 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
             // Generate code for if statement
         {
             fprintf(stderr, "DEBUG: Entering NODE_IF case\n");
-            // Генерация условия
             codegen_generate_if(output, node);
         }
             break;
@@ -447,8 +425,6 @@ void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_no
     }
 
     fprintf(output, "DEFVAR LF@%s\n", remove_last_prefix(declaration_node->name));
-
-    // Если есть начальное значение
     if (declaration_node->left) {
         codegen_generate_expression(output, declaration_node->left, NULL);
         fprintf(output, "POPS LF@%s\n", remove_last_prefix(declaration_node->name));
@@ -461,7 +437,7 @@ void codegen_generate_assignment(FILE *output, ASTNode *assignment_node) {
 }
 
 void codegen_generate_return(FILE *output, ASTNode *return_node) {
-    if (return_node->left) { // Если есть возвращаемое значение
+    if (return_node->left) { 
         codegen_generate_expression(output, return_node->left, return_node->name);
         fprintf(output, "POPS LF@%%retval\n");
     }
@@ -471,57 +447,50 @@ void codegen_generate_return(FILE *output, ASTNode *return_node) {
 void codegen_generate_if(FILE *output, ASTNode *if_node) {
     static int if_label_count = 0;
     int current_label = if_label_count++;
-
-    // Проверка на условие вида `num == nil`
     if (if_node->condition->type == NODE_BINARY_OPERATION &&
         strcmp(if_node->condition->name, "==") == 0 &&
-        if_node->condition->right->data_type == SYMBOL_VARIABLE) {
+        if_node->condition->right->data_type == TYPE_NULL) {
 
-        fprintf(output, "PUSHS nil@nil\n"); // Кладем nil на стек для сравнения
-        fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->left->name)); // Кладем значение переменной на стек
-        fprintf(output, "EQS\n"); // Сравниваем значение с nil
+        fprintf(output, "PUSHS nil@nil\n"); 
+        fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->left->name)); 
+        fprintf(output, "EQS\n"); 
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
 
-    } else if (if_node->condition->type == TYPE_INT_NULLABLE || if_node->condition->type == TYPE_FLOAT_NULLABLE || if_node->condition->type == TYPE_U8_NULLABLE) {
+    } else if (if_node->condition->data_type == TYPE_INT_NULLABLE || if_node->condition->data_type == TYPE_FLOAT_NULLABLE || if_node->condition->data_type == TYPE_U8_NULLABLE) {
         fprintf(output, "PUSHS nil@nil\n");
         fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->name));
-        fprintf(output, "EQS\n"); // Сравниваем значение с nil
-        fprintf(output, "NOTS\n"); // Инвертируем результат, чтобы получить `!= nil`
+        fprintf(output, "EQS\n"); 
+        fprintf(output, "NOTS\n"); 
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
 
     } else if (if_node->condition->type == NODE_BINARY_OPERATION &&
                strcmp(if_node->condition->name, "!=") == 0 &&
-               if_node->condition->right->data_type == SYMBOL_VARIABLE) {
+               if_node->condition->right->data_type == TYPE_NULL) {
 
         fprintf(output, "PUSHS nil@nil\n");
-        fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->left->name)); // Кладем значение переменной на стек
-        fprintf(output, "EQS\n"); // Сравниваем значение с nil
-        fprintf(output, "NOTS\n"); // Инвертируем результат, чтобы получить `!= nil`
+        fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->left->name)); 
+        fprintf(output, "EQS\n");
+        fprintf(output, "NOTS\n"); 
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
 
     } else if (if_node->condition->type == NODE_IDENTIFIER) {
         fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(if_node->condition->name));
-        fprintf(output, "PUSHS nil@nil\n"); // Кладем nil на стек для сравнения
-        fprintf(output, "EQS\n");           // Сравниваем с nil
-        fprintf(output, "NOTS\n");          // Инвертируем результат (проверяем, что переменная НЕ nil)
+        fprintf(output, "PUSHS nil@nil\n"); 
+        fprintf(output, "EQS\n");           
+        fprintf(output, "NOTS\n");          
         fprintf(output, "PUSHS bool@true\n");
         fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
     } else {
-            // Обычная генерация условия
             codegen_generate_expression(output, if_node->condition, if_node->name);
             fprintf(output, "PUSHS bool@true\n");
             fprintf(output, "JUMPIFNEQS $else_%d\n", current_label);
     }
-
-    // Генерация кода для основного блока `if`
     codegen_generate_block(output, if_node->body, if_node->name);
     fprintf(output, "JUMP $endif_%d\n", current_label);
     fprintf(output, "LABEL $else_%d\n", current_label);
-
-    // Генерация кода для блока `else`, если он присутствует
     if (if_node->left != NULL) {
         codegen_generate_block(output, if_node->left, if_node->name);
     }
@@ -532,24 +501,14 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
 void codegen_generate_while(FILE *output, ASTNode *while_node) {
     static int while_label_count = 0;
     int current_label = while_label_count++;
-
-    // Начальная метка цикла
     fprintf(output, "LABEL $while_start_%d\n", current_label);
-
-    // Генерация выражения для условия цикла
     codegen_generate_expression(output, while_node->condition, while_node->name);
-
-    // Проверка условия. Если значение на стеке меньше или равно нулю, выход из цикла.
     fprintf(output, "PUSHS int@0\n");
     fprintf(output, "GTS\n");
     fprintf(output, "JUMPIFNEQS $while_end_%d\n", current_label);
 
-    // Тело цикла
     codegen_generate_block(output, while_node->body, while_node->name);
-    // Переход в начало цикла
     fprintf(output, "JUMP $while_start_%d\n", current_label);
-
-    // Метка завершения цикла
     fprintf(output, "LABEL $while_end_%d\n", current_label);
 }
 

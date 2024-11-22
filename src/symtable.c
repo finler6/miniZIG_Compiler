@@ -40,7 +40,7 @@ void symtable_init(SymTable *symtable) {
 
 void load_builtin_functions(SymTable *symtable, ASTNode *import_node) {
     size_t num_functions = get_num_builtin_functions();
-
+    import_node = import_node;
     for (size_t i = 0; i < num_functions; i++) {
         char *name_with_prefix = (char *)malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
         if (name_with_prefix == NULL) {
@@ -114,7 +114,6 @@ unsigned int symtable_hash(char *key, int size) {
 }
 // Inserts a symbol into the symbol table
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
-    // Проверка ключа и символа на NULL
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_insert");
     }
@@ -122,37 +121,25 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
     if (symbol == NULL) {
         error_exit(ERR_INTERNAL, "NULL symbol passed to symtable_insert");
     }
-
-    // Проверка имени символа на NULL
     if (symbol->name == NULL) {
         error_exit(ERR_INTERNAL, "Symbol with NULL name passed to symtable_insert");
     }
-
-    // Если коэффициент загрузки превышает порог, расширяем таблицу
     if ((float)symtable->count / symtable->size >= LOAD_FACTOR) {
         symtable_grow(symtable);
     }
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];
-
-    // Проверка на существование символа с таким же ключом
     while (current != NULL) {
         LOG("DEBUG_SYMTABLE: Comparing key: '%s' with existing symbol: '%s'\n", key, current->name);
-        
-        // Проверяем, что имя символа не NULL перед сравнением
         if (current->name == NULL) {
             error_exit(ERR_INTERNAL, "NULL symbol name encountered in symtable during insertion");
         }
-
         if (strcmp(current->name, key) == 0) {
-            // Символ уже существует, возвращаем NULL для индикации неудачи
             return NULL;
         }
         current = current->next;
     }
-
-    // Вставляем символ в начало списка
     symbol->next = symtable->table[index];
     symtable->table[index] = symbol;
     symtable->count++;
@@ -165,7 +152,6 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol) {
 
 // Searches for a symbol in the table by key
 Symbol *symtable_search(SymTable *symtable, char *key) {
-    // Проверяем, что ключ не равен NULL
     if (key == NULL) {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_search");
     }
@@ -173,27 +159,20 @@ Symbol *symtable_search(SymTable *symtable, char *key) {
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];
-
-    // Цикл по связному списку символов в ячейке таблицы
     while (current != NULL) {
-        // Отладочный вывод для проверки ключей и символов
         LOG("DEBUG_SYMTABLE: Comparing key: '%s' with symbol: '%s'\n", key, current->name);
-
-        // Проверка, что имя символа не равно NULL перед сравнением
         if (current->name == NULL) {
             error_exit(ERR_INTERNAL, "NULL symbol name encountered in symtable");
         }
-
-        // Сравнение ключа с именем символа
         if (strcmp(current->name, key) == 0) {
             current->is_used = true;
-            return current;  // Символ найден
+            return current;  
         }
 
         current = current->next;
     }
 
-    return NULL;  // Символ не найден
+    return NULL;  
 }
 
 // Checks if all symbols in the table have is_used set to true
@@ -201,14 +180,13 @@ bool is_symtable_all_used(SymTable *symtable) {
     for (int i = 0; i < symtable->size; i++) {
         Symbol *current = symtable->table[i];
         while (current != NULL) {
-            // Проверка флага is_used для каждого символа, кроме встроенных функций
             if (!current->is_used && strncmp(current->name, "ifj.", 4) != 0) {
-                return false; // Если хотя бы один символ не использован
+                return false; 
             }
             current = current->next;
         }
     }
-    return true; // Все символы использованы
+    return true; 
 }
 
 

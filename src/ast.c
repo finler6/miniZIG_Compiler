@@ -4,12 +4,12 @@
 #include <string.h>
 #include "utils.h"
 
-// Функция для создания узла программы
+
 ASTNode* create_program_node() {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_PROGRAM;
     node->left = node->right = node->next = node->condition = NULL;
-    node->body = NULL; // Указываем на NULL при создании
+    node->body = NULL; 
     node->name = NULL;
     node->value = NULL;
     node->parameters = NULL;
@@ -19,7 +19,7 @@ ASTNode* create_program_node() {
     return node;
 }
 
-// Функция для создания узла функции
+
 ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parameters, int param_count, ASTNode* body) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_FUNCTION;
@@ -35,7 +35,7 @@ ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parame
     return node;
 }
 
-// Функция для создания узла переменной
+
 ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNode* initializer) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_VARIABLE_DECLARATION;
@@ -50,7 +50,7 @@ ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNod
     return node;
 }
 
-// Функция для создания узла присваивания
+
 ASTNode* create_assignment_node(char* name, ASTNode* value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_ASSIGNMENT;
@@ -64,7 +64,6 @@ ASTNode* create_assignment_node(char* name, ASTNode* value) {
     return node;
 }
 
-// Функция для создания узла бинарной операции
 ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_BINARY_OPERATION;
@@ -72,10 +71,7 @@ ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, 
     node->left = left;
     node->right = right;
     node->next = node->condition = node->body = NULL;
-
-    // Установка имени операции
-    node->name = string_duplicate(operator_name);  // Добавьте эту строку, чтобы установить имя оператора
-
+    node->name = string_duplicate(operator_name);  
     node->value = NULL;
     node->parameters = NULL;
     node->param_count = 0;
@@ -85,7 +81,6 @@ ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, 
 }
 
 
-// Функция для создания узла литерала
 ASTNode* create_literal_node(DataType type, char* value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_LITERAL;
@@ -100,7 +95,7 @@ ASTNode* create_literal_node(DataType type, char* value) {
     return node;
 }
 
-// Функция для создания узла идентификатора
+
 ASTNode* create_identifier_node(char* name) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_IDENTIFIER;
@@ -120,7 +115,7 @@ ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_
     node->data_type = true_block->data_type;
     node->condition = condition;
     node->body = true_block;
-    node->left = false_block;  // Используем `left` для хранения блока `else`, если он есть
+    node->left = false_block;  
     node->right = node->next = NULL;
     node->name = NULL;
     node->value = NULL;
@@ -168,7 +163,7 @@ ASTNode* create_return_node(ASTNode* value) {
     return node;
 }
 
-// Функция для создания узла вызова функции
+
 ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_count) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_FUNCTION_CALL;
@@ -198,7 +193,6 @@ ASTNode* create_block_node(ASTNode* statements, DataType return_type) {
 }
 
 
-// Функция для освобождения памяти узла
 void free_ast_node(ASTNode* node) {
     if (!node) return;
 
@@ -228,19 +222,16 @@ void free_ast_node(ASTNode* node) {
     free(node);
 }
 
-// Функция для отладки (печать AST)
+
 void print_ast(ASTNode* node, int indent) {
     if (!node) return;
 
-    // Печать отступов
+
     for (int i = 0; i < indent; ++i) printf("  ");
 
-    // Печать типа узла и дополнительной информации
     switch (node->type) {
         case NODE_PROGRAM:
             printf("Node type: PROGRAM\n");
-
-            // Печать функций в программе
             ASTNode *current_function = node->body;
             printf("  Functions:\n");
             while (current_function) {
@@ -290,14 +281,14 @@ void print_ast(ASTNode* node, int indent) {
 
         case NODE_IF:
             printf("Node type: IF\n");
-            for (int i = 0; i < indent + 1; ++i) printf("  ");
-            printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
+            //for (int i = 0; i < indent + 1; ++i) printf("  ");
+            //printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
             break;
 
         case NODE_WHILE:
             printf("Node type: WHILE\n");
-            for (int i = 0; i < indent + 1; ++i) printf("  ");
-            printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
+            //for (int i = 0; i < indent + 1; ++i) printf("  ");
+            //printf("Condition type: %d\n", node->condition ? node->condition->data_type : -1);
             break;
 
         case NODE_RETURN:
@@ -325,8 +316,6 @@ void print_ast(ASTNode* node, int indent) {
             printf("Node type: UNKNOWN\n");
             break;
     }
-
-    // Рекурсивный вызов для дочерних узлов с отступом
     if (node->left) {
         for (int i = 0; i < indent + 1; ++i) printf("  ");
         printf("Left:\n");

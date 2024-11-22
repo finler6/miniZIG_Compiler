@@ -7,8 +7,8 @@ DEFVAR LF@input
 DEFVAR LF@%retval
 READ LF@%retval int
 MOVE LF@input LF@%retval
-PUSHS LF@input
 PUSHS nil@nil
+PUSHS LF@input
 EQS
 NOTS
 PUSHS bool@true
