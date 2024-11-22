@@ -47,9 +47,9 @@ static Token current_token;
 static SymTable symtable; // Global symbol table for the program
 
 BuiltinFunctionInfo builtin_functions[] = {
-    {"readstr", TYPE_U8_NULLABLE, {}, 0},
-    {"readi32", TYPE_INT_NULLABLE, {}, 0},
-    {"readf64", TYPE_FLOAT_NULLABLE, {}, 0},
+    {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
+    {"readi32", TYPE_INT_NULLABLE, {TYPE_NULL}, 0},
+    {"readf64", TYPE_FLOAT_NULLABLE, {TYPE_NULL}, 0},
     {"write", TYPE_VOID, {TYPE_ALL}, 1},
     {"i2f", TYPE_FLOAT, {TYPE_INT}, 1},
     {"f2i", TYPE_INT, {TYPE_FLOAT}, 1},

@@ -46,7 +46,7 @@ char* construct_variable_name(const char* str1, const char* str2) {
     int len = strlen(str1) + strlen(str2) + (2*sizeof(char)); 
     char* result = (char*)malloc(len);
     if (result == NULL) {
-        printf("Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed\n");
         return NULL;
     }
     snprintf(result, len, "%s_%s", str1, str2);
@@ -57,7 +57,7 @@ char* construct_builtin_name(const char* str1, const char* str2) {
     int len = strlen(str1) + strlen(str2) + (2*sizeof(char)); 
     char* result = (char*)malloc(len);
     if (result == NULL) {
-        printf("Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed\n");
         return NULL;
     }
     snprintf(result, len, "%s.%s", str1, str2);

@@ -4,7 +4,6 @@
 #include <stdbool.h>
 
 struct ASTNode;
-typedef struct ASTNode ASTNode;
 // Symbol types
 typedef enum {
     SYMBOL_VARIABLE,
@@ -38,7 +37,7 @@ typedef struct Symbol {
     bool is_defined;
     bool is_used;
     bool is_constant;
-    ASTNode *declaration_node;
+    struct ASTNode *declaration_node;
     struct Symbol *next; // Linked list for collision resolution
 } Symbol;
 
@@ -51,7 +50,7 @@ typedef struct {
 
 // Function prototypes
 void symtable_init(SymTable *symtable);
-void load_builtin_functions(SymTable *symtable, ASTNode *import_node);
+void load_builtin_functions(SymTable *symtable, struct ASTNode *import_node);
 void insert_underscore(SymTable *symtable);
 void symtable_free(SymTable *symtable);
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol);
