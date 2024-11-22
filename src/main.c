@@ -13,21 +13,24 @@
 #include "codegen.h" 
 
 int main(int argc, char *argv[]) {
-    const char *output_filename = "output.txt";
+    FILE *source_file = stdin; 
+    const char *output_filename = NULL;
 
-    if (argc < 2 || argc > 3) {
-        fprintf(stderr, "Usage: %s <source_file> [output_file]\n", argv[0]);
+    if (argc > 3) {
+        fprintf(stderr, "Usage: %s [source_file] [output_file]\n", argv[0]);
         return ERR_INTERNAL;
     }
-    if (argc == 3) {
-        output_filename = argv[2];
-    }
-    FILE *source_file = fopen(argv[1], "r");
-    if (!source_file) {
-        fprintf(stderr, "Error opening file: %s\n", argv[1]);
-        return ERR_INTERNAL; 
+    if (argc > 1) {
+        source_file = fopen(argv[1], "r");
+        if (!source_file) {
+            fprintf(stderr, "Error opening file: %s\n", argv[1]);
+            return ERR_INTERNAL;
+        }
     }
 
+    if (argc > 2) {
+        output_filename = argv[2];
+    }
 
     Scanner scanner;
     scanner_init(source_file, &scanner);
@@ -39,7 +42,7 @@ int main(int argc, char *argv[]) {
     ASTNode* ast_root = parse_program(&scanner);
 
 
-    print_ast(ast_root, 0);
+    //print_ast(ast_root, 0);
 
 
     codegen_init(output_filename);

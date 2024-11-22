@@ -8,6 +8,13 @@
 #include <ctype.h>
 #include "scanner.h"
 
+
+#undef DEBUG_PARSER
+#ifdef DEBUG_PARSER
+#define LOG(...) fprintf(__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
 // Global variable for storing the output file
 static FILE *output_file;
 
@@ -31,7 +38,7 @@ const char* remove_last_prefix(const char* name) {
     if (last_underscore && *(last_underscore + 1) != '\0') {
         size_t new_len = last_underscore - name;
         if (new_len >= sizeof(buffer)) {
-            fprintf(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
+            LOG(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
             exit(EXIT_FAILURE);
         }
         strncpy(buffer, name, new_len); 
@@ -74,13 +81,18 @@ int generate_unique_label() {
 
 // Initialize code generator
 void codegen_init(const char *filename) {
-    output_file = fopen(filename, "w");
-    if (!output_file) {
-        fprintf(stderr, "Error: Cannot open output file %s for writing.\n", filename);
-        exit(EXIT_FAILURE);
+    if (filename) {
+        output_file = fopen(filename, "w");
+        if (!output_file) {
+            fprintf(stderr, "Error: Cannot open output file %s for writing.\n", filename);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        output_file = stdout; 
     }
     fprintf(output_file, ".IFJcode24\n"); // Header for output file
 }
+
 
 // Finalize code generation
 void codegen_finalize() {
@@ -92,17 +104,17 @@ void codegen_finalize() {
 
 void codegen_generate_program(ASTNode *program_node) {
     if (!program_node || program_node->type != NODE_PROGRAM) {
-        fprintf(stderr, "DEBUG: Invalid program node.\n");
+        LOG(stderr, "DEBUG: Invalid program node.\n");
         return;
     }
 
-    fprintf(stderr, "DEBUG: Starting code generation for program.\n");
+    LOG(stderr, "DEBUG: Starting code generation for program.\n");
 
     ASTNode *current_function = program_node->body;
 
     while (current_function) {
         if (current_function->type == NODE_FUNCTION && strcmp(current_function->name, "main") == 0) {
-            fprintf(stderr, "DEBUG: Found main function. Generating its code.\n");
+            LOG(stderr, "DEBUG: Found main function. Generating its code.\n");
             codegen_generate_function(current_function);
             break;
         }
@@ -112,7 +124,7 @@ void codegen_generate_program(ASTNode *program_node) {
     current_function = program_node->body;
     while (current_function) {
         if (current_function->type == NODE_FUNCTION && strcmp(current_function->name, "main") != 0) {
-            fprintf(stderr, "DEBUG: Found function '%s'. Generating its code.\n", current_function->name);
+            LOG(stderr, "DEBUG: Found function '%s'. Generating its code.\n", current_function->name);
             codegen_generate_function(current_function);
         }
         current_function = current_function->next;
@@ -154,10 +166,10 @@ void codegen_generate_block(FILE *output, ASTNode *block_node, const char *curre
 
 void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL) {
-        printf("Node is NULL\n");
+        LOG(stderr, "Node is NULL\n");
         return;
     }
-    printf("Node type: %d\n", node->type);
+    LOG(stderr, "Node type: %d\n", node->type);
     switch (node->type) {
         case NODE_LITERAL:
             if (node->data_type == TYPE_INT) {
@@ -187,7 +199,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
             } else if (strcmp(node->name, "false") == 0) {
                 fprintf(output, "PUSHS bool@false\n");
             } else {
-                printf("175");
+                LOG(stderr, "175");
                 fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(node->name));
             }
         }
@@ -387,7 +399,7 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
         case NODE_IF:
             // Generate code for if statement
         {
-            fprintf(stderr, "DEBUG: Entering NODE_IF case\n");
+            LOG(stderr, "DEBUG: Entering NODE_IF case\n");
             codegen_generate_if(output, node);
         }
             break;

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#undef DEBUG_SCANNER
 #ifdef DEBUG_SCANNER
 #define LOG(...) printf(__VA_ARGS__)
 #else
