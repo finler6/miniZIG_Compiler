@@ -1,85 +1,83 @@
 const ifj = @import("ifj24.zig");
 
-
-
-// Тест чисел
+// Test numbers
 pub fn test_numbers() void {
-    ifj.write("\n--- Тест чисел ---\n");
+    ifj.write("\n--- Test numbers ---\n");
     const a: i32 = 10;
     const b: f64 = 2.5;
     const sum: f64 = ifj.i2f(a) + b;
-    ifj.write("Сумма 10 и 2.5: "); ifj.write(sum); ifj.write("\n");
+    ifj.write("Sum of 10 and 2.5 is: "); ifj.write(sum); ifj.write("\n");
 
     const product: i32 = a * ifj.f2i(b);
-    ifj.write("Произведение 10 и 2 (округлено): "); ifj.write(product); ifj.write("\n");
+    ifj.write("Multiplication of 10 and 2 (round): "); ifj.write(product); ifj.write("\n");
 }
 
-// Тест строк
+// Test strings
 pub fn test_strings() void {
-    ifj.write("\n--- Тест строк ---\n");
+    ifj.write("\n--- Test strings ---\n");
     const str1 = ifj.string("IFJ24");
-    const str2 = ifj.string(" — мощный язык.");
+    const str2 = ifj.string(" — great language.");
     const result = ifj.concat(str1, str2);
-    ifj.write("Объединенная строка: "); ifj.write(result); ifj.write("\n");
+    ifj.write("Concatenated string: "); ifj.write(result); ifj.write("\n");
 }
 
-// Тест подстрок
+// Test substrings
 pub fn test_substrings() void {
-    ifj.write("\n--- Тест подстрок ---\n");
-    const text = ifj.string("Пример текста для подстроки");
+    ifj.write("\n--- Test substring ---\n");
+    const text = ifj.string("Example text for substring");
     const substr = ifj.substring(text, 8, 14);
     if (substr) |sub| {
-        ifj.write("Подстрока: "); ifj.write(sub); ifj.write("\n");
+        ifj.write("Substring: "); ifj.write(sub); ifj.write("\n");
     } else {
-        ifj.write("Ошибка извлечения подстроки.\n");
+        ifj.write("Error extracting substring.\n");
     }
 }
 
-// Тест циклов
+// Test loops
 pub fn test_loops() void {
-    ifj.write("\n--- Тест циклов ---\n");
+    ifj.write("\n--- Test loops ---\n");
     var count: i32 = 5;
     while (count > 0) {
-        ifj.write("Счетчик: "); ifj.write(count); ifj.write("\n");
+        ifj.write("Counter: "); ifj.write(count); ifj.write("\n");
         count = count - 1;
     }
 }
 
-// Тест работы с null
+// Test null handling
 pub fn test_null_handling() void {
-    ifj.write("\n--- Тест работы с null ---\n");
+    ifj.write("\n--- Test null handling ---\n");
     var optional: ?i32 = null;
 
     if (optional) |value| {
-        ifj.write("Значение: "); ifj.write(value); ifj.write("\n");
+        ifj.write("Value: "); ifj.write(value); ifj.write("\n");
     } else {
-        ifj.write("Значение отсутствует (null).\n");
+        ifj.write("Value is missing (null).\n");
     }
 
     optional = 42;
     if (optional) |value| {
-        ifj.write("Новое значение: "); ifj.write(value); ifj.write("\n");
+        ifj.write("New value: "); ifj.write(value); ifj.write("\n");
     }
 }
 
-// Основная функция
+// Main function
 pub fn main() void {
-    ifj.write("=== Начало тестирования языка IFJ24 ===\n");
+    ifj.write("=== Start of IFJ24 language testing ===\n");
 
-    // Тест чисел
+    // Test numbers
     test_numbers();
 
-    // Тест строк
+    // Test strings
     test_strings();
 
-    // Тест подстрок
+    // Test substrings
     test_substrings();
 
-    // Тест циклов
+    // Test loops
     test_loops();
 
-    // Тест работы с null
+    // Test null handling
     test_null_handling();
 
-    ifj.write("=== Завершение тестирования ===\n");
+    ifj.write("=== End of testing ===\n");
 }

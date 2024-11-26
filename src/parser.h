@@ -36,6 +36,7 @@ extern BuiltinFunctionInfo builtin_functions[];
 
 bool is_builtin_function(const char *identifier, Scanner *scanner);
 ASTNode *convert_to_float_node(ASTNode *node);
+bool is_nullable(DataType type_nullable);
 
 size_t get_num_builtin_functions();
 

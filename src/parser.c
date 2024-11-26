@@ -33,7 +33,6 @@ DataType parse_return_type(Scanner *scanner);
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
 bool type_convertion(ASTNode *main_node);
 bool can_assign_type(DataType expected_type, DataType actual_type);
-bool is_nullable(DataType type_nullable);
 DataType detach_nullable(DataType type_nullable);
 void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
 void scope_check_identifiers_in_tree(ASTNode *root);

@@ -1,22 +1,22 @@
 const ifj = @import("ifj24.zig");
 
 pub fn main() void {
-    ifj.write("Введите первое число: ");
+    ifj.write("Number one: ");
     const num1 = ifj.readi32();
 
     if (num1 != null) {
-        ifj.write("Введите второе число: ");
+        ifj.write("Number two: ");
         const num2 = ifj.readi32();
 
         if (num2 != null) {
             const sum = num1 + num2;
-            ifj.write("Сумма равна: ");
+            ifj.write("Sum: ");
             ifj.write(sum);
             ifj.write("\n");
         } else {
-            ifj.write("Ошибка: Второе число не было введено.\n");
+            ifj.write("Error\n");
         }
     } else {
-        ifj.write("Ошибка: Первое число не было введено.\n");
+        ifj.write("Value is null\n");
     }
 }
