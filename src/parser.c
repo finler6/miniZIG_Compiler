@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 
-#undef DEBUG_PARSER
+#define DEBUG_PARSER
 #ifdef DEBUG_PARSER
 #define LOG(...) printf(__VA_ARGS__)
 #else
@@ -32,7 +32,7 @@ DataType parse_type(Scanner *scanner);
 DataType parse_return_type(Scanner *scanner); 
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
 bool type_convertion(ASTNode *main_node);
-bool is_subtype_nullable(DataType type_nullable, DataType type);
+bool can_assign_type(DataType expected_type, DataType actual_type);
 bool is_nullable(DataType type_nullable);
 DataType detach_nullable(DataType type_nullable);
 void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
@@ -85,6 +85,7 @@ bool is_builtin_function(const char *identifier, Scanner *scanner)
             return true;
         }
     }
+    error_exit(ERR_SEMANTIC_UNDEF, "Unknown built-in function: %s", identifier);
     return false;
 }
 
@@ -600,97 +601,164 @@ ASTNode *parse_statement(Scanner *scanner, char *function_name)
 ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
-    char *name;
-    Symbol *symbol;
-    if (strcmp(current_token.lexeme, "ifj") == 0 || strcmp(current_token.lexeme, "_") == 0)
-    {
-        bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
-        if (is_builtin)
+    char *name = NULL;
+    Symbol *symbol = NULL;
+    bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
+    bool is_function = false;
+    bool is_underscore = false;
+    symbol = symtable_search(&symtable, current_token.lexeme);
+    if(symbol != NULL){
+        if (symbol->symbol_type == SYMBOL_FUNCTION){
+            is_function = true;
+        } else if (strcmp(symbol->name, "_") == 0){
+            is_underscore = true;
+        }
+    }
+    if (is_builtin)
         {
-            name = construct_builtin_name("ifj", current_token.lexeme);
-            symbol = symtable_search(&symtable, name);
-            if (symbol == NULL)
+        name = construct_builtin_name("ifj", current_token.lexeme);
+        symbol = symtable_search(&symtable, name);
+        if (symbol == NULL)
+        {
+            error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
+        }
+        char *builtin_function_name = string_duplicate(current_token.lexeme);
+
+        current_token = get_next_token(scanner);
+        expect_token(TOKEN_LEFT_PAREN, scanner);
+        ASTNode **arguments;
+        int arg_count = 0;
+        int builtin_index = get_builtin_function_index(builtin_function_name);
+        int params_count = builtin_functions[builtin_index].param_count;
+
+        if (current_token.type != TOKEN_RIGHT_PAREN)
+        {
+            arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+            arguments[arg_count++] = parse_expression(scanner, function_name);
+            if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
             {
-                error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
+                error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
             }
-            char *builtin_function_name = string_duplicate(current_token.lexeme);
 
-            current_token = get_next_token(scanner);
-            expect_token(TOKEN_LEFT_PAREN, scanner);
-            ASTNode **arguments;
-            int arg_count = 0;
-            int builtin_index = get_builtin_function_index(builtin_function_name);
-            int params_count = builtin_functions[builtin_index].param_count;
-
-            if (current_token.type != TOKEN_RIGHT_PAREN)
+            while (current_token.type == TOKEN_COMMA)
             {
-                arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+                if (arg_count >= params_count)
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
+                }
+                current_token = get_next_token(scanner);
+                arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                 arguments[arg_count++] = parse_expression(scanner, function_name);
                 if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
                 {
                     error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
                 }
-
-                while (current_token.type == TOKEN_COMMA)
-                {
-                    if (arg_count >= params_count)
-                    {
-                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
-                    }
-                    current_token = get_next_token(scanner);
-                    arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                    arguments[arg_count++] = parse_expression(scanner, function_name);
-                    if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
-                    {
-                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                    }
-                }
             }
-            expect_token(TOKEN_RIGHT_PAREN, scanner); 
-
-            if (arg_count != builtin_functions[builtin_index].param_count)
-            {
-                error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
-            }
-
-            ASTNode *func_call_node = create_function_call_node(name, arguments, arg_count);
-            func_call_node->data_type = builtin_functions[builtin_index].return_type; 
-
-            expect_token(TOKEN_SEMICOLON, scanner);
-            return func_call_node;
         }
-        else
+        expect_token(TOKEN_RIGHT_PAREN, scanner); 
+
+        if (arg_count != builtin_functions[builtin_index].param_count)
         {
-            name = string_duplicate(current_token.lexeme);
-            symbol = symtable_search(&symtable, name);
-
-            current_token = get_next_token(scanner);
-
-            expect_token(TOKEN_ASSIGN, scanner);
-
-            ASTNode *value_node = parse_expression(scanner, function_name);
-
-            if (symbol->data_type != TYPE_ALL)
-            {
-                if (is_nullable(symbol->data_type) && value_node->data_type == TYPE_NULL)
-                {
-
-                }
-                else if (!is_subtype_nullable(symbol->data_type, value_node->data_type))
-                {
-                    error_exit(ERR_SEMANTIC_TYPE, "Cannot assign null to non-nullable variable %s.", name);
-                }
-            }
-
-            if (symbol->data_type == TYPE_FLOAT && value_node->data_type == TYPE_INT)
-            {
-                value_node = convert_to_float_node(value_node);
-            }
-
-            expect_token(TOKEN_SEMICOLON, scanner);
-            return create_assignment_node(name, value_node);
+            error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
         }
+
+        ASTNode *func_call_node = create_function_call_node(name, arguments, arg_count);
+        func_call_node->data_type = builtin_functions[builtin_index].return_type; 
+
+        expect_token(TOKEN_SEMICOLON, scanner);
+        return func_call_node;
+        //If is function
+    } else if(is_function){
+        char *function_call_name = string_duplicate(current_token.lexeme);
+        symbol = symtable_search(&symtable, function_call_name);
+        if (symbol == NULL || symbol->symbol_type != SYMBOL_FUNCTION) {
+            error_exit(ERR_SEMANTIC_UNDEF, "Undefined function %s.", function_call_name);
+        }
+
+        current_token = get_next_token(scanner);
+        expect_token(TOKEN_LEFT_PAREN, scanner);
+
+        ASTNode **arguments = NULL;
+        int arg_count = 0;
+        int params_count = symbol->declaration_node->param_count;
+
+        if (current_token.type != TOKEN_RIGHT_PAREN)
+        {
+            arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+            arguments[arg_count++] = parse_expression(scanner, function_name);
+
+            if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
+            {
+                error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of argument %d in function %s.", arg_count, function_call_name);
+            }
+
+            while (current_token.type == TOKEN_COMMA)
+            {
+                current_token = get_next_token(scanner);
+                if (arg_count >= params_count)
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", function_call_name);
+                }
+
+                arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                arguments[arg_count++] = parse_expression(scanner, function_name);
+
+                if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
+                {
+                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of argument %d in function %s.", arg_count, function_call_name);
+                }
+            }
+        }
+        expect_token(TOKEN_RIGHT_PAREN, scanner);
+
+        if (arg_count != params_count)
+        {
+            error_exit(ERR_SEMANTIC_PARAMS, "Incorrect number of arguments in function call to %s.", function_call_name);
+        }
+
+        ASTNode *func_call_node = create_function_call_node(function_call_name, arguments, arg_count);
+        func_call_node->data_type = symbol->data_type; 
+
+        if (func_call_node->data_type != TYPE_VOID)
+        {
+            error_exit(ERR_SEMANTIC_PARAMS, "Cannot ignore return value of function %s.", function_call_name);
+        }
+        expect_token(TOKEN_SEMICOLON, scanner);
+
+        return func_call_node;
     }
+    else if(is_underscore)
+    {
+        name = string_duplicate(current_token.lexeme);
+        symbol = symtable_search(&symtable, name);
+
+        current_token = get_next_token(scanner);
+
+        expect_token(TOKEN_ASSIGN, scanner);
+
+        ASTNode *value_node = parse_expression(scanner, function_name);
+
+        if (symbol->data_type != TYPE_ALL)
+        {
+            if (is_nullable(symbol->data_type) && value_node->data_type == TYPE_NULL)
+            {
+
+            }
+            else if (!can_assign_type(symbol->data_type, value_node->data_type))
+            {
+                error_exit(ERR_SEMANTIC_TYPE, "Cannot assign null to non-nullable variable %s.", name);
+            }
+        }
+
+        if (symbol->data_type == TYPE_FLOAT && value_node->data_type == TYPE_INT)
+        {
+            value_node = convert_to_float_node(value_node);
+        }
+
+        expect_token(TOKEN_SEMICOLON, scanner);
+        return create_assignment_node(name, value_node);
+    }
+
     else
     {
         name = construct_variable_name(current_token.lexeme, function_name);
@@ -709,7 +777,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
         ASTNode *value_node = parse_expression(scanner, function_name);
 
-        if(!is_subtype_nullable(symbol->data_type,value_node->data_type))
+        if(!can_assign_type(symbol->data_type,value_node->data_type))
         value_node = check_and_convert_expression(value_node, symbol->data_type, name);
 
         expect_token(TOKEN_SEMICOLON, scanner);
@@ -717,65 +785,24 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         return create_assignment_node(name, value_node);
     }
 }
+
 ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name)
 {
     if (!node)
         return NULL;
 
-    if (node->type == NODE_BINARY_OPERATION)
+    if (!can_assign_type(expected_type, node->data_type))
     {
-        node->left = check_and_convert_expression(node->left, expected_type, variable_name);
-        node->right = check_and_convert_expression(node->right, expected_type, variable_name);
-
-        if (node->left->data_type == TYPE_FLOAT || node->right->data_type == TYPE_FLOAT)
-        {
-            node->data_type = TYPE_FLOAT;
-        }
-        else if (node->left->data_type == TYPE_INT && node->right->data_type == TYPE_INT)
-        {
-            node->data_type = TYPE_INT;
-        }
-        else
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in binary operation for variable %s.", variable_name);
-        }
+        error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in assignment to variable %s.", variable_name);
     }
-    else if (node->type == NODE_LITERAL)
+    if (expected_type == TYPE_FLOAT && node->data_type == TYPE_INT)
     {
-        if (node->data_type == TYPE_INT && expected_type == TYPE_FLOAT)
-        {
-            LOG("DEBUG: Converting int to float for variable %s, name of value node: %s\n", variable_name, node->value);
-            node = convert_to_float_node(node);
-        }
-        else if (node->data_type != expected_type)
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "1 Type mismatch in assignment to variable %s.", variable_name);
-        }
-    }
-    
-    else if (node->type == NODE_IDENTIFIER){
-        if (!is_subtype_nullable(expected_type, node->data_type))
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in assignment to variable %s.", variable_name);
-        }
-    }
-    else
-    {
-        if (node->data_type == TYPE_INT && expected_type == TYPE_FLOAT)
-        {
-            LOG("DEBUG: Converting int to float for variable %s in function call\n", variable_name);
-            node = convert_to_float_node(node);
-        }
-        else if (node->data_type != expected_type)
-        {
-            if(!is_subtype_nullable(expected_type, node->data_type)){
-                error_exit(ERR_SEMANTIC_TYPE, "2 Type mismatch in assignment to variable %s.", variable_name);
-            }
-        }
+        node = convert_to_float_node(node);
     }
 
     return node;
 }
+
 
 
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
@@ -812,7 +839,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     ASTNode *initializer_node = parse_expression(scanner, function_name);
     DataType expr_type = initializer_node->data_type;
 
-    if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !is_subtype_nullable(declaration_type, expr_type))
+    if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !can_assign_type(declaration_type, expr_type))
     {
         error_exit(ERR_SEMANTIC_TYPE, "Declared type of variable does not match the assigned type. %d %d,\n Line and column: %d %d\n", declaration_type, expr_type, current_token.line, current_token.column);
     }
@@ -1372,7 +1399,7 @@ bool check_return_types_recursive(ASTNode *function_node, DataType return_type) 
         return false;
     }
     if (function_node->type == NODE_RETURN) {
-        if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type)) {
+        if (function_node->data_type != return_type && !can_assign_type(return_type, function_node->data_type)) {
             error_exit(ERR_SEMANTIC_PARAMS, "Incompatible types of return statement");
         }
         return true;
@@ -1404,7 +1431,7 @@ bool check_all_return_types(ASTNode *function_node, DataType return_type) {
         return true;
     }
     if (function_node->type == NODE_RETURN) {
-        if (function_node->data_type != return_type && !is_subtype_nullable(return_type, function_node->data_type)) {
+        if (function_node->data_type != return_type && !can_assign_type(return_type, function_node->data_type)) {
             error_exit(ERR_SEMANTIC_PARAMS, "Incompatible return type. Expected: %d, Got: %d", return_type, function_node->data_type);
         }
     }
@@ -1472,12 +1499,30 @@ bool type_convertion(ASTNode *main_node)
     remove_decimal(main_node->left->value);*/
 }
 
-bool is_subtype_nullable(DataType type_nullable, DataType type)
+bool can_assign_type(DataType expected_type, DataType actual_type)
 {
-    return ((type_nullable == TYPE_INT_NULLABLE && (type == TYPE_INT || type == TYPE_NULL)) ||
-            (type_nullable == TYPE_FLOAT_NULLABLE && (type == TYPE_FLOAT || type == TYPE_NULL)) ||
-            (type_nullable == TYPE_U8_NULLABLE && (type == TYPE_U8 || type == TYPE_NULL)));
+    if (expected_type == actual_type)
+        return true;
+    
+    // Разрешаем неявное преобразование int к float
+    if (expected_type == TYPE_FLOAT && actual_type == TYPE_INT)
+        return true;
+
+    // Разрешаем присвоение не-nullable значения nullable переменной
+    if (is_nullable(expected_type) && !is_nullable(actual_type) && detach_nullable(expected_type) == actual_type)
+        return true;
+
+    // Не разрешаем присвоение nullable значения не-nullable переменной
+    if (!is_nullable(expected_type) && is_nullable(actual_type))
+        return false;
+
+    // Разрешаем присвоение null nullable переменной
+    if (is_nullable(expected_type) && actual_type == TYPE_NULL)
+        return true;
+
+    return false;
 }
+
 
 bool is_nullable(DataType type_nullable)
 {

@@ -10,7 +10,7 @@
 #include "error.h"
 #include "parser.h"
 
-#undef DEBUG_SYMTABLE
+#define DEBUG_SYMTABLE
 #ifdef DEBUG_SYMTABLE
     #define LOG(...) printf(__VA_ARGS__)
 #else

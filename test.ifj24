@@ -1,29 +1,85 @@
 const ifj = @import("ifj24.zig");
 
-pub fn factorial(n: i32) i32 {
-    if (n == 0) {
-            return 1;
+
+
+// Тест чисел
+pub fn test_numbers() void {
+    ifj.write("\n--- Тест чисел ---\n");
+    const a: i32 = 10;
+    const b: f64 = 2.5;
+    const sum: f64 = ifj.i2f(a) + b;
+    ifj.write("Сумма 10 и 2.5: "); ifj.write(sum); ifj.write("\n");
+
+    const product: i32 = a * ifj.f2i(b);
+    ifj.write("Произведение 10 и 2 (округлено): "); ifj.write(product); ifj.write("\n");
+}
+
+// Тест строк
+pub fn test_strings() void {
+    ifj.write("\n--- Тест строк ---\n");
+    const str1 = ifj.string("IFJ24");
+    const str2 = ifj.string(" — мощный язык.");
+    const result = ifj.concat(str1, str2);
+    ifj.write("Объединенная строка: "); ifj.write(result); ifj.write("\n");
+}
+
+// Тест подстрок
+pub fn test_substrings() void {
+    ifj.write("\n--- Тест подстрок ---\n");
+    const text = ifj.string("Пример текста для подстроки");
+    const substr = ifj.substring(text, 8, 14);
+    if (substr) |sub| {
+        ifj.write("Подстрока: "); ifj.write(sub); ifj.write("\n");
     } else {
-        return n * factorial(n - 1);
+        ifj.write("Ошибка извлечения подстроки.\n");
     }
 }
 
-pub fn main() void {
-    ifj.write("Enter a number to calculate factorial:\n");
-    const input = ifj.readi32();
-
-    if (input) |val| {
-        if (val < 0) {
-            ifj.write("Factorial of negative numbers is not defined\n");
-        } else {
-            const result = factorial(val);
-            ifj.write("Factorial of ");
-            ifj.write(val);
-            ifj.write(" is ");
-            ifj.write(result);
-            ifj.write("\n");
-        }
-    } else {
-        ifj.write("Factorial for null is not defined\n");
+// Тест циклов
+pub fn test_loops() void {
+    ifj.write("\n--- Тест циклов ---\n");
+    var count: i32 = 5;
+    while (count > 0) {
+        ifj.write("Счетчик: "); ifj.write(count); ifj.write("\n");
+        count = count - 1;
     }
+}
+
+// Тест работы с null
+pub fn test_null_handling() void {
+    ifj.write("\n--- Тест работы с null ---\n");
+    var optional: ?i32 = null;
+
+    if (optional) |value| {
+        ifj.write("Значение: "); ifj.write(value); ifj.write("\n");
+    } else {
+        ifj.write("Значение отсутствует (null).\n");
+    }
+
+    optional = 42;
+    if (optional) |value| {
+        ifj.write("Новое значение: "); ifj.write(value); ifj.write("\n");
+    }
+}
+
+// Основная функция
+pub fn main() void {
+    ifj.write("=== Начало тестирования языка IFJ24 ===\n");
+
+    // Тест чисел
+    test_numbers();
+
+    // Тест строк
+    test_strings();
+
+    // Тест подстрок
+    test_substrings();
+
+    // Тест циклов
+    test_loops();
+
+    // Тест работы с null
+    test_null_handling();
+
+    ifj.write("=== Завершение тестирования ===\n");
 }

@@ -49,7 +49,7 @@ char* construct_variable_name(const char* str1, const char* str2) {
         fprintf(stderr, "Memory allocation failed\n");
         return NULL;
     }
-    snprintf(result, len, "%s_%s", str1, str2);
+    snprintf(result, len, "%s.%s", str1, str2);
     return result;
 }
 

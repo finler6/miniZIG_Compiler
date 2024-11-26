@@ -30,23 +30,25 @@ void codegen_generate_if(FILE *output, ASTNode *if_node);
 void codegen_generate_while(FILE *output, ASTNode *while_node);
 
 const char* remove_last_prefix(const char* name) {
-    static char buffer[1024]; 
+    static char buffer[1024];
     if (!name) {
         return NULL;
     }
-    const char* last_underscore = strrchr(name, '_');
-    if (last_underscore && *(last_underscore + 1) != '\0') {
-        size_t new_len = last_underscore - name;
+
+    const char* last_dot = strrchr(name, '.');
+    if (last_dot && *(last_dot + 1) != '\0') {
+        size_t new_len = last_dot - name;
         if (new_len >= sizeof(buffer)) {
-            LOG(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
+            fprintf(stderr, "Error: Buffer overflow in remove_last_suffix.\n");
             exit(EXIT_FAILURE);
         }
         strncpy(buffer, name, new_len); 
         buffer[new_len] = '\0';         
         return buffer;
     }
-    return name;
+    return name; 
 }
+
 
 
 /*void collect_functions(ASTNode *program_node) {
