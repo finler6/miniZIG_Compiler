@@ -1,13 +1,13 @@
 const ifj = @import("ifj24.zig");
 
-pub fn foo() void {
-
-}
-
 
 
 pub fn main() void {
-    
-    
+
+    const a = 0.1;
+    if(a == 1)
+    {
+        
+    }
     return;
 }

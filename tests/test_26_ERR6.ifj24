@@ -1,13 +1,11 @@
 const ifj = @import("ifj24.zig");
 
-pub fn foo() void {
-
+pub fn foo() i32{
+    var a = 1;
+    a = 1;
 }
 
-
-
 pub fn main() void {
-    
-    
+    foo();
     return;
 }

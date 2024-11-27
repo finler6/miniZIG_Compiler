@@ -1,0 +1,14 @@
+const ifj = @import("ifj24.zig");
+
+
+
+pub fn main() void {
+    var b : []u8 = ifj.string("Hello");
+    var a : []u8 = ifj.string("Hi");
+    if(a == b)
+    {
+
+    }
+    
+    return;
+}

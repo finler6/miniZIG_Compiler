@@ -137,6 +137,7 @@ ASTNode *parse_program(Scanner *scanner)
 
     ASTNode *import_node = parse_import(scanner);
     program_node->next = import_node;
+    
     load_builtin_functions(&symtable, import_node);
 
     parse_functions_declaration(scanner, program_node);
@@ -160,11 +161,11 @@ ASTNode *parse_program(Scanner *scanner)
             error_exit(ERR_SYNTAX, "Expected function definition. Line: %d, Column: %d", current_token.line, current_token.column);
         }
     }
+    
 
-    if (!is_symtable_all_used(&symtable))
-    {
-        error_exit(ERR_SEMANTIC_UNUSED, "Unused variable");
-    }
+    is_main_correct(&symtable);
+
+    is_symtable_all_used(&symtable);
 
     scope_check_identifiers_in_tree(program_node);
 
