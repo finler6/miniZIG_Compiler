@@ -7,5 +7,5 @@ pub fn foo1() void{
 
 pub fn foo2() void{
     foo1();
-    return;;
+    return;
 }
