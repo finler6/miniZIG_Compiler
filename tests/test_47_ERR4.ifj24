@@ -1,3 +1,5 @@
+const ifj = @import("ifj24.zig");
+
 pub fn foo() ?i32
 {
     return null;
