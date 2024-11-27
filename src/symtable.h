@@ -56,7 +56,8 @@ void symtable_free(SymTable *symtable);
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol);
 Symbol *symtable_search(SymTable *symtable, char *key);
 void symtable_remove(SymTable *symtable, char *key);
-bool is_symtable_all_used(SymTable *symtable);
+void is_symtable_all_used(SymTable *symtable);
+void is_main_correct(SymTable *symtable);
 // Hash function
 unsigned int symtable_hash(char *key, int size);
 

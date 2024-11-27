@@ -1,0 +1,7 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() i32 {
+    var a = 1;
+    a = 1;
+    return 4;
+}
