@@ -469,7 +469,7 @@ void codegen_generate_function(ASTNode *function) {
     fprintf(output_file, "PUSHFRAME\n");
 
     // Объявляем переменные для параметров функции
-    for (int i = 0; i < function->param_count; i++) {
+    for (int i = function->param_count - 1; i >= 0; i--) {
         fprintf(output_file, "DEFVAR LF@%s\n", remove_last_prefix(function->parameters[i]->name));
         fprintf(output_file, "POPS LF@%s\n", remove_last_prefix(function->parameters[i]->name));
     }
@@ -730,15 +730,26 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
         char* tmp_int_var = generate_unique_var_name("tmp-int");
         char* tmp_temp_var = generate_unique_var_name("tmp-temp");
         char* retval_var = generate_unique_var_name("retval");
+
+        // Объявляем переменные
         fprintf(output, "DEFVAR LF@%s\n", tmp_int_var);
         fprintf(output, "POPS LF@%s\n", tmp_int_var);
         fprintf(output, "DEFVAR LF@%s\n", tmp_temp_var);
         fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "DIV LF@%s LF@%s int@256\n", tmp_temp_var, tmp_int_var);
+
+        // Выполняем целочисленное деление
+        fprintf(output, "IDIV LF@%s LF@%s int@256\n", tmp_temp_var, tmp_int_var);
+
+        // Умножаем результат на 256
         fprintf(output, "MUL LF@%s LF@%s int@256\n", tmp_temp_var, tmp_temp_var);
+
+        // Вычисляем остаток: i = i - (i // 256) * 256
         fprintf(output, "SUB LF@%s LF@%s LF@%s\n", tmp_int_var, tmp_int_var, tmp_temp_var);
+
+        // Преобразуем целое число в символ
         fprintf(output, "INT2CHAR LF@%s LF@%s\n", retval_var, tmp_int_var);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
+
         free(tmp_int_var);
         free(tmp_temp_var);
         free(retval_var);
@@ -923,7 +934,6 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
     int current_label = if_label_count++;
 
     if (if_node->condition->type == NODE_IDENTIFIER && is_nullable(if_node->condition->data_type)) {
-        int temp_var_number = get_temp_var_number_for_node(if_node->condition);
         fprintf(output, "TYPE LF@%%tmp_type LF@%s\n",  remove_last_prefix(if_node->condition->name));
         fprintf(output, "JUMPIFEQ $else_%d LF@%%tmp_type string@nil\n", current_label);
     } else {
@@ -996,4 +1006,3 @@ char *escape_ifj24_string(const char *input) {
     escaped_string[index] = '\0';
     return escaped_string;
 }
-
