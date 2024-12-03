@@ -99,10 +99,6 @@ bool is_variable_declared(const char *var_name) {
 }
 
 void add_declared_variable(const char *var_name) {
-    if (is_variable_declared(var_name)) {
-        // Переменная уже добавлена, не добавляем повторно
-        return;
-    }
     DeclaredVar *new_var = malloc(sizeof(DeclaredVar));
     new_var->var_name = string_duplicate(var_name);
     new_var->next = declared_vars;
@@ -163,6 +159,9 @@ char* get_temp_var_name_for_node(ASTNode* node, const char* key) {
     fprintf(stderr, "Error: Temporary variable for node not found.\n");
     exit(1);
 }
+
+
+
 
 void codegen_generate_function(ASTNode *function_node);
 void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function);
@@ -504,14 +503,6 @@ void codegen_generate_program(ASTNode *program_node) {
     codegen_generate_builtin_functions();
 }
 
-bool is_function_parameter(ASTNode *function, const char *var_name) {
-    for (int i = 0; i < function->param_count; i++) {
-        if (strcmp(remove_last_prefix(function->parameters[i]->name), var_name) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
 
 void codegen_generate_function(ASTNode *function) {
     reset_temp_var_map();
@@ -523,7 +514,7 @@ void codegen_generate_function(ASTNode *function) {
     fprintf(output_file, "PUSHFRAME\n");
 
     // Declare function parameters
-    for (int i = 0; i < function->param_count; i++) {
+    for (int i = function->param_count - 1; i >= 0; i--) {
         const char *param_name = remove_last_prefix(function->parameters[i]->name);
         fprintf(output_file, "DEFVAR LF@%s\n", param_name);
         fprintf(output_file, "POPS LF@%s\n", param_name);
@@ -541,25 +532,13 @@ void codegen_generate_function(ASTNode *function) {
     // First Pass: Collect variables (including temporary ones)
     collect_variables_in_block(function->body);
 
-    // Declare all variables collected (excluding parameters and standard temporary variables)
-    DeclaredVar *current_declared_var = declared_vars;
-    while (current_declared_var) {
-        const char *var_name = current_declared_var->var_name;
-        // Skip parameters and standard temporary variables
-        if (strcmp(var_name, "%%tmp_type") != 0 &&
-            strcmp(var_name, "%%tmp_var") != 0 &&
-            strcmp(var_name, "%%tmp_bool") != 0 &&
-            !is_function_parameter(function, var_name)) {
-            fprintf(output_file, "DEFVAR LF@%s\n", var_name);
-        }
-        current_declared_var = current_declared_var->next;
-    }
-
     // Declare all temporary variables collected
     TempVar *current_temp_var = temp_vars;
     while (current_temp_var) {
-        const char *var_name = current_temp_var->name;
-        fprintf(output_file, "DEFVAR LF@%s\n", var_name);
+        if (!is_variable_declared(current_temp_var->name)) {
+            fprintf(output_file, "DEFVAR LF@%s\n", current_temp_var->name);
+            add_declared_variable(current_temp_var->name);
+        }
         current_temp_var = current_temp_var->next;
     }
 
@@ -569,6 +548,8 @@ void codegen_generate_function(ASTNode *function) {
     fprintf(output_file, "POPFRAME\n");
     fprintf(output_file, "RETURN\n");
 }
+
+
 
 void collect_variables_in_block(ASTNode *block_node) {
     ASTNode *current = block_node->body;
@@ -966,13 +947,7 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
         for (int i = 0; i < node->arg_count; ++i) {
             codegen_generate_expression(output, node->arguments[i], current_function);
         }
-        if (strcmp(node->name, "ifj.string") == 0){
-            fprintf(output, "CALL ifj-string\n");
-        } else if (strcmp(node->name, "ifj.strcmp") == 0) {
-            fprintf(output, "CALL ifj-strcmp\n");
-        } else {
-            fprintf(output, "CALL ifj-substring\n");
-        }
+        fprintf(output, "CALL %s\n", node->name);
 
     } else if (strcmp(node->name, "ifj.chr") == 0) {
         codegen_generate_expression(output, node->arguments[0], current_function);
