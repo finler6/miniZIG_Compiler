@@ -264,7 +264,7 @@ void print_ast(ASTNode* node, int indent) {
         case NODE_BINARY_OPERATION:
             printf("Node type: BINARY_OPERATION\n");
             for (int i = 0; i < indent + 1; ++i) printf("  ");
-            printf("Data type: %d\n", node->data_type);
+            printf("Data type: %d, Operator: %s\n", node->data_type, node->name);
             break;
 
         case NODE_LITERAL:

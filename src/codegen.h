@@ -27,7 +27,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char* curren
 void codegen_generate_function_call(FILE *output, ASTNode *node, const char* current_function);
 void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node);
 void codegen_generate_assignment(FILE *output, ASTNode *assignment_node);
-void codegen_generate_return(FILE *output, ASTNode *return_node);
+void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function);
 
 void codegen_generate_if(FILE *output, ASTNode *if_node);
 
@@ -38,5 +38,7 @@ int generate_unique_label();
 const char* get_function_name_from_variable(const char* var_name);
 
 void collect_functions(ASTNode *program_node);
+
+bool is_function_parameter(ASTNode *function, const char *var_name);
 
 #endif // CODEGEN_H

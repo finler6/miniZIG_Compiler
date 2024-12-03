@@ -1,2278 +1,648 @@
-DEBUG_PARSER: Initializing parser...
-DEBUG_SYMTABLE: symtable_search called with key: _
-DEBUG_SYMTABLE: symtable_search called with key: _
-DEBUG_SYMTABLE: Inserted symbol: '_' at index: 4
-DEBUG_PARSER: Parsing program
-DEBUG_PARSER: Parsing import statement
-DEBUG_PARSER: Expected token: 0, got token: 0
-Line and column: 1 1
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 1 11
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 1 20
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 1 32
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 1 33
-DEBUG_PARSER: Finished parsing import statement
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readstr
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readstr
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.readstr' at index: 33
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readi32
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readi32
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.readi32' at index: 54
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readf64
-DEBUG_SYMTABLE: symtable_search called with key: ifj.readf64
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.readf64' at index: 24
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.write' at index: 55
-DEBUG_SYMTABLE: symtable_search called with key: ifj.i2f
-DEBUG_SYMTABLE: symtable_search called with key: ifj.i2f
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.i2f' at index: 13
-DEBUG_SYMTABLE: symtable_search called with key: ifj.f2i
-DEBUG_SYMTABLE: symtable_search called with key: ifj.f2i
-DEBUG_SYMTABLE: Comparing key: 'ifj.f2i' with existing symbol: 'ifj.i2f'
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.f2i' at index: 13
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.string' at index: 3
-DEBUG_SYMTABLE: symtable_search called with key: ifj.length
-DEBUG_SYMTABLE: symtable_search called with key: ifj.length
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.length' at index: 14
-DEBUG_SYMTABLE: symtable_search called with key: ifj.concat
-DEBUG_SYMTABLE: symtable_search called with key: ifj.concat
-DEBUG_SYMTABLE: Comparing key: 'ifj.concat' with existing symbol: '_'
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.concat' at index: 4
-DEBUG_SYMTABLE: symtable_search called with key: ifj.substring
-DEBUG_SYMTABLE: symtable_search called with key: ifj.substring
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.substring' at index: 45
-DEBUG_SYMTABLE: symtable_search called with key: ifj.strcmp
-DEBUG_SYMTABLE: symtable_search called with key: ifj.strcmp
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.strcmp' at index: 37
-DEBUG_SYMTABLE: symtable_search called with key: ifj.ord
-DEBUG_SYMTABLE: symtable_search called with key: ifj.ord
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.ord' at index: 17
-DEBUG_SYMTABLE: symtable_search called with key: ifj.chr
-DEBUG_SYMTABLE: symtable_search called with key: ifj.chr
-DEBUG_SYMTABLE: Inserted symbol: 'ifj.chr' at index: 9
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 4 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 4 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 4 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 4 20
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: Inserted symbol: 'test_numbers' at index: 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 16 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 16 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 16 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 16 20
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: Inserted symbol: 'test_strings' at index: 46
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 25 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 25 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 25 22
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 25 23
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: Comparing key: 'test_substrings' with symbol: 'ifj.readf64'
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: Comparing key: 'test_substrings' with existing symbol: 'ifj.readf64'
-DEBUG_SYMTABLE: Inserted symbol: 'test_substrings' at index: 24
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 37 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 37 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 37 17
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 37 18
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: Inserted symbol: 'test_loops' at index: 49
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 47 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 47 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 47 25
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 47 26
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: Inserted symbol: 'test_null_handling' at index: 35
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 64 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 64 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 64 11
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 64 12
-!!!DEBUG_PARSER: Brace count passed
-DEBUG_SYMTABLE: symtable_search called with key: main
-DEBUG_SYMTABLE: symtable_search called with key: main
-DEBUG_SYMTABLE: symtable_search called with key: main
-DEBUG_SYMTABLE: symtable_search called with key: main
-DEBUG_SYMTABLE: Inserted symbol: 'main' at index: 42
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 4 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 4 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 4 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 4 20
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 4 27
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 5 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 5 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 5 16
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 5 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 5 40
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 5 41
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 6 17
-DEBUG_PARSER: Parsing expression. Current token: 15
-. Line and column: 6 19
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 6 19
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 6 21
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: Inserted symbol: 'a.test_numbers' at index: 47
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 7 17
-DEBUG_PARSER: Parsing expression. Current token: 16
-. Line and column: 7 19
-DEBUG_PARSER: Parsing primary expression. Current token: 16
- Line and column: 7 19
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 7 22
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: Inserted symbol: 'b.test_numbers' at index: 16
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 8 19
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 8 21
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 8 21
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 8 24
-!!!!DEBUG_PARSER: Recognized identifier: i2f
-!!!!DEBUG_PARSER: Recognized builtin function: i2f
-DEBUG_SYMTABLE: symtable_search called with key: ifj.i2f
-DEBUG_SYMTABLE: symtable_search called with key: ifj.i2f
-DEBUG_SYMTABLE: Comparing key: 'ifj.i2f' with symbol: 'ifj.f2i'
-DEBUG_SYMTABLE: Comparing key: 'ifj.i2f' with symbol: 'ifj.i2f'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 8 28
-DEBUG_PARSER: Function return index: 2
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 8 29
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 8 29
-DEBUG_SYMTABLE: symtable_search called with key: a
-DEBUG_SYMTABLE: symtable_search called with key: a
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'a.test_numbers' with symbol: 'a.test_numbers'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 8 30
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 8 34
-DEBUG_SYMTABLE: symtable_search called with key: b
-DEBUG_SYMTABLE: symtable_search called with key: b
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'b.test_numbers' with symbol: 'b.test_numbers'
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 8 35
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'sum.test_numbers' with symbol: 'ifj.string'
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'sum.test_numbers' with existing symbol: 'ifj.string'
-DEBUG_SYMTABLE: Inserted symbol: 'sum.test_numbers' at index: 3
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 9 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 9 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 9 14
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 9 14
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 9 38
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 9 39
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 9 44
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 9 50
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 9 51
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 9 51
-DEBUG_SYMTABLE: symtable_search called with key: sum
-DEBUG_SYMTABLE: symtable_search called with key: sum
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: sum.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'sum.test_numbers' with symbol: 'sum.test_numbers'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 9 54
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 9 55
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 9 60
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 9 66
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 9 68
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 9 68
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 9 71
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 9 72
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 11 23
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 11 25
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 11 25
-DEBUG_SYMTABLE: symtable_search called with key: a
-DEBUG_SYMTABLE: symtable_search called with key: a
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'a.test_numbers' with symbol: 'a.test_numbers'
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 11 29
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 11 32
-!!!!DEBUG_PARSER: Recognized identifier: f2i
-!!!!DEBUG_PARSER: Recognized builtin function: f2i
-DEBUG_SYMTABLE: symtable_search called with key: ifj.f2i
-DEBUG_SYMTABLE: symtable_search called with key: ifj.f2i
-DEBUG_SYMTABLE: Comparing key: 'ifj.f2i' with symbol: 'ifj.f2i'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 11 36
-DEBUG_PARSER: Function return index: 1
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 11 37
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 11 37
-DEBUG_SYMTABLE: symtable_search called with key: b
-DEBUG_SYMTABLE: symtable_search called with key: b
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'b.test_numbers' with symbol: 'b.test_numbers'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 11 38
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 11 39
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'product.test_numbers' with symbol: 'a.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'product.test_numbers' with existing symbol: 'a.test_numbers'
-DEBUG_SYMTABLE: Inserted symbol: 'product.test_numbers' at index: 47
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 12 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 12 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 12 14
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 12 14
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 12 52
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 12 53
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 12 58
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 12 64
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 12 65
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 12 65
-DEBUG_SYMTABLE: symtable_search called with key: product
-DEBUG_SYMTABLE: symtable_search called with key: product
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: product.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'product.test_numbers' with symbol: 'product.test_numbers'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 12 72
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 12 73
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 12 78
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 12 84
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 12 86
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 12 86
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 12 89
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 12 90
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 13 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 16 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 16 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 16 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 16 20
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 16 27
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 17 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 17 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 17 16
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 17 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 17 40
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 17 41
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 18 15
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 18 17
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 18 17
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 18 20
-!!!!DEBUG_PARSER: Recognized identifier: string
-!!!!DEBUG_PARSER: Recognized builtin function: string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'sum.test_numbers'
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'ifj.string'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 18 27
-DEBUG_PARSER: Function return index: 6
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 18 28
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 18 28
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 18 35
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 18 36
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: Inserted symbol: 'str1.test_strings' at index: 38
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 19 15
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 19 17
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 19 17
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 19 20
-!!!!DEBUG_PARSER: Recognized identifier: string
-!!!!DEBUG_PARSER: Recognized builtin function: string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'sum.test_numbers'
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'ifj.string'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 19 27
-DEBUG_PARSER: Function return index: 6
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 19 28
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 19 28
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 19 50
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 19 51
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: Inserted symbol: 'str2.test_strings' at index: 7
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 20 17
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 20 19
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 20 19
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 20 22
-!!!!DEBUG_PARSER: Recognized identifier: concat
-!!!!DEBUG_PARSER: Recognized builtin function: concat
-DEBUG_SYMTABLE: symtable_search called with key: ifj.concat
-DEBUG_SYMTABLE: symtable_search called with key: ifj.concat
-DEBUG_SYMTABLE: Comparing key: 'ifj.concat' with symbol: 'ifj.concat'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 20 29
-DEBUG_PARSER: Function return index: 6
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 20 30
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 20 30
-DEBUG_SYMTABLE: symtable_search called with key: str1
-DEBUG_SYMTABLE: symtable_search called with key: str1
-DEBUG_SYMTABLE: Comparing key: 'str1' with symbol: 'product.test_numbers'
-DEBUG_SYMTABLE: Comparing key: 'str1' with symbol: 'a.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str1.test_strings
-DEBUG_SYMTABLE: Comparing key: 'str1.test_strings' with symbol: 'str1.test_strings'
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 20 36
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 20 36
-DEBUG_SYMTABLE: symtable_search called with key: str2
-DEBUG_SYMTABLE: symtable_search called with key: str2
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: str2.test_strings
-DEBUG_SYMTABLE: Comparing key: 'str2.test_strings' with symbol: 'str2.test_strings'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 20 40
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 20 41
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: Inserted symbol: 'result.test_strings' at index: 27
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 21 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 21 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 21 14
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 21 14
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 21 37
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 21 38
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 21 43
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 21 49
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 21 50
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 21 50
-DEBUG_SYMTABLE: symtable_search called with key: result
-DEBUG_SYMTABLE: symtable_search called with key: result
-DEBUG_SYMTABLE: Comparing key: 'result' with symbol: 'ifj.concat'
-DEBUG_SYMTABLE: Comparing key: 'result' with symbol: '_'
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: symtable_search called with key: result.test_strings
-DEBUG_SYMTABLE: Comparing key: 'result.test_strings' with symbol: 'result.test_strings'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 21 56
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 21 57
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 21 62
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 21 68
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 21 70
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 21 70
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 21 73
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 21 74
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 22 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 25 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 25 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 25 22
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 25 23
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 25 30
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 26 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 26 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 26 16
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 26 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 26 42
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 26 43
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 27 15
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 27 17
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 27 17
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 27 20
-!!!!DEBUG_PARSER: Recognized identifier: string
-!!!!DEBUG_PARSER: Recognized builtin function: string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: symtable_search called with key: ifj.string
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'sum.test_numbers'
-DEBUG_SYMTABLE: Comparing key: 'ifj.string' with symbol: 'ifj.string'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 27 27
-DEBUG_PARSER: Function return index: 6
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 27 28
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 27 28
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 27 56
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 27 57
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: Inserted symbol: 'text.test_substrings' at index: 43
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 28 17
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 28 19
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 28 19
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 28 22
-!!!!DEBUG_PARSER: Recognized identifier: substring
-!!!!DEBUG_PARSER: Recognized builtin function: substring
-DEBUG_SYMTABLE: symtable_search called with key: ifj.substring
-DEBUG_SYMTABLE: symtable_search called with key: ifj.substring
-DEBUG_SYMTABLE: Comparing key: 'ifj.substring' with symbol: 'ifj.substring'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 28 32
-DEBUG_PARSER: Function return index: 10
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 28 33
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 28 33
-DEBUG_SYMTABLE: symtable_search called with key: text
-DEBUG_SYMTABLE: symtable_search called with key: text
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: text.test_substrings
-DEBUG_SYMTABLE: Comparing key: 'text.test_substrings' with symbol: 'text.test_substrings'
-DEBUG_PARSER: Parsing expression. Current token: 15
-. Line and column: 28 39
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 28 39
-DEBUG_PARSER: Parsing expression. Current token: 15
-. Line and column: 28 42
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 28 42
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 28 44
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 28 45
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: Inserted symbol: 'substr.test_substrings' at index: 41
-DEBUG_PARSER: Parsing if statement
-DEBUG_PARSER: Expected token: 2, got token: 2
-Line and column: 29 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 29 7
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 29 8
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 29 8
-DEBUG_SYMTABLE: symtable_search called with key: substr
-DEBUG_SYMTABLE: symtable_search called with key: substr
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: Comparing key: 'substr.test_substrings' with symbol: 'substr.test_substrings'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 29 14
-DEBUG_SYMTABLE: symtable_search called with key: sub
-DEBUG_SYMTABLE: symtable_search called with key: sub
-DEBUG_SYMTABLE: symtable_search called with key: sub.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: sub.test_substrings
-DEBUG_SYMTABLE: Inserted symbol: 'sub.test_substrings' at index: 48
-DEBUG_PARSER: Expected token: 38, got token: 38
-Line and column: 29 20
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 29 22
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 30 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 30 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 30 18
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 30 18
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 30 31
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 30 32
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 30 37
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 30 43
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 30 44
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 30 44
-DEBUG_SYMTABLE: symtable_search called with key: sub
-DEBUG_SYMTABLE: symtable_search called with key: sub
-DEBUG_SYMTABLE: symtable_search called with key: sub.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: sub.test_substrings
-DEBUG_SYMTABLE: Comparing key: 'sub.test_substrings' with symbol: 'sub.test_substrings'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 30 47
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 30 48
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 30 53
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 30 59
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 30 61
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 30 61
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 30 64
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 30 65
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 31 4
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 31 11
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 32 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 32 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 32 19
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 32 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 32 49
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 32 50
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 33 4
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 34 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 37 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 37 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 37 17
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 37 18
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 37 25
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 38 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 38 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 38 16
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 38 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 38 38
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 38 39
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 39 19
-DEBUG_PARSER: Parsing expression. Current token: 15
-. Line and column: 39 21
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 39 21
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 39 22
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Inserted symbol: 'count.test_loops' at index: 8
-DEBUG_PARSER: Parsing while statement
-DEBUG_PARSER: Expected token: 4, got token: 4
-Line and column: 40 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 40 10
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 40 11
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 40 11
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: Comparing key: 'count' with symbol: 'test_strings'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 40 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 40 20
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 40 22
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 41 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 41 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 41 18
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 41 18
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 41 29
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 41 30
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 41 35
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 41 41
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 41 42
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 41 42
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: Comparing key: 'count' with symbol: 'test_strings'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 41 47
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 41 48
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 41 53
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 41 59
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 41 61
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 41 61
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 41 64
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 41 65
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: Comparing key: 'count' with symbol: 'test_strings'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 42 14
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 42 16
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 42 16
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: symtable_search called with key: count
-DEBUG_SYMTABLE: Comparing key: 'count' with symbol: 'test_strings'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 42 24
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 42 25
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 43 4
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 44 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 47 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 47 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 47 25
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 47 26
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 47 33
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 48 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 48 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 48 16
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 48 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 48 46
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 48 47
-DEBUG_PARSER: Parsing variable declaration
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 49 23
-DEBUG_PARSER: Parsing expression. Current token: 9
-. Line and column: 49 25
-DEBUG_PARSER: Parsing primary expression. Current token: 9
- Line and column: 49 25
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 49 29
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'ifj.write'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with existing symbol: 'ifj.write'
-DEBUG_SYMTABLE: Inserted symbol: 'optional.test_null_handling' at index: 55
-DEBUG_PARSER: Parsing if statement
-DEBUG_PARSER: Expected token: 2, got token: 2
-Line and column: 51 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 51 7
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 51 8
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 51 8
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 51 16
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'value.test_null_handling' with existing symbol: 'ifj.length'
-DEBUG_SYMTABLE: Inserted symbol: 'value.test_null_handling' at index: 14
-DEBUG_PARSER: Expected token: 38, got token: 38
-Line and column: 51 24
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 51 26
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 52 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 52 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 52 18
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 52 18
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 52 27
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 52 28
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 52 33
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 52 39
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 52 40
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 52 40
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'value.test_null_handling' with symbol: 'value.test_null_handling'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 52 45
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 52 46
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 52 51
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 52 57
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 52 59
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 52 59
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 52 62
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 52 63
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 53 4
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 53 11
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 54 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 54 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 54 19
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 54 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 54 46
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 54 47
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 55 4
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_PARSER: Expected token: 22, got token: 22
-Line and column: 57 13
-DEBUG_PARSER: Parsing expression. Current token: 15
-. Line and column: 57 15
-DEBUG_PARSER: Parsing primary expression. Current token: 15
- Line and column: 57 15
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 57 17
-DEBUG_PARSER: Parsing if statement
-DEBUG_PARSER: Expected token: 2, got token: 2
-Line and column: 58 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 58 7
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 58 8
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 58 8
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 58 16
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'value.test_null_handling' with existing symbol: 'value.test_null_handling'
-DEBUG_PARSER: Expected token: 38, got token: 38
-Line and column: 58 24
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 58 26
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 59 11
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 59 17
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 59 18
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 59 18
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 59 31
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 59 32
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 59 37
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 59 43
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 14
-. Line and column: 59 44
-DEBUG_PARSER: Parsing primary expression. Current token: 14
- Line and column: 59 44
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: value.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'value.test_null_handling' with symbol: 'value.test_null_handling'
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 59 49
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 59 50
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 59 55
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 59 61
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 59 63
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 59 63
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 59 66
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 59 67
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 60 4
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 61 0
-DEBUG_PARSER: Parsing function
-DEBUG_PARSER: Expected token: 7, got token: 7
-Line and column: 64 0
-DEBUG_PARSER: Expected token: 6, got token: 6
-Line and column: 64 4
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 64 11
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 64 12
-DEBUG_PARSER: Parsing block
-DEBUG_PARSER: Expected token: 31, got token: 31
-Line and column: 64 19
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 65 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 65 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 65 15
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 65 15
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 65 57
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 65 58
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: Comparing key: 'test_numbers' with symbol: 'test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: test_numbers
-DEBUG_SYMTABLE: Comparing key: 'test_numbers' with symbol: 'test_numbers'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 68 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 68 17
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 68 18
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: Comparing key: 'test_strings' with symbol: 'test_strings'
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: symtable_search called with key: test_strings
-DEBUG_SYMTABLE: Comparing key: 'test_strings' with symbol: 'test_strings'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 71 16
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 71 17
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 71 18
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: Comparing key: 'test_substrings' with symbol: 'test_substrings'
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: test_substrings
-DEBUG_SYMTABLE: Comparing key: 'test_substrings' with symbol: 'test_substrings'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 74 19
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 74 20
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 74 21
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: Comparing key: 'test_loops' with symbol: 'test_loops'
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: symtable_search called with key: test_loops
-DEBUG_SYMTABLE: Comparing key: 'test_loops' with symbol: 'test_loops'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 77 14
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 77 15
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 77 16
-DEBUG_PARSER: Parsing variable assigning
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'test_null_handling' with symbol: 'test_null_handling'
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'test_null_handling' with symbol: 'test_null_handling'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 80 22
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 80 23
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 80 24
-DEBUG_PARSER: Parsing variable assigning
-!!!!DEBUG_PARSER: Recognized 'ifj' keyword
-DEBUG_PARSER: Expected token: 39, got token: 39
-Line and column: 82 7
-!!!!DEBUG_PARSER: Recognized identifier: write
-!!!!DEBUG_PARSER: Recognized builtin function: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: symtable_search called with key: write
-DEBUG_SYMTABLE: Comparing key: 'write' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: symtable_search called with key: ifj.write
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: Comparing key: 'ifj.write' with symbol: 'ifj.write'
-DEBUG_PARSER: Expected token: 29, got token: 29
-Line and column: 82 13
-DEBUG_PARSER: Function return index: 4
-DEBUG_PARSER: Parsing expression. Current token: 17
-. Line and column: 82 15
-DEBUG_PARSER: Parsing primary expression. Current token: 17
- Line and column: 82 15
-DEBUG_PARSER: Expected token: 30, got token: 30
-Line and column: 82 40
-DEBUG_PARSER: Expected token: 34, got token: 34
-Line and column: 82 41
-DEBUG_PARSER: Expected token: 32, got token: 32
-Line and column: 83 0
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: b.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'b.test_numbers' with symbol: 'b.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: symtable_search called with key: a.test_numbers
-DEBUG_SYMTABLE: Comparing key: 'a.test_numbers' with symbol: 'product.test_numbers'
-DEBUG_SYMTABLE: Comparing key: 'a.test_numbers' with symbol: 'a.test_numbers'
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: Comparing key: 'substr.test_substrings' with symbol: 'substr.test_substrings'
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: symtable_search called with key: substr.test_substrings
-DEBUG_SYMTABLE: Comparing key: 'substr.test_substrings' with symbol: 'substr.test_substrings'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: symtable_search called with key: count.test_loops
-DEBUG_SYMTABLE: Comparing key: 'count.test_loops' with symbol: 'count.test_loops'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: symtable_search called with key: optional.test_null_handling
-DEBUG_SYMTABLE: Comparing key: 'optional.test_null_handling' with symbol: 'optional.test_null_handling'
-Node type: PROGRAM
-  Functions:
-    - Function name: test_numbers, return type: 4
-    - Function name: test_strings, return type: 4
-    - Function name: test_substrings, return type: 4
-    - Function name: test_loops, return type: 4
-    - Function name: test_null_handling, return type: 4
-    - Function name: main, return type: 4
-  Body:
-    Node type: FUNCTION
-      Name: test_numbers, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
---- Test numbers ---
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: a.test_numbers, Data type: 1
-              Left:
-                Node type: LITERAL
-                  Value: 10, Data type: 1
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: b.test_numbers, Data type: 2
-              Left:
-                Node type: LITERAL
-                  Value: 2.5, Data type: 2
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: sum.test_numbers, Data type: 2
-              Left:
-                Node type: BINARY_OPERATION
-                  Data type: 2
-                  Left:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.i2f, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: a.test_numbers
-                  Right:
-                    Node type: IDENTIFIER
-                      Name: b.test_numbers
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: Sum of 10 and 2.5 is: , Data type: 6
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: IDENTIFIER
-                    Name: sum.test_numbers
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: product.test_numbers, Data type: 1
-              Left:
-                Node type: BINARY_OPERATION
-                  Data type: 1
-                  Left:
-                    Node type: IDENTIFIER
-                      Name: a.test_numbers
-                  Right:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.f2i, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: b.test_numbers
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: Multiplication of 10 and 2 (round): , Data type: 6
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: IDENTIFIER
-                    Name: product.test_numbers
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
-, Data type: 6
-    Next:
-    Node type: FUNCTION
-      Name: test_strings, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
---- Test strings ---
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: str1.test_strings, Data type: 6
-              Left:
-                Node type: FUNCTION_CALL
-                  Name: ifj.string, Arg count: 1
-                    Argument 1:
-                      Node type: LITERAL
-                        Value: IFJ24, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: str2.test_strings, Data type: 6
-              Left:
-                Node type: FUNCTION_CALL
-                  Name: ifj.string, Arg count: 1
-                    Argument 1:
-                      Node type: LITERAL
-                        Value:  — great language., Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: result.test_strings, Data type: 6
-              Left:
-                Node type: FUNCTION_CALL
-                  Name: ifj.concat, Arg count: 2
-                    Argument 1:
-                      Node type: IDENTIFIER
-                        Name: str1.test_strings
-                    Argument 2:
-                      Node type: IDENTIFIER
-                        Name: str2.test_strings
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: Concatenated string: , Data type: 6
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: IDENTIFIER
-                    Name: result.test_strings
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
-, Data type: 6
-    Next:
-    Node type: FUNCTION
-      Name: test_substrings, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
---- Test substring ---
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: text.test_substrings, Data type: 6
-              Left:
-                Node type: FUNCTION_CALL
-                  Name: ifj.string, Arg count: 1
-                    Argument 1:
-                      Node type: LITERAL
-                        Value: Example text for substring, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: substr.test_substrings, Data type: 10
-              Left:
-                Node type: FUNCTION_CALL
-                  Name: ifj.substring, Arg count: 3
-                    Argument 1:
-                      Node type: IDENTIFIER
-                        Name: text.test_substrings
-                    Argument 2:
-                      Node type: LITERAL
-                        Value: 8, Data type: 1
-                    Argument 3:
-                      Node type: LITERAL
-                        Value: 14, Data type: 1
-            Next:
-            Node type: IF
-              Left:
-                Node type: BLOCK
-                  Body:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: Error extracting substring.
-, Data type: 6
-              Condition:
-                Node type: IDENTIFIER
-                  Name: substr.test_substrings
-              Body:
-                Node type: BLOCK
-                  Body:
-                    Node type: VARIABLE_DECLARATION
-                      Name: sub.test_substrings, Data type: 6
-                      Left:
-                        Node type: IDENTIFIER
-                          Name: substr.test_substrings
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: Substring: , Data type: 6
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: sub.test_substrings
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: 
-, Data type: 6
-    Next:
-    Node type: FUNCTION
-      Name: test_loops, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
---- Test loops ---
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: count.test_loops, Data type: 1
-              Left:
-                Node type: LITERAL
-                  Value: 5, Data type: 1
-            Next:
-            Node type: WHILE
-              Condition:
-                Node type: BINARY_OPERATION
-                  Data type: 5
-                  Left:
-                    Node type: IDENTIFIER
-                      Name: count.test_loops
-                  Right:
-                    Node type: LITERAL
-                      Value: 0, Data type: 1
-              Body:
-                Node type: BLOCK
-                  Body:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: Counter: , Data type: 6
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: count.test_loops
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: 
-, Data type: 6
-                    Next:
-                    Node type: ASSIGNMENT
-                      Variable: count.test_loops
-                      Left:
-                        Node type: BINARY_OPERATION
-                          Data type: 1
-                          Left:
-                            Node type: IDENTIFIER
-                              Name: count.test_loops
-                          Right:
-                            Node type: LITERAL
-                              Value: 1, Data type: 1
-    Next:
-    Node type: FUNCTION
-      Name: test_null_handling, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: 
---- Test null handling ---
-, Data type: 6
-            Next:
-            Node type: VARIABLE_DECLARATION
-              Name: optional.test_null_handling, Data type: 8
-              Left:
-                Node type: LITERAL
-                  Value: null, Data type: 0
-            Next:
-            Node type: IF
-              Left:
-                Node type: BLOCK
-                  Body:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: Value is missing (null).
-, Data type: 6
-              Condition:
-                Node type: IDENTIFIER
-                  Name: optional.test_null_handling
-              Body:
-                Node type: BLOCK
-                  Body:
-                    Node type: VARIABLE_DECLARATION
-                      Name: value.test_null_handling, Data type: 1
-                      Left:
-                        Node type: IDENTIFIER
-                          Name: optional.test_null_handling
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: Value: , Data type: 6
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: value.test_null_handling
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: 
-, Data type: 6
-            Next:
-            Node type: ASSIGNMENT
-              Variable: optional.test_null_handling
-              Left:
-                Node type: LITERAL
-                  Value: 42, Data type: 1
-            Next:
-            Node type: IF
-              Condition:
-                Node type: IDENTIFIER
-                  Name: optional.test_null_handling
-              Body:
-                Node type: BLOCK
-                  Body:
-                    Node type: VARIABLE_DECLARATION
-                      Name: value.test_null_handling, Data type: 1
-                      Left:
-                        Node type: IDENTIFIER
-                          Name: optional.test_null_handling
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: New value: , Data type: 6
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: IDENTIFIER
-                            Name: value.test_null_handling
-                    Next:
-                    Node type: FUNCTION_CALL
-                      Name: ifj.write, Arg count: 1
-                        Argument 1:
-                          Node type: LITERAL
-                            Value: 
-, Data type: 6
-    Next:
-    Node type: FUNCTION
-      Name: main, Return type: 4
-      Body:
-        Node type: BLOCK
-          Body:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: === Start of IFJ24 language testing ===
-, Data type: 6
-            Next:
-            Node type: FUNCTION_CALL
-              Name: test_numbers, Arg count: 0
-            Next:
-            Node type: FUNCTION_CALL
-              Name: test_strings, Arg count: 0
-            Next:
-            Node type: FUNCTION_CALL
-              Name: test_substrings, Arg count: 0
-            Next:
-            Node type: FUNCTION_CALL
-              Name: test_loops, Arg count: 0
-            Next:
-            Node type: FUNCTION_CALL
-              Name: test_null_handling, Arg count: 0
-            Next:
-            Node type: FUNCTION_CALL
-              Name: ifj.write, Arg count: 1
-                Argument 1:
-                  Node type: LITERAL
-                    Value: === End of testing ===
-, Data type: 6
-Next:
-Node type: LITERAL
-  Value: ifj24.zig, Data type: 6
 .IFJcode24
 CALL main
 EXIT int@0
-LABEL test_numbers
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@a
-DEFVAR LF@b
-DEFVAR LF@sum
-DEFVAR LF@%tmp_var_1
-DEFVAR LF@%tmp_var_2
-DEFVAR LF@%tmp_var_3
-DEFVAR LF@product
-DEFVAR LF@%tmp_var_4
-DEFVAR LF@%tmp_var_5
-DEFVAR LF@%tmp_var_6
-PUSHS string@\010---\032Test\032numbers\032---\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-PUSHS int@10
-POPS LF@a
-PUSHS float@0x1.4000000000000p+1
-POPS LF@b
-PUSHS LF@a
-DEFVAR LF@%-tmp-int-1
-POPS LF@%-tmp-int-1
-DEFVAR LF@%-retval-2
-INT2FLOAT LF@%-retval-2 LF@%-tmp-int-1
-PUSHS LF@%-retval-2
-PUSHS LF@b
-ADDS
-POPS LF@sum
-PUSHS string@Sum\032of\03210\032and\0322.5\032is:\032
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
-PUSHS LF@sum
-POPS LF@%tmp_var_2
-WRITE LF@%tmp_var_2
-PUSHS string@\010
-POPS LF@%tmp_var_3
-WRITE LF@%tmp_var_3
-PUSHS LF@a
-PUSHS LF@b
-DEFVAR LF@%-tmp-float-3
-POPS LF@%-tmp-float-3
-DEFVAR LF@%-retval-4
-FLOAT2INT LF@%-retval-4 LF@%-tmp-float-3
-PUSHS LF@%-retval-4
-MULS
-POPS LF@product
-PUSHS string@Multiplication\032of\03210\032and\0322\032(round):\032
-POPS LF@%tmp_var_4
-WRITE LF@%tmp_var_4
-PUSHS LF@product
-POPS LF@%tmp_var_5
-WRITE LF@%tmp_var_5
-PUSHS string@\010
-POPS LF@%tmp_var_6
-WRITE LF@%tmp_var_6
-POPFRAME
-RETURN
-LABEL test_strings
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@str1
-DEFVAR LF@str2
-DEFVAR LF@result
-DEFVAR LF@%tmp_var_1
-DEFVAR LF@%tmp_var_2
-DEFVAR LF@%tmp_var_3
-PUSHS string@\010---\032Test\032strings\032---\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-PUSHS string@IFJ24
-CALL ifj-string
-POPS LF@str1
-PUSHS string@\032\226\128\148\032great\032language.
-CALL ifj-string
-POPS LF@str2
-PUSHS LF@str1
-PUSHS LF@str2
-DEFVAR LF@%-tmp-str2-6
-POPS LF@%-tmp-str2-6
-DEFVAR LF@%-tmp-str1-5
-POPS LF@%-tmp-str1-5
-DEFVAR LF@%-retval-7
-CONCAT LF@%-retval-7 LF@%-tmp-str1-5 LF@%-tmp-str2-6
-PUSHS LF@%-retval-7
-POPS LF@result
-PUSHS string@Concatenated\032string:\032
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
-PUSHS LF@result
-POPS LF@%tmp_var_2
-WRITE LF@%tmp_var_2
-PUSHS string@\010
-POPS LF@%tmp_var_3
-WRITE LF@%tmp_var_3
-POPFRAME
-RETURN
-LABEL test_substrings
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@text
-DEFVAR LF@substr
-DEFVAR LF@sub
-DEFVAR LF@%tmp_var_1
-DEFVAR LF@%tmp_var_2
-DEFVAR LF@%tmp_var_3
-DEFVAR LF@%tmp_var_4
-PUSHS string@\010---\032Test\032substring\032---\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-PUSHS string@Example\032text\032for\032substring
-CALL ifj-string
-POPS LF@text
-PUSHS LF@text
-PUSHS int@8
-PUSHS int@14
-CALL ifj-substring
-POPS LF@substr
-TYPE LF@%tmp_type LF@substr
-JUMPIFEQ $else_0 LF@%tmp_type string@nil
-PUSHS LF@substr
-POPS LF@sub
-PUSHS string@Substring:\032
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
-PUSHS LF@sub
-POPS LF@%tmp_var_2
-WRITE LF@%tmp_var_2
-PUSHS string@\010
-POPS LF@%tmp_var_3
-WRITE LF@%tmp_var_3
-JUMP $endif_0
-LABEL $else_0
-PUSHS string@Error\032extracting\032substring.\010
-POPS LF@%tmp_var_4
-WRITE LF@%tmp_var_4
-LABEL $endif_0
-POPFRAME
-RETURN
-LABEL test_loops
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@count
-DEFVAR LF@%tmp_var_1
-DEFVAR LF@%tmp_var_2
-DEFVAR LF@%tmp_var_3
-PUSHS string@\010---\032Test\032loops\032---\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-PUSHS int@5
-POPS LF@count
-LABEL $while_start_0
-PUSHS LF@count
-PUSHS int@0
-GTS
-PUSHS bool@true
-JUMPIFNEQS $while_end_0
-PUSHS string@Counter:\032
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
-PUSHS LF@count
-POPS LF@%tmp_var_2
-WRITE LF@%tmp_var_2
-PUSHS string@\010
-POPS LF@%tmp_var_3
-WRITE LF@%tmp_var_3
-PUSHS LF@count
-PUSHS int@1
-SUBS
-POPS LF@count
-JUMP $while_start_0
-LABEL $while_end_0
-POPFRAME
-RETURN
-LABEL test_null_handling
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@optional
-DEFVAR LF@value
-DEFVAR LF@%tmp_var_1
-DEFVAR LF@%tmp_var_2
-DEFVAR LF@%tmp_var_3
-DEFVAR LF@%tmp_var_4
-DEFVAR LF@%tmp_var_5
-DEFVAR LF@%tmp_var_6
-DEFVAR LF@%tmp_var_7
-PUSHS string@\010---\032Test\032null\032handling\032---\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-PUSHS nil@nil
-POPS LF@optional
-TYPE LF@%tmp_type LF@optional
-JUMPIFEQ $else_1 LF@%tmp_type string@nil
-PUSHS LF@optional
-POPS LF@value
-PUSHS string@Value:\032
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
-PUSHS LF@value
-POPS LF@%tmp_var_2
-WRITE LF@%tmp_var_2
-PUSHS string@\010
-POPS LF@%tmp_var_3
-WRITE LF@%tmp_var_3
-JUMP $endif_1
-LABEL $else_1
-PUSHS string@Value\032is\032missing\032(null).\010
-POPS LF@%tmp_var_4
-WRITE LF@%tmp_var_4
-LABEL $endif_1
-PUSHS int@42
-POPS LF@optional
-TYPE LF@%tmp_type LF@optional
-JUMPIFEQ $else_2 LF@%tmp_type string@nil
-PUSHS LF@optional
-POPS LF@value
-PUSHS string@New\032value:\032
-POPS LF@%tmp_var_5
-WRITE LF@%tmp_var_5
-PUSHS LF@value
-POPS LF@%tmp_var_6
-WRITE LF@%tmp_var_6
-PUSHS string@\010
-POPS LF@%tmp_var_7
-WRITE LF@%tmp_var_7
-JUMP $endif_2
-LABEL $else_2
-LABEL $endif_2
-POPFRAME
-RETURN
 LABEL main
 CREATEFRAME
 PUSHFRAME
 DEFVAR LF@%tmp_type
 DEFVAR LF@%tmp_var
 DEFVAR LF@%tmp_bool
-DEFVAR LF@%tmp_var_0
-DEFVAR LF@%tmp_var_1
-PUSHS string@===\032Start\032of\032IFJ24\032language\032testing\032===\010
-POPS LF@%tmp_var_0
-WRITE LF@%tmp_var_0
-CALL test_numbers
-CALL test_strings
-CALL test_substrings
-CALL test_loops
-CALL test_null_handling
-PUSHS string@===\032End\032of\032testing\032===\010
-POPS LF@%tmp_var_1
-WRITE LF@%tmp_var_1
+DEFVAR LF@sum_digits_result
+DEFVAR LF@complex_result
+DEFVAR LF@chained_result
+DEFVAR LF@fact_0
+DEFVAR LF@fact_5
+DEFVAR LF@is_odd_result
+DEFVAR LF@is_even_result
+DEFVAR LF@fib_result
+DEFVAR LF@%temp_29
+DEFVAR LF@%temp_28
+DEFVAR LF@%temp_27
+DEFVAR LF@%temp_26
+DEFVAR LF@%temp_25
+DEFVAR LF@%temp_24
+DEFVAR LF@%temp_23
+DEFVAR LF@%temp_22
+DEFVAR LF@%temp_21
+DEFVAR LF@%temp_20
+DEFVAR LF@%temp_19
+DEFVAR LF@%temp_18
+DEFVAR LF@%temp_17
+DEFVAR LF@%temp_16
+DEFVAR LF@%temp_15
+DEFVAR LF@%temp_14
+DEFVAR LF@%temp_13
+DEFVAR LF@%temp_12
+DEFVAR LF@%result_11
+DEFVAR LF@%temp_10
+DEFVAR LF@%temp_9
+DEFVAR LF@%temp_8
+DEFVAR LF@%temp_7
+DEFVAR LF@%result_6
+DEFVAR LF@%temp_5
+DEFVAR LF@%temp_4
+DEFVAR LF@%temp_3
+DEFVAR LF@%temp_2
+DEFVAR LF@%temp_1
+DEFVAR LF@%temp_0
+PUSHS string@===\032Start\032of\032advanced\032function\032and\032recursion\032test\032===\010
+POPS LF@%temp_0
+WRITE LF@%temp_0
+PUSHS int@10
+CALL fibonacci
+POPS LF@fib_result
+PUSHS string@Fibonacci\032of\03210:\032
+POPS LF@%temp_1
+WRITE LF@%temp_1
+PUSHS LF@fib_result
+POPS LF@%temp_2
+WRITE LF@%temp_2
+PUSHS string@\010
+POPS LF@%temp_3
+WRITE LF@%temp_3
+PUSHS int@42
+CALL is_even
+POPS LF@is_even_result
+PUSHS LF@is_even_result
+POPS LF@%temp_4
+PUSHS int@0
+POPS LF@%temp_5
+EQ LF@%result_6 LF@%temp_4 LF@%temp_5
+NOT LF@%result_6 LF@%result_6
+PUSHS LF@%result_6
+PUSHS bool@false
+JUMPIFEQS $else_0
+PUSHS string@42\032is\032even\032-\032correct\010
+POPS LF@%temp_7
+WRITE LF@%temp_7
+JUMP $endif_0
+LABEL $else_0
+PUSHS string@42\032is\032not\032even\032-\032error\010
+POPS LF@%temp_8
+WRITE LF@%temp_8
+LABEL $endif_0
+PUSHS int@99
+CALL is_odd
+POPS LF@is_odd_result
+PUSHS LF@is_odd_result
+POPS LF@%temp_9
+PUSHS int@0
+POPS LF@%temp_10
+EQ LF@%result_11 LF@%temp_9 LF@%temp_10
+NOT LF@%result_11 LF@%result_11
+PUSHS LF@%result_11
+PUSHS bool@false
+JUMPIFEQS $else_1
+PUSHS string@99\032is\032odd\032-\032correct\010
+POPS LF@%temp_12
+WRITE LF@%temp_12
+JUMP $endif_1
+LABEL $else_1
+PUSHS string@99\032is\032not\032odd\032-\032error\010
+POPS LF@%temp_13
+WRITE LF@%temp_13
+LABEL $endif_1
+PUSHS int@5
+CALL factorial
+POPS LF@fact_5
+PUSHS int@0
+CALL factorial
+POPS LF@fact_0
+PUSHS string@Factorial\032of\0325:\032
+POPS LF@%temp_14
+WRITE LF@%temp_14
+PUSHS LF@fact_5
+POPS LF@%temp_15
+WRITE LF@%temp_15
+PUSHS string@\010
+POPS LF@%temp_16
+WRITE LF@%temp_16
+PUSHS string@Factorial\032of\0320:\032
+POPS LF@%temp_17
+WRITE LF@%temp_17
+PUSHS LF@fact_0
+POPS LF@%temp_18
+WRITE LF@%temp_18
+PUSHS string@\010
+POPS LF@%temp_19
+WRITE LF@%temp_19
+PUSHS string@world
+PUSHS string@hello
+CALL reverse_concat
+POPS LF@chained_result
+PUSHS string@Reverse\032concat\032of\032'hello'\032and\032'world':\032
+POPS LF@%temp_20
+WRITE LF@%temp_20
+PUSHS LF@chained_result
+POPS LF@%temp_21
+WRITE LF@%temp_21
+PUSHS string@\010
+POPS LF@%temp_22
+WRITE LF@%temp_22
+PUSHS int@4
+PUSHS int@3
+PUSHS int@2
+CALL complex_calculation
+POPS LF@complex_result
+PUSHS string@Complex\032calculation\032result\032(2^3\032+\0324!):\032
+POPS LF@%temp_23
+WRITE LF@%temp_23
+PUSHS LF@complex_result
+POPS LF@%temp_24
+WRITE LF@%temp_24
+PUSHS string@\010
+POPS LF@%temp_25
+WRITE LF@%temp_25
+PUSHS int@9876
+CALL sum_of_digits
+POPS LF@sum_digits_result
+PUSHS string@Sum\032of\032digits\032of\0329876:\032
+POPS LF@%temp_26
+WRITE LF@%temp_26
+PUSHS LF@sum_digits_result
+POPS LF@%temp_27
+WRITE LF@%temp_27
+PUSHS string@\010
+POPS LF@%temp_28
+WRITE LF@%temp_28
+PUSHS string@===\032End\032of\032advanced\032function\032and\032recursion\032test\032===\010
+POPS LF@%temp_29
+WRITE LF@%temp_29
+POPFRAME
+RETURN
+LABEL fibonacci
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@%result_41
+DEFVAR LF@%temp_40
+DEFVAR LF@%result_39
+DEFVAR LF@%temp_38
+DEFVAR LF@%temp_37
+DEFVAR LF@%temp_36
+DEFVAR LF@%result_35
+DEFVAR LF@%temp_34
+DEFVAR LF@%temp_33
+DEFVAR LF@%result_32
+DEFVAR LF@%temp_31
+DEFVAR LF@%temp_30
+PUSHS LF@n
+POPS LF@%temp_30
+PUSHS int@1
+POPS LF@%temp_31
+GT LF@%result_32 LF@%temp_30 LF@%temp_31
+NOT LF@%result_32 LF@%result_32
+PUSHS LF@%result_32
+PUSHS bool@false
+JUMPIFEQS $else_2
+PUSHS LF@n
+POPFRAME
+RETURN
+JUMP $endif_2
+LABEL $else_2
+PUSHS LF@n
+POPS LF@%temp_33
+PUSHS int@1
+POPS LF@%temp_34
+SUB LF@%result_35 LF@%temp_33 LF@%temp_34
+PUSHS LF@%result_35
+CALL fibonacci
+POPS LF@%temp_36
+PUSHS LF@n
+POPS LF@%temp_37
+PUSHS int@2
+POPS LF@%temp_38
+SUB LF@%result_39 LF@%temp_37 LF@%temp_38
+PUSHS LF@%result_39
+CALL fibonacci
+POPS LF@%temp_40
+ADD LF@%result_41 LF@%temp_36 LF@%temp_40
+PUSHS LF@%result_41
+POPFRAME
+RETURN
+LABEL $endif_2
+POPFRAME
+RETURN
+LABEL is_even
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@%result_47
+DEFVAR LF@%temp_46
+DEFVAR LF@%temp_45
+DEFVAR LF@%result_44
+DEFVAR LF@%temp_43
+DEFVAR LF@%temp_42
+PUSHS LF@n
+POPS LF@%temp_42
+PUSHS int@0
+POPS LF@%temp_43
+EQ LF@%result_44 LF@%temp_42 LF@%temp_43
+PUSHS LF@%result_44
+PUSHS bool@false
+JUMPIFEQS $else_3
+PUSHS int@1
+POPFRAME
+RETURN
+JUMP $endif_3
+LABEL $else_3
+PUSHS LF@n
+POPS LF@%temp_45
+PUSHS int@1
+POPS LF@%temp_46
+SUB LF@%result_47 LF@%temp_45 LF@%temp_46
+PUSHS LF@%result_47
+CALL is_odd
+POPFRAME
+RETURN
+LABEL $endif_3
+POPFRAME
+RETURN
+LABEL is_odd
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@%result_53
+DEFVAR LF@%temp_52
+DEFVAR LF@%temp_51
+DEFVAR LF@%result_50
+DEFVAR LF@%temp_49
+DEFVAR LF@%temp_48
+PUSHS LF@n
+POPS LF@%temp_48
+PUSHS int@0
+POPS LF@%temp_49
+EQ LF@%result_50 LF@%temp_48 LF@%temp_49
+PUSHS LF@%result_50
+PUSHS bool@false
+JUMPIFEQS $else_4
+PUSHS int@0
+POPFRAME
+RETURN
+JUMP $endif_4
+LABEL $else_4
+PUSHS LF@n
+POPS LF@%temp_51
+PUSHS int@1
+POPS LF@%temp_52
+SUB LF@%result_53 LF@%temp_51 LF@%temp_52
+PUSHS LF@%result_53
+CALL is_even
+POPFRAME
+RETURN
+LABEL $endif_4
+POPFRAME
+RETURN
+LABEL factorial
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@%result_62
+DEFVAR LF@%temp_61
+DEFVAR LF@%result_60
+DEFVAR LF@%temp_59
+DEFVAR LF@%temp_58
+DEFVAR LF@%temp_57
+DEFVAR LF@%result_56
+DEFVAR LF@%temp_55
+DEFVAR LF@%temp_54
+PUSHS LF@n
+POPS LF@%temp_54
+PUSHS int@2
+POPS LF@%temp_55
+LT LF@%result_56 LF@%temp_54 LF@%temp_55
+PUSHS LF@%result_56
+PUSHS bool@false
+JUMPIFEQS $else_5
+PUSHS int@1
+POPFRAME
+RETURN
+JUMP $endif_5
+LABEL $else_5
+PUSHS LF@n
+POPS LF@%temp_57
+PUSHS LF@n
+POPS LF@%temp_58
+PUSHS int@1
+POPS LF@%temp_59
+SUB LF@%result_60 LF@%temp_58 LF@%temp_59
+PUSHS LF@%result_60
+CALL factorial
+POPS LF@%temp_61
+MUL LF@%result_62 LF@%temp_57 LF@%temp_61
+PUSHS LF@%result_62
+POPFRAME
+RETURN
+LABEL $endif_5
+POPFRAME
+RETURN
+LABEL reverse_string
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@s
+POPS LF@s
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@piska
+DEFVAR LF@REEEEST
+DEFVAR LF@LAAAAST
+DEFVAR LF@rest
+DEFVAR LF@last_char
+DEFVAR LF@len
+DEFVAR LF@%retval_76
+DEFVAR LF@%tmp_str2_75
+DEFVAR LF@%tmp_str1_74
+DEFVAR LF@%result_73
+DEFVAR LF@%temp_72
+DEFVAR LF@%temp_71
+DEFVAR LF@%result_70
+DEFVAR LF@%temp_69
+DEFVAR LF@%temp_68
+DEFVAR LF@%result_67
+DEFVAR LF@%temp_66
+DEFVAR LF@%temp_65
+DEFVAR LF@%retval_64
+DEFVAR LF@%tmp_str_63
+PUSHS LF@s
+POPS LF@%tmp_str_63
+STRLEN LF@%retval_64 LF@%tmp_str_63
+PUSHS LF@%retval_64
+POPS LF@len
+PUSHS LF@len
+POPS LF@%temp_65
+PUSHS int@1
+POPS LF@%temp_66
+GT LF@%result_67 LF@%temp_65 LF@%temp_66
+NOT LF@%result_67 LF@%result_67
+PUSHS LF@%result_67
+PUSHS bool@false
+JUMPIFEQS $else_6
+PUSHS LF@s
+POPFRAME
+RETURN
+JUMP $endif_6
+LABEL $else_6
+PUSHS LF@s
+PUSHS LF@len
+POPS LF@%temp_68
+PUSHS int@1
+POPS LF@%temp_69
+SUB LF@%result_70 LF@%temp_68 LF@%temp_69
+PUSHS LF@%result_70
+PUSHS LF@len
+CALL ifj-substring
+POPS LF@last_char
+PUSHS LF@s
+PUSHS int@0
+PUSHS LF@len
+POPS LF@%temp_71
+PUSHS int@1
+POPS LF@%temp_72
+SUB LF@%result_73 LF@%temp_71 LF@%temp_72
+PUSHS LF@%result_73
+CALL ifj-substring
+POPS LF@rest
+TYPE LF@%tmp_type LF@last_char
+JUMPIFEQ $else_7 LF@%tmp_type string@nil
+PUSHS LF@last_char
+POPS LF@LAAAAST
+TYPE LF@%tmp_type LF@rest
+JUMPIFEQ $else_8 LF@%tmp_type string@nil
+PUSHS LF@rest
+POPS LF@REEEEST
+PUSHS LF@REEEEST
+CALL reverse_string
+POPS LF@piska
+PUSHS LF@LAAAAST
+PUSHS LF@piska
+POPS LF@%tmp_str2_75
+POPS LF@%tmp_str1_74
+CONCAT LF@%retval_76 LF@%tmp_str1_74 LF@%tmp_str2_75
+PUSHS LF@%retval_76
+POPFRAME
+RETURN
+JUMP $endif_8
+LABEL $else_8
+PUSHS LF@LAAAAST
+POPFRAME
+RETURN
+LABEL $endif_8
+JUMP $endif_7
+LABEL $else_7
+PUSHS string@
+CALL ifj-string
+POPFRAME
+RETURN
+LABEL $endif_7
+LABEL $endif_6
+POPFRAME
+RETURN
+LABEL reverse_concat
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@s1
+POPS LF@s1
+DEFVAR LF@s2
+POPS LF@s2
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@rev_s2
+DEFVAR LF@rev_s1
+DEFVAR LF@%retval_79
+DEFVAR LF@%tmp_str2_78
+DEFVAR LF@%tmp_str1_77
+PUSHS LF@s1
+CALL reverse_string
+POPS LF@rev_s1
+PUSHS LF@s2
+CALL reverse_string
+POPS LF@rev_s2
+PUSHS LF@rev_s1
+PUSHS LF@rev_s2
+POPS LF@%tmp_str2_78
+POPS LF@%tmp_str1_77
+CONCAT LF@%retval_79 LF@%tmp_str1_77 LF@%tmp_str2_78
+PUSHS LF@%retval_79
+POPFRAME
+RETURN
+POPFRAME
+RETURN
+LABEL complex_calculation
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@base
+POPS LF@base
+DEFVAR LF@exponent
+POPS LF@exponent
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@fact_result
+DEFVAR LF@pow_result
+DEFVAR LF@%result_82
+DEFVAR LF@%temp_81
+DEFVAR LF@%temp_80
+PUSHS LF@exponent
+PUSHS LF@base
+CALL power
+POPS LF@pow_result
+PUSHS LF@n
+CALL factorial
+POPS LF@fact_result
+PUSHS LF@pow_result
+POPS LF@%temp_80
+PUSHS LF@fact_result
+POPS LF@%temp_81
+ADD LF@%result_82 LF@%temp_80 LF@%temp_81
+PUSHS LF@%result_82
+POPFRAME
+RETURN
+POPFRAME
+RETURN
+LABEL power
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@base
+POPS LF@base
+DEFVAR LF@exp
+POPS LF@exp
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@count
+DEFVAR LF@result
+DEFVAR LF@%result_91
+DEFVAR LF@%temp_90
+DEFVAR LF@%temp_89
+DEFVAR LF@%result_88
+DEFVAR LF@%temp_87
+DEFVAR LF@%temp_86
+DEFVAR LF@%result_85
+DEFVAR LF@%temp_84
+DEFVAR LF@%temp_83
+PUSHS int@1
+POPS LF@result
+PUSHS LF@exp
+POPS LF@count
+LABEL $while_start_0
+PUSHS LF@count
+POPS LF@%temp_83
+PUSHS int@0
+POPS LF@%temp_84
+GT LF@%result_85 LF@%temp_83 LF@%temp_84
+PUSHS LF@%result_85
+PUSHS bool@false
+JUMPIFEQS $while_end_0
+PUSHS LF@result
+POPS LF@%temp_86
+PUSHS LF@base
+POPS LF@%temp_87
+MUL LF@%result_88 LF@%temp_86 LF@%temp_87
+PUSHS LF@%result_88
+POPS LF@result
+PUSHS LF@count
+POPS LF@%temp_89
+PUSHS int@1
+POPS LF@%temp_90
+SUB LF@%result_91 LF@%temp_89 LF@%temp_90
+PUSHS LF@%result_91
+POPS LF@count
+JUMP $while_start_0
+LABEL $while_end_0
+PUSHS LF@result
+POPFRAME
+RETURN
+POPFRAME
+RETURN
+LABEL sum_of_digits
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@n
+POPS LF@n
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@%result_109
+DEFVAR LF@%temp_108
+DEFVAR LF@%result_107
+DEFVAR LF@%temp_106
+DEFVAR LF@%temp_105
+DEFVAR LF@%temp_104
+DEFVAR LF@%result_103
+DEFVAR LF@%temp_102
+DEFVAR LF@%result_101
+DEFVAR LF@%temp_100
+DEFVAR LF@%temp_99
+DEFVAR LF@%result_98
+DEFVAR LF@%temp_97
+DEFVAR LF@%temp_96
+DEFVAR LF@%temp_95
+DEFVAR LF@%result_94
+DEFVAR LF@%temp_93
+DEFVAR LF@%temp_92
+PUSHS LF@n
+POPS LF@%temp_92
+PUSHS int@10
+POPS LF@%temp_93
+LT LF@%result_94 LF@%temp_92 LF@%temp_93
+PUSHS LF@%result_94
+PUSHS bool@false
+JUMPIFEQS $else_9
+PUSHS LF@n
+POPFRAME
+RETURN
+JUMP $endif_9
+LABEL $else_9
+PUSHS LF@n
+POPS LF@%temp_95
+PUSHS LF@n
+POPS LF@%temp_96
+PUSHS int@10
+POPS LF@%temp_97
+IDIV LF@%result_98 LF@%temp_96 LF@%temp_97
+PUSHS LF@%result_98
+POPS LF@%temp_99
+PUSHS int@10
+POPS LF@%temp_100
+MUL LF@%result_101 LF@%temp_99 LF@%temp_100
+PUSHS LF@%result_101
+POPS LF@%temp_102
+SUB LF@%result_103 LF@%temp_95 LF@%temp_102
+PUSHS LF@%result_103
+POPS LF@%temp_104
+PUSHS LF@n
+POPS LF@%temp_105
+PUSHS int@10
+POPS LF@%temp_106
+IDIV LF@%result_107 LF@%temp_105 LF@%temp_106
+PUSHS LF@%result_107
+CALL sum_of_digits
+POPS LF@%temp_108
+ADD LF@%result_109 LF@%temp_104 LF@%temp_108
+PUSHS LF@%result_109
+POPFRAME
+RETURN
+LABEL $endif_9
 POPFRAME
 RETURN
 LABEL ifj-substring
