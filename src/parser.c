@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG_PARSER
+#undef DEBUG_PARSER
 #ifdef DEBUG_PARSER
 #define LOG(...) printf(__VA_ARGS__)
 #else
@@ -1077,118 +1077,225 @@ ASTNode *convert_to_float_node(ASTNode *node)
     return conversion_node;
 }
 
-ASTNode *parse_expression(Scanner *scanner, char *function_name)
+ASTNode *perform_type_checking_and_create_node(const char *operator_name, ASTNode *left_node, ASTNode *right_node)
 {
-    LOG("DEBUG_PARSER: Parsing expression. Current token: %d\n. Line and column: %d %d\n", current_token.type, current_token.line, current_token.column);
-    ASTNode *left_node = parse_primary_expression(scanner, function_name);
-    bool is_boolean_expression = false;
-    bool is_equality_expression = false;
+    DataType left_type = left_node->data_type;
+    DataType right_type = right_node->data_type;
 
-    while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS ||
-           current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE ||
-           current_token.type == TOKEN_LESS || current_token.type == TOKEN_LESS_EQUAL ||
-           current_token.type == TOKEN_GREATER || current_token.type == TOKEN_GREATER_EQUAL ||
-           current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL)
+    // Determine if the operation is a boolean operation
+    bool is_boolean = false;
+    bool is_equality = false;
+    if (strcmp(operator_name, ">=") == 0 || strcmp(operator_name, "<=") == 0 ||
+        strcmp(operator_name, "<") == 0 || strcmp(operator_name, ">") == 0 ||
+        strcmp(operator_name, "==") == 0 || strcmp(operator_name, "!=") == 0)
     {
-        switch (current_token.type)
+        is_boolean = true;
+        if (strcmp(operator_name, "==") == 0 || strcmp(operator_name, "!=") == 0)
         {
-        case TOKEN_PLUS:
-        case TOKEN_MINUS:
-        case TOKEN_MULTIPLY:
-        case TOKEN_DIVIDE:
-            break;
-        case TOKEN_LESS:
-        case TOKEN_LESS_EQUAL:
-        case TOKEN_GREATER:
-        case TOKEN_GREATER_EQUAL:
-            is_boolean_expression = true;
-            break;
-        case TOKEN_EQUAL:
-        case TOKEN_NOT_EQUAL:
-            is_boolean_expression = true;
-            is_equality_expression = true;
-            break;
-        default:
-            error_exit(ERR_SYNTAX, "Unknown operator type.");
+            is_equality = true;
         }
+    }
 
-        const char *operator_name = current_token.lexeme;
+    // If either operand is of type U8 or U8 nullable, error
+    if (left_type == TYPE_U8 || left_type == TYPE_U8_NULLABLE ||
+        right_type == TYPE_U8 || right_type == TYPE_U8_NULLABLE)
+    {
+        error_exit(ERR_SEMANTIC_TYPE, "Invalid operand types for operator '%s'", operator_name);
+    }
 
-        current_token = get_next_token(scanner);
+    DataType left_base_type = is_nullable(left_type) ? detach_nullable(left_type) : left_type;
+    DataType right_base_type = is_nullable(right_type) ? detach_nullable(right_type) : right_type;
 
-        ASTNode *right_node = parse_primary_expression(scanner, function_name);
-
-        if ((left_node->data_type == TYPE_U8 || left_node->data_type == TYPE_U8_NULLABLE || right_node->data_type == TYPE_U8 || right_node->data_type == TYPE_U8_NULLABLE))
+    // Handle == and != operators
+    if (is_equality)
+    {
+        // Comparing with null
+        if (left_type == TYPE_NULL || right_type == TYPE_NULL)
         {
-            error_exit(ERR_SEMANTIC_TYPE, "Invalid operation with u8 type.");
-        }
-
-        if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE || right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) && !(is_equality_expression))
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "Invalid operation with nullable type.");
-        }
-        if (left_node->data_type != right_node->data_type && !can_assign_type(left_node->data_type, right_node->data_type) && !can_assign_type(right_node->data_type, left_node->data_type))
-        {
-            if (left_node->type == NODE_IDENTIFIER && right_node->type == NODE_IDENTIFIER)
+            // Only nullable types can be compared with null
+            if ((is_nullable(left_type) && right_type == TYPE_NULL) ||
+                (left_type == TYPE_NULL && is_nullable(right_type)))
             {
-                error_exit(ERR_SEMANTIC, "Implicit conversion between variables is not allowed.");
-            }
-
-            if (left_node->data_type == TYPE_INT && right_node->data_type == TYPE_FLOAT)
-            {
-                if (left_node->type == NODE_LITERAL)
-                {
-                    left_node = convert_to_float_node(left_node);
-                }
-                else
-                {
-                    error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
-                }
-            }
-            else if (left_node->data_type == TYPE_FLOAT && right_node->data_type == TYPE_INT)
-            {
-                if (right_node->type == NODE_LITERAL)
-                {
-                    right_node = convert_to_float_node(right_node);
-                }
-                else
-                {
-                    error_exit(ERR_SEMANTIC, "Implicit conversion requires a literal operand.");
-                }
-            }
-            else if (((left_node->data_type == TYPE_U8_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_U8_NULLABLE) || (left_node->data_type == TYPE_INT_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_INT_NULLABLE) || (left_node->data_type == TYPE_FLOAT_NULLABLE && right_node->data_type == TYPE_NULL) || (left_node->data_type == TYPE_NULL && right_node->data_type == TYPE_FLOAT_NULLABLE)) && (is_boolean_expression == 1))
-            {
+                // Create the node for comparison
+                ASTNode *node = create_binary_operation_node(operator_name, left_node, right_node);
+                node->data_type = TYPE_BOOL;
+                return node;
             }
             else
             {
-                error_exit(ERR_SEMANTIC_TYPE, "Type mismatch in binary operation: %s %s %s.", left_node->value, operator_name, right_node->name);
+                error_exit(ERR_SEMANTIC_TYPE, "Cannot compare non-nullable type with null");
             }
-        }
-
-        /*
-        if ((left_node->data_type == TYPE_INT_NULLABLE || left_node->data_type == TYPE_FLOAT_NULLABLE) &&
-             left_node->value == NULL)
-         {
-             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
-         }
-         if ((right_node->data_type == TYPE_INT_NULLABLE || right_node->data_type == TYPE_FLOAT_NULLABLE) &&
-             right_node->value == NULL)
-         {
-             error_exit(ERR_SEMANTIC, "Nullable variable is null.");
-         }*/
-
-        left_node = create_binary_operation_node(operator_name, left_node, right_node);
-        if (is_boolean_expression)
-        {
-            left_node->data_type = TYPE_BOOL;
         }
         else
         {
-            left_node->data_type = left_node->left->data_type;
+            // Handle implicit conversion between int and float if one operand is a literal
+            if (left_base_type != right_base_type)
+            {
+                if ((left_base_type == TYPE_INT && right_base_type == TYPE_FLOAT && left_node->type == NODE_LITERAL))
+                {
+                    left_node = convert_to_float_node(left_node);
+                    left_base_type = TYPE_FLOAT;
+                }
+                else if (left_base_type == TYPE_FLOAT && right_base_type == TYPE_INT && right_node->type == NODE_LITERAL)
+                {
+                    right_node = convert_to_float_node(right_node);
+                    right_base_type = TYPE_FLOAT;
+                }
+            }
+
+            // After conversions, check if base types match
+            if (left_base_type != right_base_type)
+            {
+                error_exit(ERR_SEMANTIC_TYPE, "Cannot compare types '%d' and '%d' with operator '%s'", left_type, right_type, operator_name);
+            }
+
+            // Create the node for comparison
+            ASTNode *node = create_binary_operation_node(operator_name, left_node, right_node);
+            node->data_type = TYPE_BOOL;
+            return node;
         }
     }
-    return left_node;
+    else
+    {
+        // For other operators, operands must be non-nullable
+        if (is_nullable(left_type) || is_nullable(right_type) || left_type == TYPE_NULL || right_type == TYPE_NULL)
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Cannot perform operator '%s' on nullable types or null", operator_name);
+        }
+
+        // Now both operands are non-nullable
+        if (left_base_type == right_base_type)
+        {
+            if (left_base_type == TYPE_INT || left_base_type == TYPE_FLOAT)
+            {
+                ASTNode *node = create_binary_operation_node(operator_name, left_node, right_node);
+                node->data_type = is_boolean ? TYPE_BOOL : left_base_type;
+                return node;
+            }
+            else
+            {
+                error_exit(ERR_SEMANTIC_TYPE, "Invalid operand types for operator '%s'", operator_name);
+            }
+        }
+        else if ((left_base_type == TYPE_INT && right_base_type == TYPE_FLOAT) ||
+                 (left_base_type == TYPE_FLOAT && right_base_type == TYPE_INT))
+        {
+            // Implicit conversion allowed if int operand is a literal
+            if (left_base_type == TYPE_INT && left_node->type == NODE_LITERAL)
+            {
+                left_node = convert_to_float_node(left_node);
+                left_base_type = TYPE_FLOAT;
+            }
+            else if (right_base_type == TYPE_INT && right_node->type == NODE_LITERAL)
+            {
+                right_node = convert_to_float_node(right_node);
+                right_base_type = TYPE_FLOAT;
+            }
+            else
+            {
+                error_exit(ERR_SEMANTIC_TYPE, "Cannot implicitly convert int variable to float");
+            }
+
+            // Now both operands are float
+            ASTNode *node = create_binary_operation_node(operator_name, left_node, right_node);
+            node->data_type = is_boolean ? TYPE_BOOL : TYPE_FLOAT;
+            return node;
+        }
+        else
+        {
+            error_exit(ERR_SEMANTIC_TYPE, "Incompatible operand types for operator '%s'", operator_name);
+        }
+    }
+
+    // Should not reach here
+    error_exit(ERR_INTERNAL, "Unhandled type checking case");
+    return NULL; // For compiler warnings
 }
+
+
+
+ASTNode *parse_multiplicative(Scanner *scanner, char *function_name)
+{
+    ASTNode *node = parse_primary_expression(scanner, function_name);
+
+    while (current_token.type == TOKEN_MULTIPLY || current_token.type == TOKEN_DIVIDE)
+    {
+        const char *operator_name = current_token.lexeme;
+        current_token = get_next_token(scanner);
+        ASTNode *right_node = parse_primary_expression(scanner, function_name);
+
+        // Выполняем проверку типов и устанавливаем data_type
+        node = perform_type_checking_and_create_node(operator_name, node, right_node);
+    }
+
+    return node;
+}
+
+
+
+ASTNode *parse_additive(Scanner *scanner, char *function_name)
+{
+    ASTNode *node = parse_multiplicative(scanner, function_name);
+
+    while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS)
+    {
+        const char *operator_name = current_token.lexeme;
+        current_token = get_next_token(scanner);
+        ASTNode *right_node = parse_multiplicative(scanner, function_name);
+
+        // Выполняем проверку типов и устанавливаем data_type
+        node = perform_type_checking_and_create_node(operator_name, node, right_node);
+    }
+
+    return node;
+}
+
+
+
+ASTNode *parse_relational(Scanner *scanner, char *function_name)
+{
+    ASTNode *node = parse_additive(scanner, function_name);
+
+    while (current_token.type == TOKEN_LESS || current_token.type == TOKEN_LESS_EQUAL ||
+           current_token.type == TOKEN_GREATER || current_token.type == TOKEN_GREATER_EQUAL)
+    {
+        const char *operator_name = current_token.lexeme;
+        current_token = get_next_token(scanner);
+        ASTNode *right_node = parse_additive(scanner, function_name);
+
+        // Выполняем проверку типов и создаем узел
+        node = perform_type_checking_and_create_node(operator_name, node, right_node);
+        // Устанавливаем тип результата в TYPE_BOOL
+        node->data_type = TYPE_BOOL;
+    }
+
+    return node;
+}
+
+
+ASTNode *parse_equality(Scanner *scanner, char *function_name)
+{
+    ASTNode *node = parse_relational(scanner, function_name);
+
+    while (current_token.type == TOKEN_EQUAL || current_token.type == TOKEN_NOT_EQUAL)
+    {
+        const char *operator_name = current_token.lexeme;
+        current_token = get_next_token(scanner);
+        ASTNode *right_node = parse_relational(scanner, function_name);
+        // Выполняем проверку типов и создаем узел
+        node = perform_type_checking_and_create_node(operator_name, node, right_node);
+        // Устанавливаем тип результата в TYPE_BOOL
+        node->data_type = TYPE_BOOL;
+    }
+
+    return node;
+}
+
+ASTNode *parse_expression(Scanner *scanner, char *function_name)
+{
+    return parse_equality(scanner, function_name);
+}
+
 
 // Parses a primary expression (literal, identifier, or parenthesized expression)
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)

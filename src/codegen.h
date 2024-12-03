@@ -27,7 +27,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char* curren
 void codegen_generate_function_call(FILE *output, ASTNode *node, const char* current_function);
 void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node);
 void codegen_generate_assignment(FILE *output, ASTNode *assignment_node);
-void codegen_generate_return(FILE *output, ASTNode *return_node);
+void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function);
 
 void codegen_generate_if(FILE *output, ASTNode *if_node);
 

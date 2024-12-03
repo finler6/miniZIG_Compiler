@@ -18,13 +18,21 @@ typedef struct {
 
 typedef struct TempVarMapEntry {
     ASTNode *node;
-    int temp_var_number;
+    char *key;  // New key identifier
+    char *var_name;
     struct TempVarMapEntry *next;
 } TempVarMapEntry;
 
+
 static TempVarMapEntry *temp_var_map = NULL;
 
+static int unique_var_counter = 0;
+
 static int temp_var_counter = 0;
+
+int get_next_temp_var() {
+    return temp_var_counter++;
+}
 
 static BuiltinFunctionUsage builtin_function_usage = {false, false, false};
 
@@ -44,6 +52,41 @@ typedef struct DeclaredVar {
 
 DeclaredVar *declared_vars = NULL;
 
+typedef struct TempVar {
+    char *name;
+    struct TempVar *next;
+} TempVar;
+
+
+TempVar *temp_vars = NULL;
+
+void add_temp_var(const char *var_name) {
+    TempVar *current = temp_vars;
+    while (current) {
+        if (strcmp(current->name, var_name) == 0) {
+            return; // Variable already added
+        }
+        current = current->next;
+    }
+
+    TempVar *new_var = malloc(sizeof(TempVar));
+    new_var->name = string_duplicate(var_name);
+    new_var->next = temp_vars;
+    temp_vars = new_var;
+}
+
+void reset_temp_vars() {
+    TempVar *current = temp_vars;
+    while (current) {
+        TempVar *next = current->next;
+        free(current->name);
+        free(current);
+        current = next;
+    }
+    temp_vars = NULL;
+}
+
+
 bool is_variable_declared(const char *var_name) {
     DeclaredVar *current = declared_vars;
     while (current) {
@@ -62,6 +105,18 @@ void add_declared_variable(const char *var_name) {
     declared_vars = new_var;
 }
 
+void reset_temp_var_map() {
+    TempVarMapEntry *entry = temp_var_map;
+    while (entry != NULL) {
+        TempVarMapEntry *next = entry->next;
+        free(entry->var_name);
+        free(entry->key);
+        free(entry);
+        entry = next;
+    }
+    temp_var_map = NULL;
+}
+
 void reset_declared_variables() {
     DeclaredVar *current = declared_vars;
     while (current) {
@@ -73,33 +128,39 @@ void reset_declared_variables() {
     declared_vars = NULL;
 }
 
-void reset_temp_var_map() {
-    TempVarMapEntry *entry = temp_var_map;
-    while (entry != NULL) {
-        TempVarMapEntry *next = entry->next;
-        free(entry);
-        entry = next;
+
+char* generate_unique_var_name(const char* base_name, ASTNode* node, const char* key) {
+    char* var_name = malloc(64);
+    snprintf(var_name, 64, "%%%s_%d", base_name, unique_var_counter++);
+    add_temp_var(var_name); // Add to temp variable list
+
+    if (node != NULL && key != NULL) {
+        // Map the AST node and key to the variable name
+        TempVarMapEntry* new_entry = malloc(sizeof(TempVarMapEntry));
+        new_entry->node = node;
+        new_entry->key = string_duplicate(key);
+        new_entry->var_name = var_name;
+        new_entry->next = temp_var_map;
+        temp_var_map = new_entry;
     }
-    temp_var_map = NULL;
+
+    return var_name;
 }
 
-int get_temp_var_number_for_node(ASTNode *node) {
-    TempVarMapEntry *entry = temp_var_map;
+
+char* get_temp_var_name_for_node(ASTNode* node, const char* key) {
+    TempVarMapEntry* entry = temp_var_map;
     while (entry != NULL) {
-        if (entry->node == node) {
-            return entry->temp_var_number;
+        if (entry->node == node && strcmp(entry->key, key) == 0) {
+            return entry->var_name;
         }
         entry = entry->next;
     }
-
-    int temp_var_number = temp_var_counter++;
-    TempVarMapEntry *new_entry = malloc(sizeof(TempVarMapEntry));
-    new_entry->node = node;
-    new_entry->temp_var_number = temp_var_number;
-    new_entry->next = temp_var_map;
-    temp_var_map = new_entry;
-    return temp_var_number;
+    fprintf(stderr, "Error: Temporary variable for node not found.\n");
+    exit(1);
 }
+
+
 
 
 void codegen_generate_function(ASTNode *function_node);
@@ -109,25 +170,17 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
 void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function);
 void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node);
 void codegen_generate_assignment(FILE *output, ASTNode *assignment_node);
-void codegen_generate_return(FILE *output, ASTNode *return_node);
+void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function);
 void codegen_generate_if(FILE *output, ASTNode *if_node);
 void codegen_generate_while(FILE *output, ASTNode *while_node);
 void codegen_generate_builtin_functions();
 void codegen_declare_variables_in_statement(FILE *output, ASTNode *node);
 void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node);
 
-
-int get_next_temp_var() {
-    return temp_var_counter++;
-}
-char* generate_unique_var_name(const char* base_name) {
-    static int unique_var_counter = 0;
-    unique_var_counter++;
-    char* var_name = malloc(64);
-    snprintf(var_name, 64, "%%-%s-%d", base_name, unique_var_counter);
-    return var_name;
-}
-
+void collect_variables_in_statement(ASTNode *node);
+void collect_variables_in_block(ASTNode *node);
+void collect_variables_in_function_call(ASTNode *node);
+void collect_variables_in_expression(ASTNode *node);
 
 void collect_builtin_function_usage(ASTNode *node) {
     if (!node) return;
@@ -400,7 +453,6 @@ static int label_counter = 0;
 int generate_unique_label() {
     return label_counter++;
 }
-
 // Initialize code generator
 void codegen_init(const char *filename) {
     if (filename) {
@@ -452,32 +504,234 @@ void codegen_generate_program(ASTNode *program_node) {
 }
 
 
-
-
 void codegen_generate_function(ASTNode *function) {
-    temp_var_counter = 0;
     reset_temp_var_map();
     reset_declared_variables();
+    reset_temp_vars(); // Reset temporary variables
+
     fprintf(output_file, "LABEL %s\n", function->name);
     fprintf(output_file, "CREATEFRAME\n");
     fprintf(output_file, "PUSHFRAME\n");
 
+    // Declare function parameters
     for (int i = function->param_count - 1; i >= 0; i--) {
-        fprintf(output_file, "DEFVAR LF@%s\n", remove_last_prefix(function->parameters[i]->name));
-        fprintf(output_file, "POPS LF@%s\n", remove_last_prefix(function->parameters[i]->name));
+        const char *param_name = remove_last_prefix(function->parameters[i]->name);
+        fprintf(output_file, "DEFVAR LF@%s\n", param_name);
+        fprintf(output_file, "POPS LF@%s\n", param_name);
+        add_declared_variable(param_name);
     }
 
+    // Declare standard temporary variables
     fprintf(output_file, "DEFVAR LF@%%tmp_type\n");
+    add_declared_variable("%%tmp_type");
     fprintf(output_file, "DEFVAR LF@%%tmp_var\n");
+    add_declared_variable("%%tmp_var");
     fprintf(output_file, "DEFVAR LF@%%tmp_bool\n");
+    add_declared_variable("%%tmp_bool");
 
-    codegen_declare_variables_in_block(output_file, function->body);
+    // First Pass: Collect variables (including temporary ones)
+    collect_variables_in_block(function->body);
 
+    // Declare all temporary variables collected
+    TempVar *current_temp_var = temp_vars;
+    while (current_temp_var) {
+        if (!is_variable_declared(current_temp_var->name)) {
+            fprintf(output_file, "DEFVAR LF@%s\n", current_temp_var->name);
+            add_declared_variable(current_temp_var->name);
+        }
+        current_temp_var = current_temp_var->next;
+    }
+
+    // Second Pass: Generate code
     codegen_generate_block(output_file, function->body, function->name);
 
     fprintf(output_file, "POPFRAME\n");
     fprintf(output_file, "RETURN\n");
 }
+
+
+
+void collect_variables_in_block(ASTNode *block_node) {
+    ASTNode *current = block_node->body;
+    while (current) {
+        collect_variables_in_statement(current);
+        current = current->next;
+    }
+}
+
+void collect_variables_in_statement(ASTNode *node) {
+    if (node == NULL) {
+        return;
+    }
+
+    switch (node->type) {
+        case NODE_VARIABLE_DECLARATION:
+            add_declared_variable(remove_last_prefix(node->name));
+            if (node->left != NULL) {
+                collect_variables_in_expression(node->left);
+            }
+            break;
+
+        case NODE_ASSIGNMENT:
+            add_declared_variable(remove_last_prefix(node->name));
+            collect_variables_in_expression(node->left);
+            break;
+
+        case NODE_RETURN:
+            if (node->left) {
+                collect_variables_in_expression(node->left);
+            }
+            break;
+
+        case NODE_IF:
+            collect_variables_in_expression(node->condition);
+            collect_variables_in_block(node->body);
+            if (node->left) {
+                collect_variables_in_block(node->left);
+            }
+            break;
+
+        case NODE_WHILE:
+            collect_variables_in_expression(node->condition);
+            collect_variables_in_block(node->body);
+            break;
+
+        case NODE_FUNCTION_CALL:
+            collect_variables_in_function_call(node);
+            break;
+
+        default:
+            // Handle other statement types if necessary
+            break;
+    }
+}
+
+
+void collect_variables_in_function_call(ASTNode *node) {
+    if (node == NULL || node->type != NODE_FUNCTION_CALL) {
+        fprintf(stderr, "Invalid function call node for variable collection\n");
+        exit(1);
+    }
+
+    if (strcmp(node->name, "ifj.write") == 0) {
+        ASTNode *arg = node->arguments[0];
+        collect_variables_in_expression(arg);
+
+        // Associate temp_var_name with 'arg' using key "temp_var"
+        generate_unique_var_name("temp", arg, "temp_var");
+
+        if (is_nullable(arg->data_type)) {
+            // Associate temp_type_name with 'arg' using key "temp_type"
+            generate_unique_var_name("tmp_type", arg, "temp_type");
+        }
+    } else if (strcmp(node->name, "ifj.readi32") == 0 ||
+               strcmp(node->name, "ifj.readf64") == 0 ||
+               strcmp(node->name, "ifj.readstr") == 0) {
+        // Associate retval_var with 'node' using key "retval_var"
+        generate_unique_var_name("retval", node, "retval_var");
+    } else if (strcmp(node->name, "ifj.length") == 0) {
+        collect_variables_in_expression(node->arguments[0]);
+
+        // Associate tmp_str_var with 'node->arguments[0]' using key "tmp_str_var"
+        generate_unique_var_name("tmp_str", node->arguments[0], "tmp_str_var");
+
+        // Associate retval_var with 'node' using key "retval_var"
+        generate_unique_var_name("retval", node, "retval_var");
+    } else if (strcmp(node->name, "ifj.concat") == 0) {
+        collect_variables_in_expression(node->arguments[0]);
+        collect_variables_in_expression(node->arguments[1]);
+
+        // Associate variables with respective argument nodes
+        generate_unique_var_name("tmp_str1", node->arguments[0], "tmp_str1_var");
+        generate_unique_var_name("tmp_str2", node->arguments[1], "tmp_str2_var");
+
+        // Associate retval_var with 'node' using key "retval_var"
+        generate_unique_var_name("retval", node, "retval_var");
+    } else if (strcmp(node->name, "ifj.i2f") == 0 ||
+               strcmp(node->name, "ifj.f2i") == 0) {
+        collect_variables_in_expression(node->arguments[0]);
+
+        // Associate tmp_var with 'node->arguments[0]' using key "tmp_var"
+        generate_unique_var_name("tmp_var", node->arguments[0], "tmp_var");
+
+        // Associate retval_var with 'node' using key "retval_var"
+        generate_unique_var_name("retval", node, "retval_var");
+    } else if (strcmp(node->name, "ifj.substring") == 0 ||
+               strcmp(node->name, "ifj.strcmp") == 0 ||
+               strcmp(node->name, "ifj.string") == 0) {
+        for (int i = 0; i < node->arg_count; ++i) {
+            collect_variables_in_expression(node->arguments[i]);
+        }
+        // The built-in function handles variables internally
+    } else if (strcmp(node->name, "ifj.chr") == 0) {
+        collect_variables_in_expression(node->arguments[0]);
+
+        // Associate tmp_int_var with 'node->arguments[0]' using key "tmp_int_var"
+        generate_unique_var_name("tmp_int", node->arguments[0], "tmp_int_var");
+
+        // Associate tmp_temp_var and retval_var with 'node' using unique keys
+        generate_unique_var_name("tmp_temp", node, "tmp_temp_var");
+        generate_unique_var_name("retval", node, "retval_var");
+    } else if (strcmp(node->name, "ifj.ord") == 0) {
+        collect_variables_in_expression(node->arguments[0]); // String argument
+        collect_variables_in_expression(node->arguments[1]); // Index argument
+
+        // Associate variables with 'node' using unique keys
+        generate_unique_var_name("str", node, "str_var");
+        generate_unique_var_name("idx", node, "idx_var");
+        generate_unique_var_name("strlen", node, "strlen_var");
+        generate_unique_var_name("tmp_bool", node, "tmp_bool_var");
+        generate_unique_var_name("retval", node, "retval_var");
+    } else {
+        // User-defined function call
+        for (int i = 0; i < node->arg_count; ++i) {
+            collect_variables_in_expression(node->arguments[i]);
+        }
+        if (node->left) {
+            add_declared_variable(remove_last_prefix(node->left->name));
+        }
+    }
+}
+
+
+void collect_variables_in_expression(ASTNode *node) {
+    if (node == NULL) {
+        return;
+    }
+
+    switch (node->type) {
+        case NODE_LITERAL:
+            // No variables to collect
+            break;
+
+        case NODE_IDENTIFIER:
+            // Ensure variable is declared
+            add_declared_variable(remove_last_prefix(node->name));
+            break;
+
+        case NODE_BINARY_OPERATION:
+        {
+            collect_variables_in_expression(node->left);
+            generate_unique_var_name("temp", node->left, "temp_var");
+
+            collect_variables_in_expression(node->right);
+            generate_unique_var_name("temp", node->right, "temp_var");
+
+            generate_unique_var_name("result", node, "result_var");
+            break;
+        }
+
+        case NODE_FUNCTION_CALL:
+            collect_variables_in_function_call(node);
+            break;
+
+        default:
+            fprintf(stderr, "Unsupported expression type for variable collection, type: %d, name: %s\n", node->type, node->name ? node->name : "NULL");
+            exit(1);
+    }
+}
+
+
 
 
 // Function to generate code for a block of statements
@@ -538,76 +792,65 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
         }
             break;
 
-
         case NODE_BINARY_OPERATION:
-            if (strcmp(node->name, "-") == 0 || strcmp(node->name, "/") == 0) {
-                // Для операций, где порядок операндов важен
-                // Обрабатываем левый операнд
-                codegen_generate_expression(output, node->left, current_function);
+        {
+            // Generate code for left operand
+            codegen_generate_expression(output, node->left, current_function);
+            char *left_temp_var = get_temp_var_name_for_node(node->left, "temp_var");
+            fprintf(output, "POPS LF@%s\n", left_temp_var);
 
-                // Сохраняем левый операнд во временную переменную
-                char* tmp_left = generate_unique_var_name("tmp_left");
-                fprintf(output, "DEFVAR LF@%s\n", tmp_left);
-                fprintf(output, "POPS LF@%s\n", tmp_left);
+            // Generate code for right operand
+            codegen_generate_expression(output, node->right, current_function);
+            char *right_temp_var = get_temp_var_name_for_node(node->right, "temp_var");
+            fprintf(output, "POPS LF@%s\n", right_temp_var);
 
-                // Обрабатываем правый операнд
-                codegen_generate_expression(output, node->right, current_function);
-
-                // Сохраняем правый операнд во временную переменную
-                char* tmp_right = generate_unique_var_name("tmp_right");
-                fprintf(output, "DEFVAR LF@%s\n", tmp_right);
-                fprintf(output, "POPS LF@%s\n", tmp_right);
-
-                // Помещаем на стек левый операнд, затем правый операнд
-                fprintf(output, "PUSHS LF@%s\n", tmp_left);
-                fprintf(output, "PUSHS LF@%s\n", tmp_right);
-
-                // Выполняем операцию
-                if (strcmp(node->name, "-") == 0) {
-                    fprintf(output, "SUBS\n");
-                } else if (strcmp(node->name, "/") == 0) {
-                    if (node->left->data_type == TYPE_INT && node->right->data_type == TYPE_INT) {
-                        fprintf(output, "IDIVS\n");
-                    } else {
-
-                        if (node->left->data_type == TYPE_INT) {
-                            fprintf(output, "INT2FLOATS\n");
-                        }
-                        if (node->right->data_type == TYPE_INT) {
-
-                            fprintf(output, "INT2FLOATS\n");
-                        }
-                        fprintf(output, "DIVS\n");
+            char *result_temp_var = get_temp_var_name_for_node(node, "result_var");
+            // Perform the operation based on the operator
+            if (strcmp(node->name, "-") == 0) {
+                fprintf(output, "SUB LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, "/") == 0) {
+                if (node->left->data_type == TYPE_INT && node->right->data_type == TYPE_INT) {
+                    fprintf(output, "IDIV LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+                } else {
+                    // Convert to float if necessary
+                    if (node->left->data_type == TYPE_INT) {
+                        fprintf(output, "INT2FLOAT LF@%s LF@%s\n", left_temp_var, left_temp_var);
                     }
+                    if (node->right->data_type == TYPE_INT) {
+                        fprintf(output, "INT2FLOAT LF@%s LF@%s\n", right_temp_var, right_temp_var);
+                    }
+                    fprintf(output, "DIV LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
                 }
-
-                free(tmp_left);
-                free(tmp_right);
+            } else if (strcmp(node->name, "+") == 0) {
+                fprintf(output, "ADD LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, "*") == 0) {
+                fprintf(output, "MUL LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, "<") == 0) {
+                fprintf(output, "LT LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, "<=") == 0) {
+                fprintf(output, "GT LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+                fprintf(output, "NOT LF@%s LF@%s\n", result_temp_var, result_temp_var);
+            } else if (strcmp(node->name, ">") == 0) {
+                fprintf(output, "GT LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, ">=") == 0) {
+                fprintf(output, "LT LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+                fprintf(output, "NOT LF@%s LF@%s\n", result_temp_var, result_temp_var);
+            } else if (strcmp(node->name, "==") == 0) {
+                fprintf(output, "EQ LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+            } else if (strcmp(node->name, "!=") == 0) {
+                fprintf(output, "EQ LF@%s LF@%s LF@%s\n", result_temp_var, left_temp_var, right_temp_var);
+                fprintf(output, "NOT LF@%s LF@%s\n", result_temp_var, result_temp_var);
             } else {
-                codegen_generate_expression(output, node->left, node->name);
-                codegen_generate_expression(output, node->right, node->name);
-                if (strcmp(node->name, "+") == 0) {
-                    fprintf(output, "ADDS\n");
-                } else if (strcmp(node->name, "*") == 0) {
-                    fprintf(output, "MULS\n");
-                } else if (strcmp(node->name, "<") == 0) {
-                    fprintf(output, "LTS\n");
-                } else if (strcmp(node->name, "<=") == 0) {
-                    fprintf(output, "GTS\n");
-                    fprintf(output, "NOTS\n");
-                } else if (strcmp(node->name, ">") == 0) {
-                    fprintf(output, "GTS\n");
-                } else if (strcmp(node->name, ">=") == 0) {
-                    fprintf(output, "LTS\n");
-                    fprintf(output, "NOTS\n");
-                } else if (strcmp(node->name, "==") == 0) {
-                    fprintf(output, "EQS\n");
-                } else if (strcmp(node->name, "!=") == 0) {
-                    fprintf(output, "EQS\n");
-                    fprintf(output, "NOTS\n");
-                }
+                fprintf(stderr, "Unsupported operator: %s\n", node->name);
+                exit(1);
             }
+
+            // Push the result onto the stack
+            fprintf(output, "PUSHS LF@%s\n", result_temp_var);
+
+            // Do not free temporary variable names here
             break;
+        }
 
         case NODE_FUNCTION_CALL:
             codegen_generate_function_call(output, node, current_function);
@@ -619,175 +862,150 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
     }
 }
 
-
 void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL || node->type != NODE_FUNCTION_CALL) {
         fprintf(stderr, "Invalid function call node for code generation\n");
         exit(1);
     }
+
     if (strcmp(node->name, "ifj.write") == 0) {
         ASTNode *arg = node->arguments[0];
-        int temp_var_number = get_temp_var_number_for_node(node);
         codegen_generate_expression(output, arg, current_function);
-        fprintf(output, "POPS LF@%%tmp_var_%d\n", temp_var_number);
+
+        char *temp_var_name = get_temp_var_name_for_node(arg, "temp_var");
+        fprintf(output, "POPS LF@%s\n", temp_var_name);
+
         if (is_nullable(arg->data_type)) {
-            fprintf(output, "TYPE LF@%%tmp_type_%d LF@%%tmp_var_%d\n", temp_var_number, temp_var_number);
-            fprintf(output, "JUMPIFEQ $write_null_%d LF@%%tmp_type_%d string@nil\n", temp_var_number, temp_var_number);
+            char *temp_type_name = get_temp_var_name_for_node(arg, "temp_type");
+            int label_num = generate_unique_label();
 
-            fprintf(output, "WRITE LF@%%tmp_var_%d\n", temp_var_number);
-            fprintf(output, "JUMP $write_end_%d\n", temp_var_number);
+            fprintf(output, "TYPE LF@%s LF@%s\n", temp_type_name, temp_var_name);
+            fprintf(output, "JUMPIFEQ $write_null_%d LF@%s string@nil\n", label_num, temp_type_name);
 
-            fprintf(output, "LABEL $write_null_%d\n", temp_var_number);
+            fprintf(output, "WRITE LF@%s\n", temp_var_name);
+            fprintf(output, "JUMP $write_end_%d\n", label_num);
+
+            fprintf(output, "LABEL $write_null_%d\n", label_num);
             fprintf(output, "WRITE string@null\n");
-            fprintf(output, "LABEL $write_end_%d\n", temp_var_number);
+            fprintf(output, "LABEL $write_end_%d\n", label_num);
         } else {
-
-            fprintf(output, "WRITE LF@%%tmp_var_%d\n", temp_var_number);
+            fprintf(output, "WRITE LF@%s\n", temp_var_name);
         }
-    } else if (strcmp(node->name, "ifj.readi32") == 0) {
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "READ LF@%s int\n", retval_var);
+
+    } else if (strcmp(node->name, "ifj.readi32") == 0 ||
+               strcmp(node->name, "ifj.readf64") == 0 ||
+               strcmp(node->name, "ifj.readstr") == 0) {
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
+        const char *type = (strcmp(node->name, "ifj.readi32") == 0) ? "int" :
+                           (strcmp(node->name, "ifj.readf64") == 0) ? "float" : "string";
+        fprintf(output, "READ LF@%s %s\n", retval_var, type);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(retval_var);
-    } else if (strcmp(node->name, "ifj.readf64") == 0) {
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "READ LF@%s float\n", retval_var);
-        fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(retval_var);
-    } else if (strcmp(node->name, "ifj.readstr") == 0) {
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "READ LF@%s string\n", retval_var);
-        fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(retval_var);
+
     } else if (strcmp(node->name, "ifj.length") == 0) {
         codegen_generate_expression(output, node->arguments[0], current_function);
-        char* tmp_str_var = generate_unique_var_name("tmp-str");
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", tmp_str_var);
+        char *tmp_str_var = get_temp_var_name_for_node(node->arguments[0], "tmp_str_var");
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
+
         fprintf(output, "POPS LF@%s\n", tmp_str_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
         fprintf(output, "STRLEN LF@%s LF@%s\n", retval_var, tmp_str_var);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(tmp_str_var);
-        free(retval_var);
+
     } else if (strcmp(node->name, "ifj.concat") == 0) {
         codegen_generate_expression(output, node->arguments[0], current_function);
         codegen_generate_expression(output, node->arguments[1], current_function);
-        char* tmp_str1_var = generate_unique_var_name("tmp-str1");
-        char* tmp_str2_var = generate_unique_var_name("tmp-str2");
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", tmp_str2_var);
+        char *tmp_str1_var = get_temp_var_name_for_node(node->arguments[0], "tmp_str1_var");
+        char *tmp_str2_var = get_temp_var_name_for_node(node->arguments[1], "tmp_str2_var");
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
+
         fprintf(output, "POPS LF@%s\n", tmp_str2_var);
-        fprintf(output, "DEFVAR LF@%s\n", tmp_str1_var);
         fprintf(output, "POPS LF@%s\n", tmp_str1_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
         fprintf(output, "CONCAT LF@%s LF@%s LF@%s\n", retval_var, tmp_str1_var, tmp_str2_var);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(tmp_str1_var);
-        free(tmp_str2_var);
-        free(retval_var);
+
     } else if (strcmp(node->name, "ifj.i2f") == 0) {
         codegen_generate_expression(output, node->arguments[0], current_function);
-        char* tmp_int_var = generate_unique_var_name("tmp-int");
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", tmp_int_var);
-        fprintf(output, "POPS LF@%s\n", tmp_int_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "INT2FLOAT LF@%s LF@%s\n", retval_var, tmp_int_var);
+        char *tmp_var = get_temp_var_name_for_node(node->arguments[0], "tmp_var");
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
+
+        fprintf(output, "POPS LF@%s\n", tmp_var);
+        fprintf(output, "INT2FLOAT LF@%s LF@%s\n", retval_var, tmp_var);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(tmp_int_var);
-        free(retval_var);
+
     } else if (strcmp(node->name, "ifj.f2i") == 0) {
         codegen_generate_expression(output, node->arguments[0], current_function);
-        char* tmp_float_var = generate_unique_var_name("tmp-float");
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", tmp_float_var);
-        fprintf(output, "POPS LF@%s\n", tmp_float_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "FLOAT2INT LF@%s LF@%s\n", retval_var, tmp_float_var);
-        fprintf(output, "PUSHS LF@%s\n", retval_var);
-        free(tmp_float_var);
-        free(retval_var);
-    } else if (strcmp(node->name, "ifj.substring") == 0) {
+        char *tmp_var = get_temp_var_name_for_node(node->arguments[0], "tmp_var");
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
 
-        builtin_function_usage.uses_substring = true;
-        codegen_generate_expression(output, node->arguments[0], current_function);
-        codegen_generate_expression(output, node->arguments[1], current_function);
-        codegen_generate_expression(output, node->arguments[2], current_function);
-        fprintf(output, "CALL ifj-substring\n");
-    } else if (strcmp(node->name, "ifj.ord") == 0) {
-        codegen_generate_expression(output, node->arguments[0], current_function);
-        codegen_generate_expression(output, node->arguments[1], current_function);
-
-        char* str_var = generate_unique_var_name("str");
-        char* idx_var = generate_unique_var_name("idx");
-        char* strlen_var = generate_unique_var_name("strlen");
-        char* tmp_bool_var = generate_unique_var_name("tmp-bool");
-        char* retval_var = generate_unique_var_name("retval");
-        fprintf(output, "DEFVAR LF@%s\n", idx_var);
-        fprintf(output, "POPS LF@%s\n", idx_var);
-        fprintf(output, "DEFVAR LF@%s\n", str_var);
-        fprintf(output, "POPS LF@%s\n", str_var);
-        fprintf(output, "DEFVAR LF@%s\n", strlen_var);
-        fprintf(output, "STRLEN LF@%s LF@%s\n", strlen_var, str_var);
-        fprintf(output, "DEFVAR LF@%s\n", tmp_bool_var);
-        fprintf(output, "LT LF@%s LF@%s int@0\n", tmp_bool_var, idx_var);
-        fprintf(output, "JUMPIFEQ $ord_error LF@%s bool@true\n", tmp_bool_var);
-        fprintf(output, "SUB LF@%s LF@%s int@1\n", strlen_var, strlen_var);
-        fprintf(output, "GT LF@%s LF@%s LF@%s\n", tmp_bool_var, idx_var, strlen_var);
-        fprintf(output, "JUMPIFEQ $ord_error LF@%s bool@true\n", tmp_bool_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-        fprintf(output, "STRI2INT LF@%s LF@%s LF@%s\n", retval_var, str_var, idx_var);
-        fprintf(output, "PUSHS LF@%s\n", retval_var);
-        fprintf(output, "JUMP $ord_end\n");
-        fprintf(output, "LABEL $ord_error\n");
-        fprintf(output, "PUSHS int@0\n");
-        fprintf(output, "LABEL $ord_end\n");
-    } else if (strcmp(node->name, "ifj.strcmp") == 0) {
-        builtin_function_usage.uses_strcmp = true;
-        codegen_generate_expression(output, node->arguments[0], current_function);
-        codegen_generate_expression(output, node->arguments[1], current_function);
-        fprintf(output, "CALL ifj-strcmp\n");
-    } else if (strcmp(node->name, "ifj.string") == 0) {
-        builtin_function_usage.uses_string = true;
-        codegen_generate_expression(output, node->arguments[0], current_function);
-        fprintf(output, "CALL ifj-string\n");
-    } else if (strcmp(node->name, "ifj.chr") == 0) {
-        codegen_generate_expression(output, node->arguments[0], current_function);
-        char* tmp_int_var = generate_unique_var_name("tmp-int");
-        char* tmp_temp_var = generate_unique_var_name("tmp-temp");
-        char* retval_var = generate_unique_var_name("retval");
-
-        fprintf(output, "DEFVAR LF@%s\n", tmp_int_var);
-        fprintf(output, "POPS LF@%s\n", tmp_int_var);
-        fprintf(output, "DEFVAR LF@%s\n", tmp_temp_var);
-        fprintf(output, "DEFVAR LF@%s\n", retval_var);
-
-        fprintf(output, "IDIV LF@%s LF@%s int@256\n", tmp_temp_var, tmp_int_var);
-
-        fprintf(output, "MUL LF@%s LF@%s int@256\n", tmp_temp_var, tmp_temp_var);
-
-        fprintf(output, "SUB LF@%s LF@%s LF@%s\n", tmp_int_var, tmp_int_var, tmp_temp_var);
-
-        fprintf(output, "INT2CHAR LF@%s LF@%s\n", retval_var, tmp_int_var);
+        fprintf(output, "POPS LF@%s\n", tmp_var);
+        fprintf(output, "FLOAT2INT LF@%s LF@%s\n", retval_var, tmp_var);
         fprintf(output, "PUSHS LF@%s\n", retval_var);
 
-        free(tmp_int_var);
-        free(tmp_temp_var);
-        free(retval_var);
-    } else {
+    } else if (strcmp(node->name, "ifj.substring") == 0 ||
+               strcmp(node->name, "ifj.strcmp") == 0 ||
+               strcmp(node->name, "ifj.string") == 0) {
+        // Handle substring, strcmp, and string functions
         for (int i = 0; i < node->arg_count; ++i) {
             codegen_generate_expression(output, node->arguments[i], current_function);
         }
         fprintf(output, "CALL %s\n", node->name);
+
+    } else if (strcmp(node->name, "ifj.chr") == 0) {
+        codegen_generate_expression(output, node->arguments[0], current_function);
+        char *tmp_int_var = get_temp_var_name_for_node(node->arguments[0], "tmp_int_var");
+        char *tmp_temp_var = get_temp_var_name_for_node(node, "tmp_temp_var");
+        char *retval_var = get_temp_var_name_for_node(node, "retval_var");
+
+        fprintf(output, "POPS LF@%s\n", tmp_int_var);
+        // Ensure the integer is within valid range (0-255)
+        fprintf(output, "IDIV LF@%s LF@%s int@256\n", tmp_temp_var, tmp_int_var);
+        fprintf(output, "MUL LF@%s LF@%s int@256\n", tmp_temp_var, tmp_temp_var);
+        fprintf(output, "SUB LF@%s LF@%s LF@%s\n", tmp_int_var, tmp_int_var, tmp_temp_var);
+        fprintf(output, "INT2CHAR LF@%s LF@%s\n", retval_var, tmp_int_var);
+        fprintf(output, "PUSHS LF@%s\n", retval_var);
+
+    } else if (strcmp(node->name, "ifj.ord") == 0) {
+        codegen_generate_expression(output, node->arguments[0], current_function); // string
+        codegen_generate_expression(output, node->arguments[1], current_function); // index
+
+        // Retrieve variable names using the same keys
+        char* str_var = get_temp_var_name_for_node(node, "str_var");
+        char* idx_var = get_temp_var_name_for_node(node, "idx_var");
+        char* strlen_var = get_temp_var_name_for_node(node, "strlen_var");
+        char* tmp_bool_var = get_temp_var_name_for_node(node, "tmp_bool_var");
+        char* retval_var = get_temp_var_name_for_node(node, "retval_var");
+
+        fprintf(output, "POPS LF@%s\n", idx_var);
+        fprintf(output, "POPS LF@%s\n", str_var);
+        fprintf(output, "STRLEN LF@%s LF@%s\n", strlen_var, str_var);
+        fprintf(output, "LT LF@%s LF@%s int@0\n", tmp_bool_var, idx_var);
+        fprintf(output, "JUMPIFEQ $ord_error_%d LF@%s bool@true\n", label_counter, tmp_bool_var);
+        fprintf(output, "SUB LF@%s LF@%s int@1\n", strlen_var, strlen_var);
+        fprintf(output, "GT LF@%s LF@%s LF@%s\n", tmp_bool_var, idx_var, strlen_var);
+        fprintf(output, "JUMPIFEQ $ord_error_%d LF@%s bool@true\n", label_counter, tmp_bool_var);
+        fprintf(output, "STRI2INT LF@%s LF@%s LF@%s\n", retval_var, str_var, idx_var);
+        fprintf(output, "PUSHS LF@%s\n", retval_var);
+        fprintf(output, "JUMP $ord_end_%d\n", label_counter);
+        fprintf(output, "LABEL $ord_error_%d\n", label_counter);
+        fprintf(output, "PUSHS int@0\n");
+        fprintf(output, "LABEL $ord_end_%d\n", label_counter);
+        label_counter++;
+
+    } else {
+        // User-defined function call
+        // Push arguments onto the stack in reverse order
+        for (int i = node->arg_count - 1; i >= 0; i--) {
+            codegen_generate_expression(output, node->arguments[i], current_function);
+        }
+        // Call the function
+        fprintf(output, "CALL %s\n", node->name);
+        // If the function returns a value and it's assigned to a variable
         if (node->left) {
             fprintf(output, "POPS LF@%s\n", remove_last_prefix(node->left->name));
         }
     }
 }
+
+
 
 void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node) {
     ASTNode *current = block_node->body;
@@ -796,6 +1014,7 @@ void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node) {
         current = current->next;
     }
 }
+
 
 
 void codegen_declare_variables_in_statement(FILE *output, ASTNode *node) {
@@ -812,43 +1031,32 @@ void codegen_declare_variables_in_statement(FILE *output, ASTNode *node) {
             }
             break;
         }
-
+        case NODE_ASSIGNMENT: {
+            codegen_declare_variables_in_statement(output, node->left);
+            break;
+        }
         case NODE_FUNCTION_CALL: {
-
+            // Recursively collect variables in arguments
             for (int i = 0; i < node->arg_count; ++i) {
                 codegen_declare_variables_in_statement(output, node->arguments[i]);
             }
-
-            if (strcmp(node->name, "ifj.write") == 0) {
-                int temp_var_number = get_temp_var_number_for_node(node);
-                char temp_var_name[32];
-                snprintf(temp_var_name, sizeof(temp_var_name), "%%tmp_var_%d", temp_var_number);
-
-                if (!is_variable_declared(temp_var_name)) {
-                    fprintf(output, "DEFVAR LF@%s\n", temp_var_name);
-                    add_declared_variable(temp_var_name);
-                }
-
-                if (is_nullable(node->arguments[0]->data_type)) {
-                    snprintf(temp_var_name, sizeof(temp_var_name), "%%tmp_type_%d", temp_var_number);
-                    if (!is_variable_declared(temp_var_name)) {
-                        fprintf(output, "DEFVAR LF@%s\n", temp_var_name);
-                        add_declared_variable(temp_var_name);
-                    }
-                }
-            }
+            break;
+        }
+        case NODE_BINARY_OPERATION: {
+            // Recursively collect variables in left and right expressions
+            codegen_declare_variables_in_statement(output, node->left);
+            codegen_declare_variables_in_statement(output, node->right);
             break;
         }
         case NODE_IF:
         case NODE_WHILE:
         case NODE_BLOCK:
-            codegen_declare_variables_in_block(output, node->body);
-            if (node->left) {
-                codegen_declare_variables_in_block(output, node->left);
-            }
+            codegen_declare_variables_in_block(output, node);
             break;
-
-
+        case NODE_LITERAL:
+        case NODE_IDENTIFIER:
+            // No variables to declare
+            break;
         default:
             if (node->left) {
                 codegen_declare_variables_in_statement(output, node->left);
@@ -861,6 +1069,7 @@ void codegen_declare_variables_in_statement(FILE *output, ASTNode *node) {
 }
 
 
+
 void codegen_generate_statement(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL) {
         fprintf(stderr, "Invalid statement node for code generation\n");
@@ -871,51 +1080,34 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
         case NODE_VARIABLE_DECLARATION:
             if (node->left != NULL) {
                 codegen_generate_expression(output, node->left, current_function);
-                fprintf(output, "POPS LF@%s\n", remove_last_prefix(node->name));
+                const char *var_name = remove_last_prefix(node->name);
+                if (var_name == NULL) {
+                    fprintf(stderr, "Error: Variable name is NULL in VARIABLE_DECLARATION.\n");
+                    exit(1);
+                }
+                fprintf(output, "POPS LF@%s\n", var_name);
             }
             break;
 
         case NODE_ASSIGNMENT:
             codegen_generate_expression(output, node->left, current_function);
             fprintf(output, "POPS LF@%s\n", remove_last_prefix(node->name));
-
             break;
 
         case NODE_RETURN:
-            // Generate code for return statement
-            if (node->left != NULL) {
-                codegen_generate_expression(output, node->left, node->name);
-                //fprintf(output, "POPS LF@%%retval\n");
-            }
-            //fprintf(output, "RETURN\n");
+            codegen_generate_return(output, node, current_function);
             break;
 
         case NODE_IF:
-            // Generate code for if statement
-        {
-            LOG(stderr, "DEBUG: Entering NODE_IF case\n");
             codegen_generate_if(output, node);
-        }
             break;
 
         case NODE_WHILE:
-            // Generate code for while loop
-        {
-            int label_num = generate_unique_label();
-            fprintf(output, "LABEL $while_start_%d\n", label_num);
-            codegen_generate_expression(output, node->condition, node->name);
-            fprintf(output, "PUSHS bool@true\n");
-            fprintf(output, "JUMPIFNEQS $while_end_%d\n", label_num);
-            codegen_generate_block(output, node->body, node->name);
-            fprintf(output, "JUMP $while_start_%d\n", label_num);
-            fprintf(output, "LABEL $while_end_%d\n", label_num);
-        }
+            codegen_generate_while(output, node);
             break;
 
         case NODE_FUNCTION_CALL:
-        {
-            codegen_generate_function_call(output, node, node->name);
-        }
+            codegen_generate_function_call(output, node, current_function);
             break;
 
         default:
@@ -923,6 +1115,8 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
             exit(1);
     }
 }
+
+
 
 void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node) {
     if (!declaration_node || !declaration_node->name) {
@@ -941,13 +1135,16 @@ void codegen_generate_assignment(FILE *output, ASTNode *assignment_node) {
     fprintf(output, "POPS LF@%s\n", remove_last_prefix(assignment_node->name));
 }
 
-void codegen_generate_return(FILE *output, ASTNode *return_node) {
+void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function) {
     if (return_node->left) {
-        codegen_generate_expression(output, return_node->left, return_node->name);
-        fprintf(output, "POPS LF@%%retval\n");
+        codegen_generate_expression(output, return_node->left, current_function);
+        // The return value is now on the stack
     }
+    // No need to pop into LF@%retval
+    fprintf(output, "POPFRAME\n");
     fprintf(output, "RETURN\n");
 }
+
 
 void codegen_generate_if(FILE *output, ASTNode *if_node) {
     static int if_label_count = 0;
@@ -958,7 +1155,7 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
         fprintf(output, "TYPE LF@%%tmp_type LF@%s\n",  remove_last_prefix(if_node->condition->name));
         fprintf(output, "JUMPIFEQ $else_%d LF@%%tmp_type string@nil\n", current_label);
     } else {
-        codegen_generate_expression(output, if_node->condition, if_node->name);
+    codegen_generate_expression(output, if_node->condition, if_node->name);
 
         fprintf(output, "PUSHS bool@false\n");
         fprintf(output, "JUMPIFEQS $else_%d\n", current_label);
@@ -980,20 +1177,20 @@ void codegen_generate_if(FILE *output, ASTNode *if_node) {
 
 
 void codegen_generate_while(FILE *output, ASTNode *while_node) {
-    static int while_label_count = 0;
-    int current_label = while_label_count++;
-    fprintf(output, "LABEL $while_start_%d\n", current_label);
+    int label_num = generate_unique_label();
+    fprintf(output, "LABEL $while_start_%d\n", label_num);
 
     codegen_generate_expression(output, while_node->condition, while_node->name);
 
     fprintf(output, "PUSHS bool@false\n");
-    fprintf(output, "JUMPIFEQS $while_end_%d\n", current_label);
+    fprintf(output, "JUMPIFEQS $while_end_%d\n", label_num);
 
     codegen_generate_block(output, while_node->body, while_node->name);
 
-    fprintf(output, "JUMP $while_start_%d\n", current_label);
-    fprintf(output, "LABEL $while_end_%d\n", current_label);
+    fprintf(output, "JUMP $while_start_%d\n", label_num);
+    fprintf(output, "LABEL $while_end_%d\n", label_num);
 }
+
 
 
 char *escape_ifj24_string(const char *input) {

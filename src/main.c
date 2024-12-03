@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     ASTNode* ast_root = parse_program(&scanner);
 
 
-    print_ast(ast_root, 0);
+    //print_ast(ast_root, 0);
 
 
     codegen_init(output_filename);

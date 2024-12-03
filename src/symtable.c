@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG_SYMTABLE
+#undef DEBUG_SYMTABLE
 #ifdef DEBUG_SYMTABLE
 #define LOG(...) printf(__VA_ARGS__)
 #else
