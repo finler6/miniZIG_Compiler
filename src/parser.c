@@ -13,14 +13,54 @@
  */
 #include "parser.h"
 
+#define MAX_SCOPE_DEPTH 100
+
 // Global symbol table for the program
 static SymTable symtable;
-
-#define MAX_SCOPE_DEPTH 100
 
 static int scope_stack[MAX_SCOPE_DEPTH];
 static int scope_stack_top = -1;
 static int scope_counter = 0;
+
+// Function to make sure that current token us expected_type
+static void expect_token(TokenType expected_type, Scanner *scanner);
+
+// Main functions for parser
+static ASTNode *parse_import(Scanner *scanner);
+static ASTNode *parse_function(Scanner *scanner, bool is_definition);
+static ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
+static ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope);
+static ASTNode *parse_statement(Scanner *scanner, char *function_name);
+static ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name);
+static ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name);
+static ASTNode *parse_if_statement(Scanner *scanner, char *function_name);
+static ASTNode *parse_while_statement(Scanner *scanner, char *function_name);
+static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
+static ASTNode *parse_expression(Scanner *scanner, char *function_name);
+static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
+static ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
+static ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments, int param_count, int *arg_count, char *function_name, char *builtin_function_name);
+
+// Global token storage
+static Token current_token;
+
+BuiltinFunctionInfo builtin_functions[] = {
+    {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
+    {"readi32", TYPE_INT_NULLABLE, {TYPE_NULL}, 0},
+    {"readf64", TYPE_FLOAT_NULLABLE, {TYPE_NULL}, 0},
+    {"write", TYPE_VOID, {TYPE_ALL}, 1},
+    {"i2f", TYPE_FLOAT, {TYPE_INT}, 1},
+    {"f2i", TYPE_INT, {TYPE_FLOAT}, 1},
+    {"string", TYPE_U8, {TYPE_U8}, 1},
+    {"length", TYPE_INT, {TYPE_U8}, 1},
+    {"concat", TYPE_U8, {TYPE_U8, TYPE_U8}, 2},
+    {"substring", TYPE_U8_NULLABLE, {TYPE_U8, TYPE_INT, TYPE_INT}, 3},
+    {"strcmp", TYPE_INT, {TYPE_U8, TYPE_U8}, 2},
+    {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
+    {"chr", TYPE_U8, {TYPE_INT}, 1}};
 
 void enter_scope() {
     scope_counter++;
@@ -72,68 +112,6 @@ Symbol *search_variable_in_outer_scopes(const char *variable_name, const char *f
     }
     return NULL;
 }
-
-// Forward declarations of helper functions
-
-// Function to make sure that current token us expected_type
-static void expect_token(TokenType expected_type, Scanner *scanner);
-
-// Main functions for parser
-static ASTNode *parse_import(Scanner *scanner);
-static ASTNode *parse_function(Scanner *scanner, bool is_definition);
-static ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
-static ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope);
-static ASTNode *parse_statement(Scanner *scanner, char *function_name);
-static ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name);
-static ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name);
-static ASTNode *parse_if_statement(Scanner *scanner, char *function_name);
-static ASTNode *parse_while_statement(Scanner *scanner, char *function_name);
-static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
-static ASTNode *parse_expression(Scanner *scanner, char *function_name);
-static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
-static ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
-static ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
-static ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
-static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
-static ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments, int param_count, int *arg_count, char *function_name, char *builtin_function_name);
-
-// Data type parse functions
-DataType parse_type(Scanner *scanner);
-DataType parse_return_type(Scanner *scanner);
-
-// Return types check
-void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
-bool check_return_types_recursive(ASTNode *function_node, DataType return_type);
-bool check_all_return_types(ASTNode *function_node, DataType return_type);
-
-// Scopre check funtions
-void scope_check_identifiers_in_tree(ASTNode *root);
-bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
-
-bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name);
-
-void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
-bool can_assign_type(DataType expected_type, DataType actual_type);
-DataType detach_nullable(DataType type_nullable);
-int get_builtin_function_index(const char *function_name);
-
-// Global token storage
-static Token current_token;
-
-BuiltinFunctionInfo builtin_functions[] = {
-    {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
-    {"readi32", TYPE_INT_NULLABLE, {TYPE_NULL}, 0},
-    {"readf64", TYPE_FLOAT_NULLABLE, {TYPE_NULL}, 0},
-    {"write", TYPE_VOID, {TYPE_ALL}, 1},
-    {"i2f", TYPE_FLOAT, {TYPE_INT}, 1},
-    {"f2i", TYPE_INT, {TYPE_FLOAT}, 1},
-    {"string", TYPE_U8, {TYPE_U8}, 1},
-    {"length", TYPE_INT, {TYPE_U8}, 1},
-    {"concat", TYPE_U8, {TYPE_U8, TYPE_U8}, 2},
-    {"substring", TYPE_U8_NULLABLE, {TYPE_U8, TYPE_INT, TYPE_INT}, 3},
-    {"strcmp", TYPE_INT, {TYPE_U8, TYPE_U8}, 2},
-    {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
-    {"chr", TYPE_U8, {TYPE_INT}, 1}};
 
 /**
  * Function that initilazes parser

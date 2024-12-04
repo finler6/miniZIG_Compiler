@@ -32,10 +32,15 @@ void parser_init(Scanner *scanner);
 // Starts parsing the input program
 ASTNode* parse_program(Scanner *scanner);
 
+bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name);
+
+int get_builtin_function_index(const char *function_name);
 
 // Data type parse functions
 DataType parse_type(Scanner *scanner);
 DataType parse_return_type(Scanner *scanner);
+
+DataType detach_nullable(DataType type_nullable);
 
 // Return types check
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
