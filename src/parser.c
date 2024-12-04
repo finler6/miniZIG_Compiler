@@ -29,7 +29,6 @@ static int scope_stack[MAX_SCOPE_DEPTH];
 static int scope_stack_top = -1;
 static int scope_counter = 0;
 
-// Функция для входа в новую область видимости
 void enter_scope() {
     scope_counter++;
     if (scope_stack_top >= MAX_SCOPE_DEPTH - 1) {
@@ -54,7 +53,7 @@ int current_scope_id() {
 
 Symbol *search_variable_in_scopes(const char *variable_name, const char *function_name) {
     for (int i = scope_stack_top; i >= -1; i--) {
-        int scope_id = (i >= 0) ? scope_stack[i] : 0; // Глобальная область видимости
+        int scope_id = (i >= 0) ? scope_stack[i] : 0;
         size_t len = strlen(function_name) + strlen(variable_name) + 20;
         char *full_name = (char *)safe_malloc(len);
         snprintf(full_name, len, "%s.%d.%s", variable_name, scope_id, function_name);
@@ -68,12 +67,12 @@ Symbol *search_variable_in_scopes(const char *variable_name, const char *functio
 
 Symbol *search_variable_in_outer_scopes(const char *variable_name, const char *function_name) {
     for (int i = scope_stack_top - 1; i >= -1; i--) {
-        int scope_id = (i >= 0) ? scope_stack[i] : 0; // Глобальная область видимости
+        int scope_id = (i >= 0) ? scope_stack[i] : 0;
         size_t len = strlen(function_name) + strlen(variable_name) + 20;
         char *full_name = (char *)safe_malloc(len);
         snprintf(full_name, len, "%s.%d.%s", variable_name, scope_id, function_name);
         Symbol *symbol = symtable_search(&symtable, full_name);
-        safe_free(full_name); // Освобождаем память
+        safe_free(full_name);
         if (symbol != NULL) {
             return symbol;
         }
@@ -144,6 +143,9 @@ BuiltinFunctionInfo builtin_functions[] = {
     {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
     {"chr", TYPE_U8, {TYPE_INT}, 1}};
 
+/**
+ * Function that initilazes parser
+ */
 void parser_init(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Initializing parser...\n");
@@ -153,6 +155,15 @@ void parser_init(Scanner *scanner)
     current_token = get_next_token(scanner);
 }
 
+/**
+ * Main function to parse program.
+ * 1. Parses import
+ * 2. Loading builtin functions
+ * 3. Declaring all functions (Pre-run)
+ * 4. Parsing all functions
+ * 5. Semantic controll of symtable and scope check
+ * Returns pointer to the root node of AST
+ */
 ASTNode *parse_program(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Parsing program\n");
@@ -211,6 +222,18 @@ ASTNode *parse_program(Scanner *scanner)
     return program_node;
 }
 
+/**
+ * Function that parses function declaration or definition.
+ * bool is_definition is responsive for 2 types of execution (Definition and Declaration)
+ * In Declaration:
+ * 1. Parsing parameters
+ * 2. Creating "blank" function node
+ * 3. Inserting into symtable
+ * In Definition:
+ * 1. Parsing parameters
+ * 2. Creating function node with block section
+ * Returns a pointer to a function node
+ */
 ASTNode *parse_function(Scanner *scanner, bool is_definition)
 {
     LOG("DEBUG_PARSER: Parsing function\n");
@@ -223,10 +246,11 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     }
 
     char *function_name = string_duplicate(current_token.lexeme);
+
     current_token = get_next_token(scanner);
 
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
-    enter_scope(); // Входим в область видимости функции
+    enter_scope();
     ASTNode **parameters = NULL;
     int param_count = 0;
 
@@ -251,7 +275,6 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     {
         ASTNode *body_node = parse_block(scanner, function_name, false);
         function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
-        // Symbol *symbol = symtable_search(&symtable, function_name);
 
         int block_layer = 0;
         check_return_types(function_node->body->body, return_type, &block_layer);
@@ -300,11 +323,20 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         symtable_insert(&symtable, function_name_symtable, new_function);
         current_token = get_next_token(scanner);
     }
-    exit_scope(); // Выходим из области видимости функции
+    exit_scope();
 
     return function_node;
 }
 
+/**
+ * Function to parse a parameter
+ * 1. Constructs a variable name in "variable.function_name" format
+ * 2. Parsing type of parameter
+ * 3. Asserting if parameter was already defined
+ * 4. Creating variable declaretion node
+ * 5. In case of definition inserting parameter into symtable
+ * Returns a pointer to variable_declaration node
+ */
 ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition)
 {
     LOG("DEBUG_PARSER: Parsing parameter\n");
@@ -349,6 +381,12 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     return param_node;
 }
 
+/**
+ * Function that parses block of statements
+ * 1. Creates block_node
+ * 2. Parsing statements until right brace is found
+ * Returns a pointer to block_node
+ */
 ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope)
 {
     LOG("DEBUG_PARSER: Parsing block\n");
@@ -356,7 +394,7 @@ ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope
 
     if (enter_new_scope)
     {
-        enter_scope(); // Входим в новую область видимости
+        enter_scope();
     }
 
     ASTNode *block_node = create_block_node(NULL, TYPE_NULL);
@@ -381,12 +419,16 @@ ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope
 
     if (enter_new_scope)
     {
-        exit_scope(); // Выходим из области видимости
+        exit_scope();
     }
 
     return block_node;
 }
 
+/**
+ * Function that decides which type of statement will be parsed
+ * Returns a pointer to a parsed node
+ */
 ASTNode *parse_statement(Scanner *scanner, char *function_name)
 {
     if (current_token.type == TOKEN_VAR || current_token.type == TOKEN_CONST)
@@ -416,6 +458,16 @@ ASTNode *parse_statement(Scanner *scanner, char *function_name)
     }
 }
 
+/**
+ * Function that pasrses a variable assigning statement
+ * Generaly this function is applied when in statement first token is identifier
+ * 1. Finds type of statement it is dealing with
+ * . In case of builtin function, parses function call
+ * . In case of user-defined function, parses function call
+ * . In case of underscore parses expression and optianaly converts types of nodes of expression
+ * . In other cases assumes that its variable identifier and parses it
+ * Returns a pointer to a node (function_call, or assigning node)
+ */
 ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
@@ -425,7 +477,6 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
     bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
     bool is_function = false;
     bool is_underscore = false;
-    //symbol = symtable_search(&symtable, current_token.lexeme);
     symbol = symtable_search(&symtable, current_token.lexeme);
     if (symbol != NULL)
     {
@@ -495,7 +546,6 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         expect_token(TOKEN_SEMICOLON, scanner);
         return create_assignment_node(name, value_node);
     }
-
     else
     {
         symbol = search_variable_in_scopes(current_token.lexeme, function_name);
@@ -520,6 +570,12 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
 }
 
+/**
+ * Function that converting expression
+ * 1. Find out if node data type can be assigned to a variable
+ * 2. Then converts if it possible
+ * Returns a pointer to a node that was converted
+ */
 ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name)
 {
     if (!node)
@@ -537,6 +593,16 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
     return node;
 }
 
+/**
+ * Function that parses declaration of a variable
+ * 1. Recognizes the type of variable (const or var)
+ * 2. Recognizes if is there a type specification for a variable
+ * 3. Parses an expression
+ * 4. Ensures type compability
+ * 5. Checks redefinition
+ * 6. Inserting into symtable
+ * Returns a pointer to a variable declaration node
+ */
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing variable declaration\n");
@@ -552,10 +618,8 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
         error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
     }
 
-    // Сохраняем базовое имя переменной для проверки
     const char *base_variable_name = current_token.lexeme;
 
-    // Создаём полное имя переменной с учётом области видимости
     char *variable_name = construct_variable_name(base_variable_name, function_name);
     current_token = get_next_token(scanner);
 
@@ -596,14 +660,12 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 
     expect_token(TOKEN_SEMICOLON, scanner);
 
-    // Проверяем, существует ли переменная с таким именем во внешних областях видимости
     Symbol *symbol = search_variable_in_outer_scopes(base_variable_name, function_name);
     if (symbol != NULL)
     {
         error_exit(ERR_SEMANTIC_OTHER, "Variable '%s' is already defined in an outer scope.", base_variable_name);
     }
 
-    // Проверяем, существует ли переменная с таким именем в текущей области видимости
     symbol = symtable_search(&symtable, variable_name);
     if (symbol != NULL)
     {
@@ -626,7 +688,13 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     return variable_declaration_node;
 }
 
-
+/**
+ * Function that parses if statement
+ * 1. Parses condition expression
+ * 2. Optianaly parses id withou null (|id|) and declaring a variable in body node
+ * 3. Optianaly parses else block
+ * Returns a pointer to a if_node
+ */
 ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing if statement\n");
@@ -659,7 +727,6 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
             error_exit(ERR_SEMANTIC_OTHER, "Variable is already defined");
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), (ASTNode *)condition_node->parameters); // Unsure about condition_node->parameters
-        // variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         Symbol *new_var = (Symbol *)safe_malloc(sizeof(Symbol));
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
@@ -677,9 +744,9 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 
         is_pipe = true;
     }
-    enter_scope(); // Входим в область видимости для блока if
+    enter_scope();
     ASTNode *true_block = parse_block(scanner, function_name, true);
-    exit_scope(); // Выходим из области видимости блока if
+    exit_scope();
     if (is_pipe)
     {
         ASTNode *tmp = true_block->body;
@@ -691,9 +758,9 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     if (current_token.type == TOKEN_ELSE)
     {
         current_token = get_next_token(scanner);
-        enter_scope(); // Входим в область видимости для блока else
+        enter_scope();
         false_block = parse_block(scanner, function_name, true);
-        exit_scope(); // Выходим из области видимости блока else
+        exit_scope();
     }
 
     if (false_block != NULL)
@@ -705,8 +772,12 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     }
     return create_if_node(condition_node, true_block, false_block, variable_declaration_node);
 }
-
-// Function to parse a while statement
+/**
+ * Function that parses while statement
+ * 1. Parses condition expression
+ * 2. Optianaly parses id withou null (|id|) and declaring a variable in body node
+ * Returns a pointer to a while_node
+ */
 ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing while statement\n");
@@ -736,7 +807,6 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
             error_exit(ERR_SEMANTIC_OTHER, "Variable is already defined");
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), (ASTNode *)condition_node->parameters); // Unsure about condition_node->parameters
-        // variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
         Symbol *new_var = (Symbol *)safe_malloc(sizeof(Symbol));
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
@@ -753,9 +823,9 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         expect_token(TOKEN_PIPE, scanner);
         is_pipe = true;
     }
-    enter_scope(); // Входим в область видимости для блока while
+    enter_scope();
     ASTNode *body_node = parse_block(scanner, function_name, true);
-    exit_scope(); // Выходим из области видимости блока while
+    exit_scope();
     if (is_pipe)
     {
         ASTNode *tmp = body_node->body;
@@ -766,6 +836,11 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
     return create_while_node(condition_node, body_node);
 }
 
+/**
+ * Function that parses a return statement
+ * 1. Parses expression of a return statement
+ * Returns a pointer to a return_node
+ */
 ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing return statement\n");
@@ -783,6 +858,11 @@ ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
     return create_return_node(return_value_node);
 }
 
+/**
+ * Convertion function
+ * 1. Adds a dot to a value in node
+ * Returs converted node
+ */
 ASTNode *convert_to_float_node(ASTNode *node)
 {
     if (node->data_type != TYPE_INT)
@@ -791,10 +871,9 @@ ASTNode *convert_to_float_node(ASTNode *node)
     }
     char *new_value = string_duplicate(node->value);
     char *decimal_value = add_decimal(new_value);
-    safe_free(new_value); // Освобождаем старое значение
+    safe_free(new_value);
 
     ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, decimal_value);
-    // Не освобождаем decimal_value, так как оно нужно в узле AST
 
     return conversion_node;
 }
@@ -944,7 +1023,6 @@ ASTNode *parse_multiplicative(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_primary_expression(scanner, function_name);
 
-        // Выполняем проверку типов и устанавливаем data_type
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
     }
 
@@ -961,7 +1039,6 @@ ASTNode *parse_additive(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_multiplicative(scanner, function_name);
 
-        // Выполняем проверку типов и устанавливаем data_type
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
     }
 
@@ -979,9 +1056,7 @@ ASTNode *parse_relational(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_additive(scanner, function_name);
 
-        // Выполняем проверку типов и создаем узел
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
-        // Устанавливаем тип результата в TYPE_BOOL
         node->data_type = TYPE_BOOL;
     }
 
@@ -997,9 +1072,7 @@ ASTNode *parse_equality(Scanner *scanner, char *function_name)
         const char *operator_name = current_token.lexeme;
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_relational(scanner, function_name);
-        // Выполняем проверку типов и создаем узел
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
-        // Устанавливаем тип результата в TYPE_BOOL
         node->data_type = TYPE_BOOL;
     }
 
@@ -1011,7 +1084,9 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
     return parse_equality(scanner, function_name);
 }
 
-// Parses a primary expression (literal, identifier, or parenthesized expression)
+/**  Parses a primary expression (literal, identifier, or parenthesized expression)
+ *
+ */
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing primary expression. Current token: %d\n Line and column: %d %d\n", current_token.type, current_token.line, current_token.column);
@@ -1082,7 +1157,8 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
     }
 }
 
-// Function to parse the import line at the beginning of the program
+/**  Function to parse the import line at the beginning of the program
+ */
 ASTNode *parse_import(Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Parsing import statement\n");
@@ -1652,19 +1728,15 @@ bool can_assign_type(DataType expected_type, DataType actual_type)
     if (expected_type == actual_type)
         return true;
 
-    // Разрешаем неявное преобразование int к float
     if (expected_type == TYPE_FLOAT && actual_type == TYPE_INT)
         return true;
 
-    // Разрешаем присвоение не-nullable значения nullable переменной
     if (is_nullable(expected_type) && !is_nullable(actual_type) && detach_nullable(expected_type) == actual_type)
         return true;
 
-    // Не разрешаем присвоение nullable значения не-nullable переменной
     if (!is_nullable(expected_type) && is_nullable(actual_type))
         return false;
 
-    // Разрешаем присвоение null nullable переменной
     if (is_nullable(expected_type) && actual_type == TYPE_NULL)
         return true;
 
@@ -1676,6 +1748,9 @@ bool is_nullable(DataType type_nullable)
     return (type_nullable == TYPE_INT_NULLABLE || type_nullable == TYPE_FLOAT_NULLABLE || type_nullable == TYPE_U8_NULLABLE);
 }
 
+/**
+ * Function that detaches nullable from type
+ */
 DataType detach_nullable(DataType type_nullable)
 {
     if (type_nullable == TYPE_INT_NULLABLE)
@@ -1688,7 +1763,9 @@ DataType detach_nullable(DataType type_nullable)
     return type_nullable;
 }
 
-// Function to expect a specific token type
+/**
+ *  Function to expect a specific token type
+ */
 static void expect_token(TokenType expected_type, Scanner *scanner)
 {
     LOG("DEBUG_PARSER: Expected token: %d, got token: %d\nLine and column: %d %d\n", expected_type, current_token.type, current_token.line, current_token.column);

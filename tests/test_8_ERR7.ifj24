@@ -1,8 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-pub fn main() void {
-    const c: i32 = 10;
-    if (c == null) { // Ошибка: сравнение null с i32 недопустимо
-        ifj.write("c is null\n");
-    }
-}

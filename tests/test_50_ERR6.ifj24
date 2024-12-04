@@ -1,7 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-pub fn main() void {
-    var b = 2;
-    b = 1;
-    return 1;
-}

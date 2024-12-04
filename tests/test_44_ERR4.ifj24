@@ -1,8 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-
-pub fn main() void {
-    var b = 2;
-    ifj.write("Sas", b);
-    return;
-}

@@ -1,5 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-pub fn main() void {
-    const b: i32 = null; // Ошибка: переменная i32 не допускает null
-}

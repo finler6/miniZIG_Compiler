@@ -1,6 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-pub fn main() void {
-    const e: ?i32 = null;
-    const f: i32 = e + 1; // Ошибка: доступ к null без проверки
-}

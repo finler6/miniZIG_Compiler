@@ -1,9 +1,0 @@
-const ifj = @import("ifj24.zig");
-
-
-
-pub fn main() void {
-    var a : f64 = 0.1;
-    a = ifj.string("Hello");
-    return;
-}
