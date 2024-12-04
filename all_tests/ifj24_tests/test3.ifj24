@@ -1,14 +1,13 @@
 const ifj = @import("ifj24.zig");
 
-pub fn foo(j : i32) i32 {
-    var a = j * 2;
-    return a;
-}
+
 
 pub fn main() void {
-    var a = 2;
-    var b = foo(a);
-    ifj.write(a);
-    ifj.write(b);
+    var b : ?i32 = 2;
+    var a = 1;
+    if(a == b)
+    {
+    }
+    
     return;
 }
