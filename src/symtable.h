@@ -66,9 +66,11 @@ void symtable_init(SymTable *symtable);
 void load_builtin_functions(SymTable *symtable, struct ASTNode *import_node);
 void insert_underscore(SymTable *symtable);
 void symtable_free(SymTable *symtable);
+// Symbol table operations
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol);
 Symbol *symtable_search(SymTable *symtable, char *key);
 void symtable_remove(SymTable *symtable, char *key);
+// Helper functions
 void is_symtable_all_used(SymTable *symtable);
 void is_main_correct(SymTable *symtable);
 // Hash function

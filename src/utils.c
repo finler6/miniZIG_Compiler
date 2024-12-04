@@ -33,15 +33,6 @@ char *string_duplicate(const char *src)
     return copy;
 }
 
-void remove_decimal(char *str)
-{
-    char *dot = strchr(str, '.');
-    if (dot != NULL)
-    {
-        *dot = '\0';
-    }
-}
-
 char *add_decimal(const char *str)
 {
     if (!str)

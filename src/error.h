@@ -22,7 +22,7 @@
 #define ERR_OK 0               // No error
 #define ERR_LEXICAL 1          // Lexical error
 #define ERR_SYNTACTICAL 2      // Syntactical error
-#define ERR_SYNTAX 2  
+#define ERR_SYNTAX 2           // Syntax error
 #define ERR_SEMANTIC_UNDEF 3   // Semantic error - undefined function or variable
 #define ERR_SEMANTIC_PARAMS 4  // Semantic error - incorrect function parameters
 #define ERR_SEMANTIC_OTHER 5   // Semantic error - redefinition, assignment to const, etc.
@@ -35,6 +35,5 @@
 
 // Functions for error handling
 void error_exit(int error_code, const char *format, ...);
-void warning(const char *format, ...);
 
 #endif // ERROR_H

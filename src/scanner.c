@@ -2,7 +2,7 @@
  * @file scanner.c
  *
  * Implementation of the scanner module.
- * The scanner reads the input file character by character
+ * The scanner reads the input file character by character and performs lexical analysis.
  *
  * IFJ Project 2024, Team 'xstepa77'
  *
@@ -17,54 +17,43 @@
 #include "tokens.h"
 #include "utils.h"
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
-#undef DEBUG_SCANNER
-#ifdef DEBUG_SCANNER
-#define LOG(...) printf(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
-
-// Maximum length for a lexeme
 #define MAX_LEXEME_LENGTH 256
-
-// Scanner state and current character storage
 
 // Function prototypes
 static void skip_whitespace_and_comments(Scanner *scanner);
 static Token scan_identifier_or_keyword(Scanner *scanner);
-static Token scan_number(Scanner *scanner);
-static Token scan_string(Scanner *scanner);
-static Token get_operator_or_delimiter(Scanner *scanner);
+static Token scan_number_literal(Scanner *scanner);
+static Token scan_string_literal(Scanner *scanner);
+static Token scan_operator_or_delimiter(Scanner *scanner);
 static Token get_next_token_internal(Scanner *scanner);
 
-void print_token(Token token)
+/**
+ * Ensure the buffer does not exceed its maximum length
+ */
+static void check_buffer_length(int index)
 {
-    if (token.lexeme == NULL)
+    if (index >= MAX_LEXEME_LENGTH - 1)
     {
-        LOG("DEBUG_SCANNER: Token type: %d, lexeme: (null), line: %d, column: %d\n",
-            token.type, token.line, token.column);
-    }
-    else
-    {
-        LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
-            token.type, token.lexeme, token.line, token.column);
+        error_exit(ERR_LEXICAL, "Literal too long.");
     }
 }
 
-// Helper function to skip whitespace and comments
+/**
+ * Helper function to skip whitespace and comments
+ */
 static void skip_whitespace_and_comments(Scanner *scanner)
 {
-    while (1)
+    bool skipping = true;
+    while (skipping)
     {
-        // Skip whitespace
+        // Skip whitespace characters
         while (isspace(scanner->current_char))
         {
-            LOG("DEBUG_SCANNER: Skipping whitespace: %c\n", scanner->current_char);
             if (scanner->current_char == '\n')
             {
                 scanner->line++;
@@ -80,45 +69,40 @@ static void skip_whitespace_and_comments(Scanner *scanner)
         // Check for comments
         if (scanner->current_char == '/')
         {
-            char next_char = fgetc(scanner->input);
+            int next_char = fgetc(scanner->input);
             if (next_char == '/')
-            { // Line comment
-                // Skip until end of line or EOF
+            {
+                // Single-line comment, skip until end of line
                 while (scanner->current_char != '\n' && scanner->current_char != EOF)
                 {
                     scanner->current_char = fgetc(scanner->input);
                     scanner->column++;
                 }
-                // Continue to skip whitespace and comments
-                continue;
+                continue; // Continue skipping whitespace and comments
             }
             else
             {
-                // Not a comment, put back the character
+                // Not a comment, return the character
                 ungetc(next_char, scanner->input);
-                break;
+                skipping = false;
             }
         }
         else
         {
-            break;
+            skipping = false;
         }
     }
 }
 
-// Function to recognize keywords and identifiers
-static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
+/**
+ * Recognize keywords or identifiers
+ */
+static Token recognize_keyword_or_identifier(const char *lexeme, Scanner *scanner)
 {
-    LOG("DEBUG_SCANNER: Lexeme in the start recognize is: %s\n", lexeme);
     Token token;
-    LOG("DEBUG_SCANNER: token.Lexeme in the start recognize is: %s\n", token.lexeme);
     token.lexeme = string_duplicate(lexeme);
-    LOG("DEBUG_SCANNER: Lexeme in the middle recognize is: %s\n", lexeme);
-    LOG("DEBUG_SCANNER: token.Lexeme in the middle recognize is: %s\n", token.lexeme);
     token.line = scanner->line;
     token.column = scanner->column - strlen(lexeme);
-
-    LOG("DEBUG_SCANNER: Recognizing identifier or keyword: %s\n", lexeme);
 
     if (strcmp(lexeme, "const") == 0)
         token.type = TOKEN_CONST;
@@ -135,10 +119,7 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
     else if (strcmp(lexeme, "fn") == 0)
         token.type = TOKEN_FN;
     else if (strcmp(lexeme, "pub") == 0)
-    {
-        LOG("DEBUG_SCANNER: Recognized 'pub' keyword\n");
         token.type = TOKEN_PUB;
-    }
     else if (strcmp(lexeme, "void") == 0)
         token.type = TOKEN_VOID;
     else if (strcmp(lexeme, "null") == 0)
@@ -155,31 +136,24 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
     {
         if (strchr(lexeme, '@') != NULL)
         {
-            error_exit(ERR_LEXICAL, "Invalid identifier: '@' is not allowed.");
+            error_exit(ERR_LEXICAL, "Invalid identifier: '@' symbol is not allowed.");
         }
         token.type = TOKEN_IDENTIFIER;
-        LOG("DEBUG_SCANNER: Recognized as identifier\n");
     }
-    LOG("DEBUG_SCANNER: Lexeme in the end recognize is: %s\n", token.lexeme);
     return token;
 }
 
+/**
+ * Scan identifiers or keywords
+ */
 static Token scan_identifier_or_keyword(Scanner *scanner)
 {
     char lexeme_buffer[MAX_LEXEME_LENGTH];
     int index = 0;
-    LOG("DEBUG_SCANNER: Starting to scan identifier or keyword\n");
     while (isalnum(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']')
     {
-        if (index < MAX_LEXEME_LENGTH - 1)
-        {
-            lexeme_buffer[index++] = scanner->current_char;
-            LOG("DEBUG_SCANNER: Lexeme_Buffer is: %s\n", lexeme_buffer);
-        }
-        else
-        {
-            error_exit(ERR_LEXICAL, "Identifier too long.");
-        }
+        check_buffer_length(index);
+        lexeme_buffer[index++] = scanner->current_char;
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
     }
@@ -187,108 +161,88 @@ static Token scan_identifier_or_keyword(Scanner *scanner)
     {
         error_exit(ERR_LEXICAL, "Lexeme buffer is empty.");
     }
-    lexeme_buffer[index] = '\0';
-    LOG("DEBUG_SCANNER: Finished scanning identifier: %s\n", lexeme_buffer);
-    Token t = recognize_keyword_or_identifier(lexeme_buffer, scanner);
-    LOG("DEBUG_SCANNER: Token type: %d, lexeme: %s, line: %d, column: %d\n",
-        t.type, t.lexeme, t.line, t.column);
 
-    return t;
+    lexeme_buffer[index] = '\0';
+
+    return recognize_keyword_or_identifier(lexeme_buffer, scanner);
 }
 
-// Function to scan numeric literals (int and float)
-static Token scan_number(Scanner *scanner)
+/**
+ * Read a sequence of digits into the buffer
+ */
+static void read_digits(Scanner *scanner, char *buffer, int *index)
+{
+    while (isdigit(scanner->current_char))
+    {
+        check_buffer_length(*index);
+        buffer[(*index)++] = scanner->current_char;
+        scanner->current_char = fgetc(scanner->input);
+        scanner->column++;
+    }
+}
+
+/**
+ * Handle the exponent part of a float literal
+ */
+static void handle_exponent(Scanner *scanner, char *buffer, int *index)
+{
+    buffer[(*index)++] = scanner->current_char;
+    scanner->current_char = fgetc(scanner->input);
+    scanner->column++;
+
+    // Optional '+' or '-'
+    if (scanner->current_char == '+' || scanner->current_char == '-')
+    {
+        check_buffer_length(*index);
+        buffer[(*index)++] = scanner->current_char;
+        scanner->current_char = fgetc(scanner->input);
+        scanner->column++;
+    }
+
+    // At least one digit required in exponent
+    if (!isdigit(scanner->current_char))
+    {
+        error_exit(ERR_LEXICAL, "Invalid float literal exponent.");
+    }
+
+    read_digits(scanner, buffer, index);
+}
+
+/**
+ * Main function to scan numeric literals (int and float)
+ */
+static Token scan_number_literal(Scanner *scanner)
 {
     char number_buffer[MAX_LEXEME_LENGTH];
     int index = 0;
     int is_float = 0;
 
-    // Handle integer part
-    while (isdigit(scanner->current_char))
-    {
-        if (index < MAX_LEXEME_LENGTH - 1)
-        {
-            number_buffer[index++] = scanner->current_char;
-        }
-        else
-        {
-            error_exit(ERR_LEXICAL, "Number literal too long.");
-        }
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-    }
+    // Read integer part
+    read_digits(scanner, number_buffer, &index);
 
-    // Handle decimal point (float) or exponent
+    // Handle decimal point for float literals
     if (scanner->current_char == '.')
     {
         is_float = 1;
+        check_buffer_length(index);
         number_buffer[index++] = scanner->current_char;
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
 
-        // At least one digit after decimal point
+        // At least one digit required after the decimal point
         if (!isdigit(scanner->current_char))
         {
             error_exit(ERR_LEXICAL, "Invalid float literal.");
         }
 
-        while (isdigit(scanner->current_char))
-        {
-            if (index < MAX_LEXEME_LENGTH - 1)
-            {
-                number_buffer[index++] = scanner->current_char;
-            }
-            else
-            {
-                error_exit(ERR_LEXICAL, "Float literal too long.");
-            }
-            scanner->current_char = fgetc(scanner->input);
-            scanner->column++;
-        }
+        read_digits(scanner, number_buffer, &index);
     }
 
-    // Handle exponent part
+    // Handle exponent part for float literals
     if (scanner->current_char == 'e' || scanner->current_char == 'E')
     {
         is_float = 1;
-        number_buffer[index++] = scanner->current_char;
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-
-        // Optional '+' or '-'
-        if (scanner->current_char == '+' || scanner->current_char == '-')
-        {
-            if (index < MAX_LEXEME_LENGTH - 1)
-            {
-                number_buffer[index++] = scanner->current_char;
-            }
-            else
-            {
-                error_exit(ERR_LEXICAL, "Float literal too long in exponent.");
-            }
-            scanner->current_char = fgetc(scanner->input);
-            scanner->column++;
-        }
-
-        // At least one digit in exponent
-        if (!isdigit(scanner->current_char))
-        {
-            error_exit(ERR_LEXICAL, "Invalid float literal exponent.");
-        }
-
-        while (isdigit(scanner->current_char))
-        {
-            if (index < MAX_LEXEME_LENGTH - 1)
-            {
-                number_buffer[index++] = scanner->current_char;
-            }
-            else
-            {
-                error_exit(ERR_LEXICAL, "Float literal exponent too long.");
-            }
-            scanner->current_char = fgetc(scanner->input);
-            scanner->column++;
-        }
+        handle_exponent(scanner, number_buffer, &index);
     }
 
     number_buffer[index] = '\0';
@@ -299,25 +253,56 @@ static Token scan_number(Scanner *scanner)
         error_exit(ERR_LEXICAL, "Invalid integer literal with leading zero.");
     }
 
+    // Create the token
     Token token;
     token.lexeme = string_duplicate(number_buffer);
     token.line = scanner->line;
     token.column = scanner->column - strlen(number_buffer);
 
-    if (is_float)
-    {
-        token.type = TOKEN_FLOAT_LITERAL;
-    }
-    else
-    {
-        token.type = TOKEN_INT_LITERAL;
-    }
-
+    token.type = is_float ? TOKEN_FLOAT_LITERAL : TOKEN_INT_LITERAL;
     return token;
 }
 
-// Function to scan string literals
-static Token scan_string(Scanner *scanner)
+/**
+ * Handle escape sequences in a string literal
+ */
+static char handle_escape_sequence(Scanner *scanner)
+{
+    scanner->current_char = fgetc(scanner->input);
+    scanner->column++;
+
+    switch (scanner->current_char)
+    {
+    case 'n': return '\n';
+    case 't': return '\t';
+    case 'r': return '\r';
+    case '"': return '"';
+    case '\\': return '\\';
+    case 'x':
+    {
+        char hex_digits[3] = {0};
+        for (int i = 0; i < 2; i++)
+        {
+            scanner->current_char = fgetc(scanner->input);
+            scanner->column++;
+            if (!isxdigit(scanner->current_char))
+            {
+                error_exit(ERR_LEXICAL, "Invalid escape sequence in string literal.");
+            }
+            hex_digits[i] = scanner->current_char;
+        }
+        return (char)strtol(hex_digits, NULL, 16);
+    }
+    default:
+        error_exit(ERR_LEXICAL, "Invalid escape sequence in string literal.");
+    }
+    return '\0'; // Unreachable
+}
+
+/**
+ * Main function to scan string literals
+ */
+static Token scan_string_literal(Scanner *scanner)
 {
     char string_buffer[MAX_LEXEME_LENGTH];
     int index = 0;
@@ -328,98 +313,22 @@ static Token scan_string(Scanner *scanner)
     while (scanner->current_char != '"' && scanner->current_char != EOF)
     {
         if (scanner->current_char == '\\')
-        { // Handle escape sequences
-            scanner->current_char = fgetc(scanner->input);
-            scanner->column++;
-
-            if (scanner->current_char == 'n')
-            {
-                if (index < MAX_LEXEME_LENGTH - 1)
-                    string_buffer[index++] = '\n';
-                else
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-            }
-            else if (scanner->current_char == 't')
-            {
-                if (index < MAX_LEXEME_LENGTH - 1)
-                    string_buffer[index++] = '\t';
-                else
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-            }
-            else if (scanner->current_char == 'r')
-            {
-                if (index < MAX_LEXEME_LENGTH - 1)
-                    string_buffer[index++] = '\r';
-                else
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-            }
-            else if (scanner->current_char == '"')
-            {
-                if (index < MAX_LEXEME_LENGTH - 1)
-                    string_buffer[index++] = '"';
-                else
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-            }
-            else if (scanner->current_char == '\\')
-            {
-                if (index < MAX_LEXEME_LENGTH - 1)
-                    string_buffer[index++] = '\\';
-                else
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-            }
-            else if (scanner->current_char == 'x')
-            {
-                char hex_digits[3] = {0};
-                scanner->current_char = fgetc(scanner->input);
-                scanner->column++;
-
-                for (int i = 0; i < 2; i++)
-                {
-                    if (!isxdigit(scanner->current_char))
-                    {
-                        error_exit(ERR_LEXICAL, "Invalid escape sequence in string literal.");
-                    }
-                    hex_digits[i] = scanner->current_char;
-                    scanner->current_char = fgetc(scanner->input);
-                    scanner->column++;
-                }
-
-                int char_code = (int)strtol(hex_digits, NULL, 16);
-                if (index < MAX_LEXEME_LENGTH - 1)
-                {
-                    string_buffer[index++] = (char)char_code;
-                }
-                else
-                {
-                    error_exit(ERR_LEXICAL, "String literal too long.");
-                }
-            }
-            else
-            {
-                // Invalid escape sequence
-                error_exit(ERR_LEXICAL, "Invalid escape sequence in string literal.");
-            }
+        {
+            check_buffer_length(index);
+            string_buffer[index++] = handle_escape_sequence(scanner);
         }
         else if (scanner->current_char == '\n')
         {
-            // Strings cannot contain newlines
-            error_exit(ERR_LEXICAL, "Unterminated string literal.");
+            error_exit(ERR_LEXICAL, "Unterminated string literal."); // Strings cannot contain newlines
+        }
+        else if (scanner->current_char < 32 || scanner->current_char == 35 || scanner->current_char == 92)
+        {
+            error_exit(ERR_LEXICAL, "Invalid character in string literal."); // ASCII > 32, not '#', not '\\'
         }
         else
         {
-            // Regular character
-            if (scanner->current_char < 32 || scanner->current_char == 35 || scanner->current_char == 92)
-            { // ASCII > 32, not '#', not '\\'
-                error_exit(ERR_LEXICAL, "Invalid character in string literal.");
-            }
-            if (index < MAX_LEXEME_LENGTH - 1)
-            {
-                string_buffer[index++] = scanner->current_char;
-            }
-            else
-            {
-                error_exit(ERR_LEXICAL, "String literal too long.");
-            }
+            check_buffer_length(index);
+            string_buffer[index++] = scanner->current_char;
         }
 
         scanner->current_char = fgetc(scanner->input);
@@ -445,301 +354,211 @@ static Token scan_string(Scanner *scanner)
     return token;
 }
 
-// Function to get operator or delimiter tokens
-static Token get_operator_or_delimiter(Scanner *scanner)
+/**
+ * Create a simple token for single-character symbols
+ */
+static Token create_simple_token(Scanner *scanner, TokenType type)
 {
     Token token;
+    token.type = type;
     token.line = scanner->line;
     token.column = scanner->column;
 
-    // Allocate memory for lexeme
     token.lexeme = safe_malloc(2);
+    token.lexeme[0] = scanner->current_char;
+    token.lexeme[1] = '\0';
+
+    scanner->current_char = fgetc(scanner->input);
+    scanner->column++;
+
+    return token;
+}
+
+/**
+ * Scan operators and delimiters
+ */
+static Token scan_operator_or_delimiter(Scanner *scanner)
+{
+    Token token;
     token.line = scanner->line;
     token.column = scanner->column;
 
     switch (scanner->current_char)
     {
     case '+':
-        token.type = TOKEN_PLUS;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_PLUS);
     case '-':
-        token.type = TOKEN_MINUS;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_MINUS);
     case '*':
-        token.type = TOKEN_MULTIPLY;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_MULTIPLY);
     case '/':
-        token.type = TOKEN_DIVIDE;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_DIVIDE);
     case '=':
-        scanner->current_char = fgetc(scanner->input);
+    {
+        int next_char = fgetc(scanner->input);
         scanner->column++;
-        if (scanner->current_char == '=')
+        if (next_char == '=')
         {
             token.type = TOKEN_EQUAL;
-            char *temp = safe_realloc(token.lexeme, 3);
-            if (temp == NULL)
-            {
-                safe_free(token.lexeme);
-                error_exit(ERR_INTERNAL, "Memory reallocation failed.");
-            }
-            token.lexeme = temp;
-            token.lexeme[0] = '=';
-            token.lexeme[1] = '=';
-            token.lexeme[2] = '\0';
+            token.lexeme = string_duplicate("==");
             scanner->current_char = fgetc(scanner->input);
             scanner->column++;
         }
         else
         {
+            ungetc(next_char, scanner->input);
+            token.lexeme = string_duplicate("=");
             token.type = TOKEN_ASSIGN;
-            token.lexeme[0] = '=';
-            token.lexeme[1] = '\0';
+            scanner->current_char = fgetc(scanner->input);
+            scanner->column++;
         }
-        break;
+        return token;
+    }
     case '(':
-        token.type = TOKEN_LEFT_PAREN;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_LEFT_PAREN);
     case ')':
-        token.type = TOKEN_RIGHT_PAREN;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_RIGHT_PAREN);
     case '{':
-        token.type = TOKEN_LEFT_BRACE;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_LEFT_BRACE);
     case '}':
-        token.type = TOKEN_RIGHT_BRACE;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_RIGHT_BRACE);
     case '|':
-        token.type = TOKEN_PIPE;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_PIPE);
     case ':':
-        token.type = TOKEN_COLON;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_COLON);
     case ';':
-        token.type = TOKEN_SEMICOLON;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_SEMICOLON);
     case '<':
-        scanner->current_char = fgetc(scanner->input);
+    {
+        int next_char = fgetc(scanner->input);
         scanner->column++;
-        if (scanner->current_char == '=')
+        if (next_char == '=')
         {
             token.type = TOKEN_LESS_EQUAL;
-            char *temp = safe_realloc(token.lexeme, 3);
-            if (temp == NULL)
-            {
-                safe_free(token.lexeme);
-                error_exit(ERR_INTERNAL, "Memory reallocation failed.");
-            }
-            token.lexeme = temp;
-
-            strcpy(token.lexeme, "<=");
+            token.lexeme = string_duplicate("<=");
             scanner->current_char = fgetc(scanner->input);
             scanner->column++;
         }
         else
         {
+            ungetc(next_char, scanner->input);
+            token.lexeme = string_duplicate("<");
             token.type = TOKEN_LESS;
-            token.lexeme[0] = '<';
-            token.lexeme[1] = '\0';
+            scanner->current_char = fgetc(scanner->input);
+            scanner->column++;
         }
-        break;
+        return token;
+    }
     case '>':
-        scanner->current_char = fgetc(scanner->input);
+    {
+        int next_char = fgetc(scanner->input);
         scanner->column++;
-        if (scanner->current_char == '=')
+        if (next_char == '=')
         {
             token.type = TOKEN_GREATER_EQUAL;
-            char *temp = safe_realloc(token.lexeme, 3);
-            if (temp == NULL)
-            {
-                safe_free(token.lexeme);
-                error_exit(ERR_INTERNAL, "Memory reallocation failed.");
-            }
-            token.lexeme = temp;
-
-            strcpy(token.lexeme, ">=");
+            token.lexeme = string_duplicate(">=");
             scanner->current_char = fgetc(scanner->input);
             scanner->column++;
         }
         else
         {
+            ungetc(next_char, scanner->input);
+            token.lexeme = string_duplicate(">");
             token.type = TOKEN_GREATER;
-            token.lexeme[0] = '>';
-            token.lexeme[1] = '\0';
+            scanner->current_char = fgetc(scanner->input);
+            scanner->column++;
         }
-        break;
+        return token;
+    }
     case ',':
-        token.type = TOKEN_COMMA;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_COMMA);
     case '.':
-        token.type = TOKEN_DOT;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_DOT);
     case '?':
-        token.type = TOKEN_QUESTION;
-        token.lexeme[0] = scanner->current_char;
-        token.lexeme[1] = '\0';
-        scanner->current_char = fgetc(scanner->input);
-        scanner->column++;
-        break;
+        return create_simple_token(scanner, TOKEN_QUESTION);
     case '!':
-        scanner->current_char = fgetc(scanner->input);
+    {
+        int next_char = fgetc(scanner->input);
         scanner->column++;
-        if (scanner->current_char == '=')
+        if (next_char == '=')
         {
             token.type = TOKEN_NOT_EQUAL;
-            char *temp = safe_realloc(token.lexeme, 3);
-            if (temp == NULL)
-            {
-                safe_free(token.lexeme);
-                error_exit(ERR_INTERNAL, "Memory reallocation failed.");
-            }
-            token.lexeme = temp;
-
-            token.lexeme[0] = '!';
-            token.lexeme[1] = '=';
-            token.lexeme[2] = '\0';
+            token.lexeme = string_duplicate("!=");
             scanner->current_char = fgetc(scanner->input);
             scanner->column++;
         }
         else
         {
-            error_exit(ERR_LEXICAL, "Unknown operator '!' without '='.");
+            error_exit(ERR_LEXICAL, "Unknown operator '!' detected.");
         }
-        break;
+        return token;
+    }
     default:
-        safe_free(token.lexeme);
-        error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c, ASCII: %d", scanner->current_char, scanner->current_char);
-        break;
+        error_exit(ERR_LEXICAL, "Unknown character: '%c'", scanner->current_char);
     }
 
-    return token;
+    // In case of an unexpected situation
+    error_exit(ERR_LEXICAL, "Unknown character: '%c'", scanner->current_char);
+    return token; // Never reached
 }
 
+/**
+ * Get the next token
+ */
 static Token get_next_token_internal(Scanner *scanner)
 {
     skip_whitespace_and_comments(scanner);
 
-    LOG("DEBUG_SCANNER: Processing character: '%c' (ASCII: %d)\n", scanner->current_char, (int)scanner->current_char);
-
-    Token token;
-    token.lexeme = NULL;
-    token.line = scanner->line;
-    token.column = scanner->column;
-
     if (scanner->current_char == EOF)
     {
-        LOG("DEBUG_SCANNER: Reached EOF\n");
+        Token token;
         token.type = TOKEN_EOF;
         token.lexeme = string_duplicate("EOF");
-        LOG("DEBUG_SCANNER: Returning EOF token\n");
+        token.line = scanner->line;
+        token.column = scanner->column;
         return token;
     }
 
-    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']')
+    if (isalpha(scanner->current_char) || scanner->current_char == '_' || scanner->current_char == '@' || scanner->current_char == '[' || scanner->current_char == ']') 
     {
-        LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
-        Token t = scan_identifier_or_keyword(scanner);
-        print_token(t);
-        return t;
+        return scan_identifier_or_keyword(scanner);
     }
     else if (isdigit(scanner->current_char))
     {
-        LOG("DEBUG_SCANNER: Detected number\n");
-        Token t = scan_number(scanner);
-        print_token(t);
-        return t;
+        return scan_number_literal(scanner);
     }
     else if (scanner->current_char == '"')
     {
-        LOG("DEBUG_SCANNER: Detected string\n");
-        Token t = scan_string(scanner);
-        print_token(t);
-        return t;
+        return scan_string_literal(scanner);
     }
     else
     {
-        LOG("DEBUG_SCANNER: Detected operator or delimiter\n");
-        Token t = get_operator_or_delimiter(scanner);
-        print_token(t);
-        return t;
+        return scan_operator_or_delimiter(scanner);
     }
 }
 
-// Public function to get the next token
+/**
+ * Public function to get the next token
+ */
 Token get_next_token(Scanner *scanner)
 {
     return get_next_token_internal(scanner);
 }
 
-// Function to initialize scanner
+/**
+ * Initialize the scanner
+ */
 void scanner_init(FILE *input_file, Scanner *scanner)
 {
     scanner->input = input_file;
     scanner->current_char = fgetc(scanner->input);
     scanner->column = 1;
     scanner->line = 1;
-    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
-    while ((scanner->current_char = fgetc(scanner->input)) != EOF)
-    {
-        LOG("DEBUG_SCANNER: Reading character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
-    }
-    rewind(scanner->input);
-    scanner->current_char = fgetc(scanner->input);
 }
 
-// Function to free token lexeme
+/**
+ * Free the memory occupied by a token
+ */
 void free_token(Token *token)
 {
     if (token->lexeme != NULL)
@@ -747,9 +566,4 @@ void free_token(Token *token)
         safe_free(token->lexeme);
         token->lexeme = NULL;
     }
-}
-
-void scanner_free(Scanner *scanner)
-{
-    scanner = scanner;
 }

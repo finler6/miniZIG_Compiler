@@ -64,9 +64,6 @@ int main(int argc, char *argv[]) {
 
     codegen_finalize();
 
-    scanner_free(&scanner);
-
-
     //free_ast_node(ast_root);
 
 

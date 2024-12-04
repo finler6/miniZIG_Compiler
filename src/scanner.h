@@ -25,14 +25,10 @@ typedef struct {
     int current_char;   
 } Scanner;
 
+// Function prototypes
 void scanner_init(FILE *input_file, Scanner *scanner);
 
-void scanner_free(Scanner *scanner);
-
+// Public function to get the next token
 Token get_next_token();
-
-int scanner_is_keyword(const char *lexeme, Scanner *scanner);
-int scanner_is_operator(int c, Scanner *scanner);
-int scanner_is_delimiter(int c, Scanner *scanner);
 
 #endif // SCANNER_H

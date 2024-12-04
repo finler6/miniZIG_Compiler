@@ -19,13 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#undef DEBUG_SYMTABLE
-#ifdef DEBUG_SYMTABLE
-#define LOG(...) printf(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
-
 #define INITIAL_SYMTABLE_SIZE 64
 #define LOAD_FACTOR 0.75
 
@@ -33,7 +26,9 @@ extern BuiltinFunctionInfo builtin_functions[];
 
 static void symtable_grow(SymTable *symtable);
 
-// Initializes the symbol table
+/**
+ * Initializes the symbol table.
+ */
 void symtable_init(SymTable *symtable)
 {
     symtable->size = INITIAL_SYMTABLE_SIZE;
@@ -47,6 +42,9 @@ void symtable_init(SymTable *symtable)
     insert_underscore(symtable);
 }
 
+/**
+ * Loads the built-in functions into the symbol table.
+ */
 void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
 {
     size_t num_functions = get_num_builtin_functions();
@@ -70,6 +68,9 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
     }
 }
 
+/**
+ * Inserts an underscore symbol into the symbol table.
+ */
 void insert_underscore(SymTable *symtable)
 {
     Symbol *underscore = (Symbol *)safe_malloc(sizeof(Symbol));
@@ -84,7 +85,9 @@ void insert_underscore(SymTable *symtable)
     symtable_insert(symtable, "_", underscore);
 }
 
-// Frees all memory allocated for the symbol table
+/**
+ * Frees all memory allocated for the symbol table.
+ */
 void symtable_free(SymTable *symtable)
 {
     for (int i = 0; i < symtable->size; i++)
@@ -104,14 +107,15 @@ void symtable_free(SymTable *symtable)
     symtable->count = 0;
 }
 
-// Hash function to calculate the index for a given key
+/**
+ * Hash function to calculate the index for a given key.
+ */
 unsigned int symtable_hash(char *key, int size)
 {
     if (key == NULL)
     {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_hash");
     }
-    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
     unsigned long hash = 5381;
     int c;
     while ((c = *key++))
@@ -120,14 +124,16 @@ unsigned int symtable_hash(char *key, int size)
     }
     return hash % size;
 }
-// Inserts a symbol into the symbol table
+
+/**
+ * Inserts a symbol into the symbol table.
+ */
 Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol)
 {
     if (key == NULL)
     {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_insert");
     }
-    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
     if (symbol == NULL)
     {
         error_exit(ERR_INTERNAL, "NULL symbol passed to symtable_insert");
@@ -145,7 +151,6 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol)
     Symbol *current = symtable->table[index];
     while (current != NULL)
     {
-        LOG("DEBUG_SYMTABLE: Comparing key: '%s' with existing symbol: '%s'\n", key, current->name);
         if (current->name == NULL)
         {
             error_exit(ERR_INTERNAL, "NULL symbol name encountered in symtable during insertion");
@@ -160,25 +165,23 @@ Symbol *symtable_insert(SymTable *symtable, char *key, Symbol *symbol)
     symtable->table[index] = symbol;
     symtable->count++;
 
-    LOG("DEBUG_SYMTABLE: Inserted symbol: '%s' at index: %u\n", symbol->name, index);
-
     return symbol;
 }
 
-// Searches for a symbol in the table by key
+/**
+ * Searches for a symbol in the table by key.
+ */
 Symbol *symtable_search(SymTable *symtable, char *key)
 {
     if (key == NULL)
     {
         error_exit(ERR_INTERNAL, "NULL key passed to symtable_search");
     }
-    LOG("DEBUG_SYMTABLE: symtable_search called with key: %s\n", key);
 
     unsigned int index = symtable_hash(key, symtable->size);
     Symbol *current = symtable->table[index];
     while (current != NULL)
     {
-        LOG("DEBUG_SYMTABLE: Comparing key: '%s' with symbol: '%s'\n", key, current->name);
         if (current->name == NULL)
         {
             error_exit(ERR_INTERNAL, "NULL symbol name encountered in symtable");
@@ -195,7 +198,9 @@ Symbol *symtable_search(SymTable *symtable, char *key)
     return NULL;
 }
 
-// Checks if all symbols in the table have is_used set to true
+/**
+ * Checks if all symbols in the table have is_used set to true.
+ */
 void is_symtable_all_used(SymTable *symtable)
 {
     bool is_all_used = true;
@@ -217,11 +222,14 @@ void is_symtable_all_used(SymTable *symtable)
     return;
 }
 
+/**
+ * Checks if the main function is defined correctly.
+ */
 void is_main_correct(SymTable *symtable)
 {
     Symbol *main = symtable_search(symtable, "main");
     if (main == NULL)
-        error_exit(ERR_SEMANTIC_UNDEF, "Funtion \"main\" is not defined");
+        error_exit(ERR_SEMANTIC_UNDEF, "Function \"main\" is not defined");
     if (main->declaration_node->parameters != NULL)
         error_exit(ERR_SEMANTIC_PARAMS, "Function \"main\" must have no parameters");
     if (main->data_type != TYPE_VOID)
@@ -230,7 +238,9 @@ void is_main_correct(SymTable *symtable)
     return;
 }
 
-// Removes a symbol from the symbol table
+/**
+ * Removes a symbol from the symbol table.
+ */
 void symtable_remove(SymTable *symtable, char *key)
 {
     unsigned int index = symtable_hash(key, symtable->size);
@@ -258,7 +268,9 @@ void symtable_remove(SymTable *symtable, char *key)
     }
 }
 
-// Grows the symbol table when load factor exceeds threshold
+/**
+ * Grows the symbol table when load factor exceeds threshold.
+ */
 static void symtable_grow(SymTable *symtable)
 {
     int old_size = symtable->size;
