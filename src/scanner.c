@@ -440,13 +440,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
     token.column = scanner->column;
 
     // Allocate memory for lexeme
-    token.lexeme = malloc(2);
-    if (token.lexeme == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
-    }
-    add_pointer_to_storage(token.lexeme);
-
+    token.lexeme = safe_malloc(2);
     token.line = scanner->line;
     token.column = scanner->column;
 
@@ -486,10 +480,10 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         if (scanner->current_char == '=')
         {
             token.type = TOKEN_EQUAL;
-            char *temp = realloc(token.lexeme, 3);
+            char *temp = safe_realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-               safe_free(token.lexeme); 
+                safe_free(token.lexeme);
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -541,14 +535,14 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
-    case ':': 
+    case ':':
         token.type = TOKEN_COLON;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
         scanner->current_char = fgetc(scanner->input);
         scanner->column++;
         break;
-    case ';': 
+    case ';':
         token.type = TOKEN_SEMICOLON;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
@@ -561,10 +555,10 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         if (scanner->current_char == '=')
         {
             token.type = TOKEN_LESS_EQUAL;
-            char *temp = realloc(token.lexeme, 3);
+            char *temp = safe_realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-               safe_free(token.lexeme); 
+                safe_free(token.lexeme);
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -586,10 +580,10 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         if (scanner->current_char == '=')
         {
             token.type = TOKEN_GREATER_EQUAL;
-            char *temp = realloc(token.lexeme, 3);
+            char *temp = safe_realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-               safe_free(token.lexeme); 
+                safe_free(token.lexeme);
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -605,7 +599,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             token.lexeme[1] = '\0';
         }
         break;
-    case ',': 
+    case ',':
         token.type = TOKEN_COMMA;
         token.lexeme[0] = scanner->current_char;
         token.lexeme[1] = '\0';
@@ -632,10 +626,10 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         if (scanner->current_char == '=')
         {
             token.type = TOKEN_NOT_EQUAL;
-            char *temp = realloc(token.lexeme, 3);
+            char *temp = safe_realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-               safe_free(token.lexeme); 
+                safe_free(token.lexeme);
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -652,7 +646,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         }
         break;
     default:
-       safe_free(token.lexeme);
+        safe_free(token.lexeme);
         error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c, ASCII: %d", scanner->current_char, scanner->current_char);
         break;
     }
@@ -684,28 +678,28 @@ static Token get_next_token_internal(Scanner *scanner)
     {
         LOG("DEBUG_SCANNER: Detected identifier or keyword\n");
         Token t = scan_identifier_or_keyword(scanner);
-        print_token(t); 
+        print_token(t);
         return t;
     }
     else if (isdigit(scanner->current_char))
     {
         LOG("DEBUG_SCANNER: Detected number\n");
         Token t = scan_number(scanner);
-        print_token(t); 
+        print_token(t);
         return t;
     }
     else if (scanner->current_char == '"')
     {
         LOG("DEBUG_SCANNER: Detected string\n");
         Token t = scan_string(scanner);
-        print_token(t); 
+        print_token(t);
         return t;
     }
     else
     {
         LOG("DEBUG_SCANNER: Detected operator or delimiter\n");
         Token t = get_operator_or_delimiter(scanner);
-        print_token(t); 
+        print_token(t);
         return t;
     }
 }
@@ -723,7 +717,7 @@ void scanner_init(FILE *input_file, Scanner *scanner)
     scanner->current_char = fgetc(scanner->input);
     scanner->column = 1;
     scanner->line = 1;
-    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char); 
+    LOG("DEBUG_SCANNER: Initial character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
     while ((scanner->current_char = fgetc(scanner->input)) != EOF)
     {
         LOG("DEBUG_SCANNER: Reading character: '%c' (ASCII: %d)\n", scanner->current_char, scanner->current_char);
@@ -737,7 +731,7 @@ void free_token(Token *token)
 {
     if (token->lexeme != NULL)
     {
-       safe_free(token->lexeme);
+        safe_free(token->lexeme);
         token->lexeme = NULL;
     }
 }

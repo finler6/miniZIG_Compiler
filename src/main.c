@@ -61,10 +61,10 @@ int main(int argc, char *argv[]) {
 
     //free_ast_node(ast_root);
 
-    cleanup_pointers_storage();
-
 
     fclose(source_file);
+
+    cleanup_pointers_storage();
 
     return ERR_OK;  
 }

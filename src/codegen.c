@@ -75,13 +75,7 @@ void add_temp_var(const char *var_name)
         current = current->next;
     }
 
-    TempVar *new_var = malloc(sizeof(TempVar));
-    if (new_var == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed in add_temp_var");
-    }
-    add_pointer_to_storage(new_var);
-
+    TempVar *new_var = safe_malloc(sizeof(TempVar));
     new_var->name = string_duplicate(var_name);
     new_var->next = temp_vars;
     temp_vars = new_var;
@@ -121,13 +115,7 @@ void add_declared_variable(const char *var_name)
         // Переменная уже добавлена, не добавляем повторно
         return;
     }
-    DeclaredVar *new_var = malloc(sizeof(DeclaredVar));
-    if (new_var == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed in add_declared_variable");
-    }
-    add_pointer_to_storage(new_var);
-
+    DeclaredVar *new_var = safe_malloc(sizeof(DeclaredVar));
     new_var->var_name = string_duplicate(var_name);
     new_var->next = declared_vars;
     declared_vars = new_var;
@@ -162,26 +150,14 @@ void reset_declared_variables()
 
 char *generate_unique_var_name(const char *base_name, ASTNode *node, const char *key)
 {
-    char *var_name = malloc(64);
-    if (var_name == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation faleid in generate_unique_var_name");
-    }
-    add_pointer_to_storage(var_name);
-
+    char *var_name = safe_malloc(64);
     snprintf(var_name, 64, "%%%s_%d", base_name, unique_var_counter++);
     add_temp_var(var_name); // Add to temp variable list
 
     if (node != NULL && key != NULL)
     {
         // Map the AST node and key to the variable name
-        TempVarMapEntry *new_entry = malloc(sizeof(TempVarMapEntry));
-        if (new_entry == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation faleid in generate_unique_var_name");
-        }
-        add_pointer_to_storage(new_entry);
-
+        TempVarMapEntry *new_entry = safe_malloc(sizeof(TempVarMapEntry));
         new_entry->node = node;
         new_entry->key = string_duplicate(key);
         new_entry->var_name = var_name;
@@ -1416,13 +1392,7 @@ char *escape_ifj24_string(const char *input)
 {
     size_t length = strlen(input);
     size_t buffer_size = length * 4 + 1; // reserve space for escaping
-    char *escaped_string = malloc(buffer_size);
-    if (escaped_string == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for escaped string.\n");
-    }
-    add_pointer_to_storage(escaped_string);
-
+    char *escaped_string = safe_malloc(buffer_size);
     size_t index = 0;
     for (size_t i = 0; i < length; i++)
     {

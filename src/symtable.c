@@ -29,13 +29,7 @@ void symtable_init(SymTable *symtable)
 {
     symtable->size = INITIAL_SYMTABLE_SIZE;
     symtable->count = 0;
-    symtable->table = (Symbol **)malloc(sizeof(Symbol) * symtable->size);
-    if (symtable->table == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed");
-    }
-    add_pointer_to_storage(symtable->table);
-
+    symtable->table = (Symbol **)safe_malloc(sizeof(Symbol) * symtable->size);
     for (int i = 0; i < symtable->size; i++)
     {
         symtable->table[i] = NULL;
@@ -50,24 +44,11 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
     import_node = import_node;
     for (size_t i = 0; i < num_functions; i++)
     {
-        char *name_with_prefix = (char *)malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
-        if (name_with_prefix == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function name.");
-        }
-
-        add_pointer_to_storage(name_with_prefix);
-
+        char *name_with_prefix = (char *)safe_malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
         strcpy(name_with_prefix, "ifj.");
         strcat(name_with_prefix, builtin_functions[i].name);
 
-        Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
-        if (new_function == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function symbol.");
-        }
-        add_pointer_to_storage(new_function);
-
+        Symbol *new_function = (Symbol *)safe_malloc(sizeof(Symbol));
         new_function->name = name_with_prefix;
         new_function->symbol_type = SYMBOL_FUNCTION;
         new_function->data_type = builtin_functions[i].return_type;
@@ -82,13 +63,7 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
 
 void insert_underscore(SymTable *symtable)
 {
-    Symbol *underscore = (Symbol *)malloc(sizeof(Symbol));
-    if (underscore == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed in insert underscore");
-    }
-    add_pointer_to_storage(underscore);
-
+    Symbol *underscore = (Symbol *)safe_malloc(sizeof(Symbol));
     underscore->name = "_";
     underscore->symbol_type = SYMBOL_VARIABLE;
     underscore->data_type = TYPE_ALL;
@@ -282,13 +257,7 @@ static void symtable_grow(SymTable *symtable)
     Symbol **old_table = symtable->table;
 
     // Allocate new, larger table
-    symtable->table = (Symbol **)malloc(sizeof(Symbol *) * symtable->size);
-    if (symtable->table == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed during resizing");
-    }
-    add_pointer_to_storage(symtable->table);
-
+    symtable->table = (Symbol **)safe_malloc(sizeof(Symbol *) * symtable->size);
     // Initialize the new table
     for (int i = 0; i < symtable->size; i++)
     {

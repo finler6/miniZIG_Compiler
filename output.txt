@@ -1,49 +1,349 @@
 .IFJcode24
 CALL main
 EXIT int@0
+LABEL test_numbers
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@product
+DEFVAR LF@sum
+DEFVAR LF@b
+DEFVAR LF@a
+DEFVAR LF@%temp_16
+DEFVAR LF@%temp_15
+DEFVAR LF@%temp_14
+DEFVAR LF@%result_13
+DEFVAR LF@%temp_12
+DEFVAR LF@%retval_11
+DEFVAR LF@%tmp_var_10
+DEFVAR LF@%temp_9
+DEFVAR LF@%temp_8
+DEFVAR LF@%temp_7
+DEFVAR LF@%temp_6
+DEFVAR LF@%result_5
+DEFVAR LF@%temp_4
+DEFVAR LF@%temp_3
+DEFVAR LF@%retval_2
+DEFVAR LF@%tmp_var_1
+DEFVAR LF@%temp_0
+PUSHS string@\010---\032Test\032numbers\032---\010
+POPS LF@%temp_0
+WRITE LF@%temp_0
+PUSHS int@10
+POPS LF@a
+PUSHS float@0x1.4000000000000p+1
+POPS LF@b
+PUSHS LF@a
+POPS LF@%tmp_var_1
+INT2FLOAT LF@%retval_2 LF@%tmp_var_1
+PUSHS LF@%retval_2
+POPS LF@%temp_3
+PUSHS LF@b
+POPS LF@%temp_4
+ADD LF@%result_5 LF@%temp_3 LF@%temp_4
+PUSHS LF@%result_5
+POPS LF@sum
+PUSHS string@Sum\032of\03210\032and\0322.5\032is:\032
+POPS LF@%temp_6
+WRITE LF@%temp_6
+PUSHS LF@sum
+POPS LF@%temp_7
+WRITE LF@%temp_7
+PUSHS string@\010
+POPS LF@%temp_8
+WRITE LF@%temp_8
+PUSHS LF@a
+POPS LF@%temp_9
+PUSHS LF@b
+POPS LF@%tmp_var_10
+FLOAT2INT LF@%retval_11 LF@%tmp_var_10
+PUSHS LF@%retval_11
+POPS LF@%temp_12
+MUL LF@%result_13 LF@%temp_9 LF@%temp_12
+PUSHS LF@%result_13
+POPS LF@product
+PUSHS string@Multiplication\032of\03210\032and\0322\032(round):\032
+POPS LF@%temp_14
+WRITE LF@%temp_14
+PUSHS LF@product
+POPS LF@%temp_15
+WRITE LF@%temp_15
+PUSHS string@\010
+POPS LF@%temp_16
+WRITE LF@%temp_16
+POPFRAME
+RETURN
+LABEL test_strings
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@result
+DEFVAR LF@str2
+DEFVAR LF@str1
+DEFVAR LF@%temp_23
+DEFVAR LF@%temp_22
+DEFVAR LF@%temp_21
+DEFVAR LF@%retval_20
+DEFVAR LF@%tmp_str2_19
+DEFVAR LF@%tmp_str1_18
+DEFVAR LF@%temp_17
+PUSHS string@\010---\032Test\032strings\032---\010
+POPS LF@%temp_17
+WRITE LF@%temp_17
+PUSHS string@IFJ24
+CALL ifj-string
+POPS LF@str1
+PUSHS string@\032\226\128\148\032great\032language.
+CALL ifj-string
+POPS LF@str2
+PUSHS LF@str1
+PUSHS LF@str2
+POPS LF@%tmp_str2_19
+POPS LF@%tmp_str1_18
+CONCAT LF@%retval_20 LF@%tmp_str1_18 LF@%tmp_str2_19
+PUSHS LF@%retval_20
+POPS LF@result
+PUSHS string@Concatenated\032string:\032
+POPS LF@%temp_21
+WRITE LF@%temp_21
+PUSHS LF@result
+POPS LF@%temp_22
+WRITE LF@%temp_22
+PUSHS string@\010
+POPS LF@%temp_23
+WRITE LF@%temp_23
+POPFRAME
+RETURN
+LABEL test_substrings
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@sub
+DEFVAR LF@substr
+DEFVAR LF@text
+DEFVAR LF@%temp_28
+DEFVAR LF@%temp_27
+DEFVAR LF@%temp_26
+DEFVAR LF@%temp_25
+DEFVAR LF@%temp_24
+PUSHS string@\010---\032Test\032substring\032---\010
+POPS LF@%temp_24
+WRITE LF@%temp_24
+PUSHS string@Example\032text\032for\032substring
+CALL ifj-string
+POPS LF@text
+PUSHS LF@text
+PUSHS int@8
+PUSHS int@14
+CALL ifj-substring
+POPS LF@substr
+TYPE LF@%tmp_type LF@substr
+JUMPIFEQ $else_0 LF@%tmp_type string@nil
+PUSHS LF@substr
+POPS LF@sub
+PUSHS string@Substring:\032
+POPS LF@%temp_25
+WRITE LF@%temp_25
+PUSHS LF@sub
+POPS LF@%temp_26
+WRITE LF@%temp_26
+PUSHS string@\010
+POPS LF@%temp_27
+WRITE LF@%temp_27
+JUMP $endif_0
+LABEL $else_0
+PUSHS string@Error\032extracting\032substring.\010
+POPS LF@%temp_28
+WRITE LF@%temp_28
+LABEL $endif_0
+POPFRAME
+RETURN
+LABEL test_loops
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@count
+DEFVAR LF@%result_38
+DEFVAR LF@%temp_37
+DEFVAR LF@%temp_36
+DEFVAR LF@%temp_35
+DEFVAR LF@%temp_34
+DEFVAR LF@%temp_33
+DEFVAR LF@%result_32
+DEFVAR LF@%temp_31
+DEFVAR LF@%temp_30
+DEFVAR LF@%temp_29
+PUSHS string@\010---\032Test\032loops\032---\010
+POPS LF@%temp_29
+WRITE LF@%temp_29
+PUSHS int@5
+POPS LF@count
+LABEL $while_start_0
+PUSHS LF@count
+POPS LF@%temp_30
+PUSHS int@0
+POPS LF@%temp_31
+GT LF@%result_32 LF@%temp_30 LF@%temp_31
+PUSHS LF@%result_32
+PUSHS bool@false
+JUMPIFEQS $while_end_0
+PUSHS string@Counter:\032
+POPS LF@%temp_33
+WRITE LF@%temp_33
+PUSHS LF@count
+POPS LF@%temp_34
+WRITE LF@%temp_34
+PUSHS string@\010
+POPS LF@%temp_35
+WRITE LF@%temp_35
+PUSHS LF@count
+POPS LF@%temp_36
+PUSHS int@1
+POPS LF@%temp_37
+SUB LF@%result_38 LF@%temp_36 LF@%temp_37
+PUSHS LF@%result_38
+POPS LF@count
+JUMP $while_start_0
+LABEL $while_end_0
+POPFRAME
+RETURN
+LABEL test_null_handling
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@value
+DEFVAR LF@optional
+DEFVAR LF@%temp_46
+DEFVAR LF@%temp_45
+DEFVAR LF@%temp_44
+DEFVAR LF@%temp_43
+DEFVAR LF@%temp_42
+DEFVAR LF@%temp_41
+DEFVAR LF@%temp_40
+DEFVAR LF@%temp_39
+PUSHS string@\010---\032Test\032null\032handling\032---\010
+POPS LF@%temp_39
+WRITE LF@%temp_39
+PUSHS nil@nil
+POPS LF@optional
+TYPE LF@%tmp_type LF@optional
+JUMPIFEQ $else_1 LF@%tmp_type string@nil
+PUSHS LF@optional
+POPS LF@value
+PUSHS string@Value:\032
+POPS LF@%temp_40
+WRITE LF@%temp_40
+PUSHS LF@value
+POPS LF@%temp_41
+WRITE LF@%temp_41
+PUSHS string@\010
+POPS LF@%temp_42
+WRITE LF@%temp_42
+JUMP $endif_1
+LABEL $else_1
+PUSHS string@Value\032is\032missing\032(null).\010
+POPS LF@%temp_43
+WRITE LF@%temp_43
+LABEL $endif_1
+PUSHS int@42
+POPS LF@optional
+TYPE LF@%tmp_type LF@optional
+JUMPIFEQ $else_2 LF@%tmp_type string@nil
+PUSHS LF@optional
+POPS LF@value
+PUSHS string@New\032value:\032
+POPS LF@%temp_44
+WRITE LF@%temp_44
+PUSHS LF@value
+POPS LF@%temp_45
+WRITE LF@%temp_45
+PUSHS string@\010
+POPS LF@%temp_46
+WRITE LF@%temp_46
+JUMP $endif_2
+LABEL $else_2
+LABEL $endif_2
+POPFRAME
+RETURN
 LABEL main
 CREATEFRAME
 PUSHFRAME
 DEFVAR LF@%tmp_type
 DEFVAR LF@%tmp_var
 DEFVAR LF@%tmp_bool
-DEFVAR LF@val
-DEFVAR LF@a
-DEFVAR LF@input
-DEFVAR LF@%temp_5
-DEFVAR LF@%temp_4
-DEFVAR LF@%result_3
-DEFVAR LF@%temp_2
-DEFVAR LF@%temp_1
-DEFVAR LF@%retval_0
-READ LF@%retval_0 int
-PUSHS LF@%retval_0
-POPS LF@input
-PUSHS int@4
-POPS LF@a
-TYPE LF@%tmp_type LF@input
-JUMPIFEQ $else_0 LF@%tmp_type string@nil
-PUSHS LF@input
-POPS LF@val
-PUSHS LF@val
-POPS LF@%temp_1
-PUSHS LF@a
-POPS LF@%temp_2
-GT LF@%result_3 LF@%temp_1 LF@%temp_2
-PUSHS LF@%result_3
-PUSHS bool@false
-JUMPIFEQS $else_1
-PUSHS LF@val
-POPS LF@%temp_4
-WRITE LF@%temp_4
-JUMP $endif_1
-LABEL $else_1
-PUSHS string@No\032input\032received\010
-POPS LF@%temp_5
-WRITE LF@%temp_5
-LABEL $endif_1
-JUMP $endif_0
-LABEL $else_0
-LABEL $endif_0
+DEFVAR LF@%temp_48
+DEFVAR LF@%temp_47
+PUSHS string@===\032Start\032of\032IFJ24\032language\032testing\032===\010
+POPS LF@%temp_47
+WRITE LF@%temp_47
+CALL test_numbers
+CALL test_strings
+CALL test_substrings
+CALL test_loops
+CALL test_null_handling
+PUSHS string@===\032End\032of\032testing\032===\010
+POPS LF@%temp_48
+WRITE LF@%temp_48
+POPFRAME
+RETURN
+LABEL ifj-substring
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@str
+DEFVAR LF@start
+DEFVAR LF@end
+DEFVAR LF@length
+DEFVAR LF@retval
+DEFVAR LF@tmp_bool
+DEFVAR LF@tmp_char
+POPS LF@end
+POPS LF@start
+POPS LF@str
+STRLEN LF@length LF@str
+LT LF@tmp_bool LF@start int@0
+JUMPIFEQ $substr_null LF@tmp_bool bool@true
+LT LF@tmp_bool LF@end int@0
+JUMPIFEQ $substr_null LF@tmp_bool bool@true
+GT LF@tmp_bool LF@start LF@end
+JUMPIFEQ $substr_null LF@tmp_bool bool@true
+LT LF@tmp_bool LF@start LF@length
+JUMPIFEQ $check_j LF@tmp_bool bool@true
+JUMP $substr_null
+LABEL $check_j
+GT LF@tmp_bool LF@end LF@length
+JUMPIFEQ $substr_null LF@tmp_bool bool@true
+SUB LF@length LF@end LF@start
+MOVE LF@retval string@
+LABEL $substr_loop
+JUMPIFEQ $substr_end LF@length int@0
+GETCHAR LF@tmp_char LF@str LF@start
+CONCAT LF@retval LF@retval LF@tmp_char
+ADD LF@start LF@start int@1
+SUB LF@length LF@length int@1
+JUMP $substr_loop
+LABEL $substr_end
+PUSHS LF@retval
+POPFRAME
+RETURN
+LABEL $substr_null
+PUSHS nil@nil
+POPFRAME
+RETURN
+LABEL ifj-string
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@str_literal
+POPS LF@str_literal
+PUSHS LF@str_literal
 POPFRAME
 RETURN

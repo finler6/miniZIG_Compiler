@@ -14,15 +14,31 @@ void parser_init(Scanner *scanner);
 // Starts parsing the input program
 ASTNode* parse_program(Scanner *scanner);
 
-// Parses a single function
-ASTNode* parse_function(Scanner *scanner, bool is_definition);
 
-// Parses a statement (expression, if, while, return, etc.)
-ASTNode* parse_statement(Scanner *scanner, char *function_name);
+// Data type parse functions
+DataType parse_type(Scanner *scanner);
+DataType parse_return_type(Scanner *scanner);
 
-ASTNode* parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
+// Return types check
+void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
+bool check_return_types_recursive(ASTNode *function_node, DataType return_type);
+bool check_all_return_types(ASTNode *function_node, DataType return_type);
 
-ASTNode* parse_expression(Scanner *scanner, char *function_name);
+// Scopre check funtions
+void scope_check_identifiers_in_tree(ASTNode *root);
+bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
+
+void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
+bool type_convertion(ASTNode *main_node);
+bool can_assign_type(DataType expected_type, DataType actual_type);
+DataType detach_nullable(DataType type_nullable);
+int get_builtin_function_index(const char *function_name);
+
+bool is_builtin_function(const char *identifier, Scanner *scanner);
+ASTNode *convert_to_float_node(ASTNode *node);
+bool is_nullable(DataType type_nullable);
+
+size_t get_num_builtin_functions();
 
 typedef struct {
     const char *name;             
@@ -34,10 +50,5 @@ typedef struct {
 
 extern BuiltinFunctionInfo builtin_functions[];
 
-bool is_builtin_function(const char *identifier, Scanner *scanner);
-ASTNode *convert_to_float_node(ASTNode *node);
-bool is_nullable(DataType type_nullable);
-
-size_t get_num_builtin_functions();
 
 #endif // PARSER_H

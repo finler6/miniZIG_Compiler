@@ -17,32 +17,51 @@
 #endif
 
 // Forward declarations of helper functions
+
+// Function to make sure that current token us expected_type
 static void expect_token(TokenType expected_type, Scanner *scanner);
+
+//Main functions for parser
+static ASTNode *parse_import(Scanner *scanner);
+static ASTNode *parse_function(Scanner *scanner, bool is_definition);
+static ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
 static ASTNode *parse_block(Scanner *scanner, char *function_name);
+static ASTNode *parse_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name);
 static ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name);
 static ASTNode *parse_if_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_while_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
-static ASTNode *parse_import(Scanner *scanner);
+static ASTNode *parse_expression(Scanner *scanner, char *function_name);
 static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
 static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
+
+
+
+// Data type parse functions
 DataType parse_type(Scanner *scanner);
 DataType parse_return_type(Scanner *scanner);
+
+// Return types check
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer);
-bool type_convertion(ASTNode *main_node);
-bool can_assign_type(DataType expected_type, DataType actual_type);
-DataType detach_nullable(DataType type_nullable);
-void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
-void scope_check_identifiers_in_tree(ASTNode *root);
-bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
-int get_builtin_function_index(const char *function_name);
 bool check_return_types_recursive(ASTNode *function_node, DataType return_type);
 bool check_all_return_types(ASTNode *function_node, DataType return_type);
 
+// Scopre check funtions
+void scope_check_identifiers_in_tree(ASTNode *root);
+bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
+
+void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
+bool type_convertion(ASTNode *main_node);
+bool can_assign_type(DataType expected_type, DataType actual_type);
+DataType detach_nullable(DataType type_nullable);
+int get_builtin_function_index(const char *function_name);
+
 // Global token storage
 static Token current_token;
-static SymTable symtable; // Global symbol table for the program
+
+// Global symbol table for the program
+static SymTable symtable;
 
 BuiltinFunctionInfo builtin_functions[] = {
     {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
@@ -58,61 +77,6 @@ BuiltinFunctionInfo builtin_functions[] = {
     {"strcmp", TYPE_INT, {TYPE_U8, TYPE_U8}, 2},
     {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
     {"chr", TYPE_U8, {TYPE_INT}, 1}};
-size_t get_num_builtin_functions()
-{
-    return sizeof(builtin_functions) / sizeof(builtin_functions[0]);
-}
-
-bool is_builtin_function(const char *identifier, Scanner *scanner)
-{
-    if (strcmp(identifier, "ifj") != 0)
-    {
-        return false;
-    }
-    LOG("!!!!DEBUG_PARSER: Recognized 'ifj' keyword\n");
-    current_token = get_next_token(scanner);
-    expect_token(TOKEN_DOT, scanner);
-    identifier = current_token.lexeme;
-    LOG("!!!!DEBUG_PARSER: Recognized identifier: %s\n", identifier);
-    for (size_t i = 0; i < sizeof(builtin_functions) / sizeof(builtin_functions[0]); i++)
-    {
-        if (strcmp(identifier, builtin_functions[i].name) == 0)
-        {
-            LOG("!!!!DEBUG_PARSER: Recognized builtin function: %s\n", identifier);
-            return true;
-        }
-    }
-    error_exit(ERR_SEMANTIC_UNDEF, "Unknown built-in function: %s", identifier);
-    return false;
-}
-
-DataType get_builtin_function_type(const char *function_name)
-{
-    size_t num_functions = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
-    for (size_t i = 0; i < num_functions; i++)
-    {
-        if (strcmp(function_name, builtin_functions[i].name) == 0)
-        {
-            LOG("DEBUG_PARSER: Function return type: %d\n", builtin_functions[i].return_type);
-            return builtin_functions[i].return_type;
-        }
-    }
-    return TYPE_UNKNOWN;
-}
-
-int get_builtin_function_index(const char *function_name)
-{
-    size_t num_functions = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
-    for (size_t i = 0; i < num_functions; i++)
-    {
-        if (strcmp(function_name, builtin_functions[i].name) == 0)
-        {
-            LOG("DEBUG_PARSER: Function return index: %d\n", builtin_functions[i].return_type);
-            return i;
-        }
-    }
-    return -1;
-}
 
 void parser_init(Scanner *scanner)
 {
@@ -128,29 +92,43 @@ ASTNode *parse_program(Scanner *scanner)
     LOG("DEBUG_PARSER: Parsing program\n");
 
     ASTNode *program_node = create_program_node();
-    ASTNode current_function_copy;
-    ASTNode *current_function_carette = NULL;
+
+    // These nodes were defined to make pre-run to declare functions and its parameters
+    ASTNode program_node_pointer;
+    ASTNode *current_function_pointer = NULL;
 
     ASTNode *import_node = parse_import(scanner);
     program_node->next = import_node;
 
     load_builtin_functions(&symtable, import_node);
 
+    // Pre-run
     parse_functions_declaration(scanner, program_node);
 
-    current_function_copy = *program_node->body;
-    current_function_carette = program_node->body;
+    /* At this point program currently have functions ASTNode created
+    now program need to prevent rewriting this nodes and continue.
+    So after Pre-run AST has all function nodes, but no function node has deeper nodes in tree 
+    Later this tree will be called pre-run tree
+    */
+    program_node_pointer = *program_node->body;
+    current_function_pointer = program_node->body;
 
     while (current_token.type != TOKEN_EOF)
     {
         if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
         {
-            *current_function_carette = *(parse_function(scanner, true));
+            // Creating function node again with all deeper nodes
+            *current_function_pointer = *(parse_function(scanner, true));
 
-            current_function_carette->next = current_function_copy.next;
-            current_function_carette = current_function_copy.next;
-            if (current_function_copy.next != NULL)
-                current_function_copy = *current_function_copy.next;
+            // Pointing to next funtion node according with pre-run 
+            current_function_pointer->next = program_node_pointer.next;
+
+            // Moving to the next function node from pre-run tree 
+            current_function_pointer = program_node_pointer.next;
+
+            // Moving pre-run tree pointer to the next function node if exists  
+            if (program_node_pointer.next != NULL)
+                program_node_pointer = *program_node_pointer.next;
         }
         else
         {
@@ -158,118 +136,13 @@ ASTNode *parse_program(Scanner *scanner)
         }
     }
 
+    // Semantics check
+
     is_main_correct(&symtable);
-
     is_symtable_all_used(&symtable);
-
     scope_check_identifiers_in_tree(program_node);
 
     return program_node;
-}
-
-void scope_check_identifiers_in_tree(ASTNode *root)
-{
-    if (!root)
-    {
-        return;
-    }
-    if ((root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT) && strcmp(root->name, "_") != 0)
-    {
-        Symbol *symbol = symtable_search(&symtable, root->name);
-        ASTNode *declaration_node;
-        if (symbol->symbol_type == SYMBOL_PARAMETER)
-        {
-            Symbol *parent_function = symtable_search(&symtable, symbol->parent_function);
-            declaration_node = parent_function->declaration_node;
-            bool found = scope_check(declaration_node, root);
-            if (!found)
-            {
-                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
-            }
-        }
-        else
-        {
-            declaration_node = symbol->declaration_node;
-            bool found = scope_check(declaration_node, root);
-            if (!found)
-            {
-                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
-            }
-        }
-    }
-    scope_check_identifiers_in_tree(root->left);
-    scope_check_identifiers_in_tree(root->right);
-    scope_check_identifiers_in_tree(root->body);
-    scope_check_identifiers_in_tree(root->next);
-    scope_check_identifiers_in_tree(root->condition);
-}
-
-bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
-{
-    if (!node_decl || !node_identifier)
-    {
-        return false;
-    }
-    if (node_decl == node_identifier)
-    {
-        return true;
-    }
-    if (scope_check(node_decl->left, node_identifier))
-    {
-        return true;
-    }
-    if (scope_check(node_decl->right, node_identifier))
-    {
-        return true;
-    }
-    if (scope_check(node_decl->body, node_identifier))
-    {
-        return true;
-    }
-    if (scope_check(node_decl->next, node_identifier))
-    {
-        return true;
-    }
-    if (scope_check(node_decl->condition, node_identifier))
-    {
-        return true;
-    }
-
-    return false;
-}
-
-void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
-{
-    Scanner saved_scanner_state = *scanner;
-    FILE saved_input = *scanner->input;
-    Token saved_token = current_token;
-
-    ASTNode *current_function = NULL;
-    while (current_token.type != TOKEN_EOF)
-    {
-        if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
-        {
-            ASTNode *function_node = parse_function(scanner, false);
-            if (program_node->body == NULL)
-            {
-                program_node->body = function_node;
-            }
-            else
-            {
-                current_function->next = function_node;
-            }
-            current_function = function_node;
-        }
-        else
-        {
-            error_exit(ERR_SYNTAX, "Expected function definition. Line: %d, Column: %d", current_token.line, current_token.column);
-        }
-    }
-    *scanner = saved_scanner_state;
-    *scanner->input = saved_input;
-    current_token = saved_token;
-
-    return;
 }
 
 ASTNode *parse_function(Scanner *scanner, bool is_definition)
@@ -289,17 +162,15 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
     ASTNode **parameters = NULL;
     int param_count = 0;
-    // if (!is_definition)
-    //{
+
     if (current_token.type != TOKEN_RIGHT_PAREN)
     {
-        parameters = (ASTNode **)malloc(sizeof(ASTNode *));
-        add_pointer_to_storage(parameters);
+        parameters = (ASTNode **)safe_malloc(sizeof(ASTNode *));
         parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
         while (current_token.type == TOKEN_COMMA)
         {
             current_token = get_next_token(scanner);
-            parameters = (ASTNode **)realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
+            parameters = (ASTNode **)safe_realloc(parameters, (param_count + 1) * sizeof(ASTNode *));
             parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
         }
     }
@@ -354,13 +225,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
             error_exit(ERR_SEMANTIC_OTHER, "Function already defined.");
         }
 
-        Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
-        if (new_function == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation failed for new function symbol");
-        }
-        add_pointer_to_storage(new_function);
-
+        Symbol *new_function = (Symbol *)safe_malloc(sizeof(Symbol));
         new_function->name = string_duplicate(function_name_symtable);
         new_function->symbol_type = SYMBOL_FUNCTION;
         new_function->parent_function = string_duplicate(function_name);
@@ -399,21 +264,14 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     Symbol *param_symbol = symtable_search(&symtable, param_name);
     if (param_symbol != NULL && is_definition)
     {
-       safe_free(param_name);
+        safe_free(param_name);
         error_exit(ERR_SEMANTIC_OTHER, "Parameter already defined.");
     }
 
     ASTNode *param_node = create_variable_declaration_node(param_name, param_type, NULL);
     if (is_definition)
     {
-        Symbol *new_param = (Symbol *)malloc(sizeof(Symbol));
-        if (new_param == NULL)
-        {
-           safe_free(param_name);
-            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
-        }
-        add_pointer_to_storage(new_param);
-
+        Symbol *new_param = (Symbol *)safe_malloc(sizeof(Symbol));
         new_param->name = param_name;
         new_param->symbol_type = SYMBOL_PARAMETER;
         new_param->parent_function = string_duplicate(function_name);
@@ -428,104 +286,6 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     return param_node;
 }
 
-DataType parse_type(Scanner *scanner)
-{
-    if (current_token.type == TOKEN_I32)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_INT;
-    }
-    else if (current_token.type == TOKEN_F64)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_FLOAT;
-    }
-    else if (current_token.type == TOKEN_U8)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_U8;
-    }
-    else if (current_token.type == TOKEN_VOID)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_VOID;
-    }
-    else if (current_token.type == TOKEN_ASSIGN)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_UNKNOWN;
-    }
-    else if (current_token.type == TOKEN_QUESTION)
-    {
-        current_token = get_next_token(scanner);
-        if (current_token.type == TOKEN_I32)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_INT_NULLABLE;
-        }
-        else if (current_token.type == TOKEN_F64)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_FLOAT_NULLABLE;
-        }
-        else if (current_token.type == TOKEN_U8)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_U8_NULLABLE;
-        }
-    }
-
-    error_exit(ERR_SYNTAX, "Expected type.");
-    return TYPE_UNKNOWN;
-}
-// Function to parse the return type (same as parameter type parsing)
-DataType parse_return_type(Scanner *scanner)
-{
-    if (current_token.type == TOKEN_I32)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_INT;
-    }
-    else if (current_token.type == TOKEN_F64)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_FLOAT;
-    }
-    else if (current_token.type == TOKEN_U8)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_U8;
-    }
-    else if (current_token.type == TOKEN_VOID)
-    {
-        current_token = get_next_token(scanner);
-        return TYPE_VOID;
-    }
-    else if (current_token.type == TOKEN_QUESTION)
-    {
-        current_token = get_next_token(scanner);
-        if (current_token.type == TOKEN_I32)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_INT_NULLABLE;
-        }
-        else if (current_token.type == TOKEN_F64)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_FLOAT_NULLABLE;
-        }
-        else if (current_token.type == TOKEN_U8)
-        {
-            current_token = get_next_token(scanner);
-            return TYPE_U8_NULLABLE;
-        }
-    }
-
-    error_exit(ERR_SYNTAX, "Expected return type.");
-    return TYPE_UNKNOWN;
-}
-
-// Parses a block of statements enclosed in {}
 ASTNode *parse_block(Scanner *scanner, char *function_name)
 {
     LOG("DEBUG_PARSER: Parsing block\n");
@@ -622,9 +382,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
         if (current_token.type != TOKEN_RIGHT_PAREN)
         {
-            arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-            add_pointer_to_storage(arguments);
-
+            arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
             arguments[arg_count++] = parse_expression(scanner, function_name);
             if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
             {
@@ -640,7 +398,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
                 {
                     error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
                 }
-                arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                 arguments[arg_count++] = parse_expression(scanner, function_name);
                 if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
                 {
@@ -680,9 +438,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
         if (current_token.type != TOKEN_RIGHT_PAREN)
         {
-            arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-            add_pointer_to_storage(arguments);
-
+            arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
             arguments[arg_count++] = parse_expression(scanner, function_name);
 
             if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
@@ -700,7 +456,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
                     error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", function_call_name);
                 }
 
-                arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                 arguments[arg_count++] = parse_expression(scanner, function_name);
 
                 if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
@@ -868,14 +624,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     }
 
     ASTNode *variable_declaration_node = create_variable_declaration_node(variable_name, declaration_type, initializer_node);
-    Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
-    if (new_var == NULL)
-    {
-       safe_free(variable_name);
-        error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
-    }
-    add_pointer_to_storage(new_var);
-
+    Symbol *new_var = (Symbol *)safe_malloc(sizeof(Symbol));
     new_var->name = variable_name;
     new_var->symbol_type = SYMBOL_VARIABLE;
     new_var->parent_function = string_duplicate(function_name);
@@ -923,14 +672,7 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), (ASTNode *)condition_node->parameters); // Unsure about condition_node->parameters
         // variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
-        Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
-        if (new_var == NULL)
-        {
-           safe_free(variable_name);
-            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
-        }
-        add_pointer_to_storage(new_var);
-
+        Symbol *new_var = (Symbol *)safe_malloc(sizeof(Symbol));
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
         new_var->parent_function = string_duplicate(function_name);
@@ -1003,14 +745,7 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         }
         variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), (ASTNode *)condition_node->parameters); // Unsure about condition_node->parameters
         // variable_declaration_node = create_variable_declaration_node(variable_name, detach_nullable(condition_node->data_type), condition_node->parameters); // Unsure about condition_node->parameters
-        Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
-        if (new_var == NULL)
-        {
-           safe_free(variable_name);
-            error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
-        }
-        add_pointer_to_storage(new_var);
-
+        Symbol *new_var = (Symbol *)safe_malloc(sizeof(Symbol));
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
         new_var->parent_function = string_duplicate(function_name);
@@ -1064,7 +799,7 @@ ASTNode *convert_to_float_node(ASTNode *node)
     add_decimal(new_value);
 
     ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, new_value);
-   safe_free(new_value);
+    safe_free(new_value);
     return conversion_node;
 }
 
@@ -1203,8 +938,6 @@ ASTNode *perform_type_checking_and_create_node(const char *operator_name, ASTNod
     return NULL; // For compiler warnings
 }
 
-
-
 ASTNode *parse_multiplicative(Scanner *scanner, char *function_name)
 {
     ASTNode *node = parse_primary_expression(scanner, function_name);
@@ -1222,8 +955,6 @@ ASTNode *parse_multiplicative(Scanner *scanner, char *function_name)
     return node;
 }
 
-
-
 ASTNode *parse_additive(Scanner *scanner, char *function_name)
 {
     ASTNode *node = parse_multiplicative(scanner, function_name);
@@ -1240,8 +971,6 @@ ASTNode *parse_additive(Scanner *scanner, char *function_name)
 
     return node;
 }
-
-
 
 ASTNode *parse_relational(Scanner *scanner, char *function_name)
 {
@@ -1262,7 +991,6 @@ ASTNode *parse_relational(Scanner *scanner, char *function_name)
 
     return node;
 }
-
 
 ASTNode *parse_equality(Scanner *scanner, char *function_name)
 {
@@ -1286,7 +1014,6 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
 {
     return parse_equality(scanner, function_name);
 }
-
 
 // Parses a primary expression (literal, identifier, or parenthesized expression)
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
@@ -1339,8 +1066,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 
             if (current_token.type != TOKEN_RIGHT_PAREN)
             {
-                arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-                add_pointer_to_storage(arguments);
+                arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
                 arguments[arg_count++] = parse_expression(scanner, function_name);
                 if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
                 {
@@ -1356,7 +1082,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                     {
                         error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
                     }
-                    arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                    arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                     arguments[arg_count++] = parse_expression(scanner, function_name);
                     if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
                     {
@@ -1391,8 +1117,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 
                 if (current_token.type != TOKEN_RIGHT_PAREN)
                 {
-                    arguments = (ASTNode **)malloc(sizeof(ASTNode *));
-                    add_pointer_to_storage(arguments);
+                    arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
                     arguments[arg_count++] = parse_expression(scanner, function_name);
                     if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
                     {
@@ -1408,7 +1133,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                         {
                             error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", symbol->name);
                         }
-                        arguments = (ASTNode **)realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
+                        arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
                         arguments[arg_count++] = parse_expression(scanner, function_name);
                         if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
                         {
@@ -1506,6 +1231,270 @@ ASTNode *parse_import(Scanner *scanner)
     return create_literal_node(TYPE_U8, import_value);
 }
 
+size_t get_num_builtin_functions()
+{
+    return sizeof(builtin_functions) / sizeof(builtin_functions[0]);
+}
+
+bool is_builtin_function(const char *identifier, Scanner *scanner)
+{
+    if (strcmp(identifier, "ifj") != 0)
+    {
+        return false;
+    }
+    LOG("!!!!DEBUG_PARSER: Recognized 'ifj' keyword\n");
+    current_token = get_next_token(scanner);
+    expect_token(TOKEN_DOT, scanner);
+    identifier = current_token.lexeme;
+    LOG("!!!!DEBUG_PARSER: Recognized identifier: %s\n", identifier);
+    for (size_t i = 0; i < sizeof(builtin_functions) / sizeof(builtin_functions[0]); i++)
+    {
+        if (strcmp(identifier, builtin_functions[i].name) == 0)
+        {
+            LOG("!!!!DEBUG_PARSER: Recognized builtin function: %s\n", identifier);
+            return true;
+        }
+    }
+    error_exit(ERR_SEMANTIC_UNDEF, "Unknown built-in function: %s", identifier);
+    return false;
+}
+
+DataType get_builtin_function_type(const char *function_name)
+{
+    size_t num_functions = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
+    for (size_t i = 0; i < num_functions; i++)
+    {
+        if (strcmp(function_name, builtin_functions[i].name) == 0)
+        {
+            LOG("DEBUG_PARSER: Function return type: %d\n", builtin_functions[i].return_type);
+            return builtin_functions[i].return_type;
+        }
+    }
+    return TYPE_UNKNOWN;
+}
+
+int get_builtin_function_index(const char *function_name)
+{
+    size_t num_functions = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
+    for (size_t i = 0; i < num_functions; i++)
+    {
+        if (strcmp(function_name, builtin_functions[i].name) == 0)
+        {
+            LOG("DEBUG_PARSER: Function return index: %d\n", builtin_functions[i].return_type);
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+
+void scope_check_identifiers_in_tree(ASTNode *root)
+{
+    if (!root)
+    {
+        return;
+    }
+    if ((root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT) && strcmp(root->name, "_") != 0)
+    {
+        Symbol *symbol = symtable_search(&symtable, root->name);
+        ASTNode *declaration_node;
+        if (symbol->symbol_type == SYMBOL_PARAMETER)
+        {
+            Symbol *parent_function = symtable_search(&symtable, symbol->parent_function);
+            declaration_node = parent_function->declaration_node;
+            bool found = scope_check(declaration_node, root);
+            if (!found)
+            {
+                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
+            }
+        }
+        else
+        {
+            declaration_node = symbol->declaration_node;
+            bool found = scope_check(declaration_node, root);
+            if (!found)
+            {
+                error_exit(ERR_SEMANTIC_UNDEF, "Variable is not defined in this scope");
+            }
+        }
+    }
+    scope_check_identifiers_in_tree(root->left);
+    scope_check_identifiers_in_tree(root->right);
+    scope_check_identifiers_in_tree(root->body);
+    scope_check_identifiers_in_tree(root->next);
+    scope_check_identifiers_in_tree(root->condition);
+}
+
+bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
+{
+    if (!node_decl || !node_identifier)
+    {
+        return false;
+    }
+    if (node_decl == node_identifier)
+    {
+        return true;
+    }
+    if (scope_check(node_decl->left, node_identifier))
+    {
+        return true;
+    }
+    if (scope_check(node_decl->right, node_identifier))
+    {
+        return true;
+    }
+    if (scope_check(node_decl->body, node_identifier))
+    {
+        return true;
+    }
+    if (scope_check(node_decl->next, node_identifier))
+    {
+        return true;
+    }
+    if (scope_check(node_decl->condition, node_identifier))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
+{
+    Scanner saved_scanner_state = *scanner;
+    FILE saved_input = *scanner->input;
+    Token saved_token = current_token;
+
+    ASTNode *current_function = NULL;
+    while (current_token.type != TOKEN_EOF)
+    {
+        if ((current_token.type == TOKEN_PUB) || (current_token.type == TOKEN_FN))
+        {
+            ASTNode *function_node = parse_function(scanner, false);
+            if (program_node->body == NULL)
+            {
+                program_node->body = function_node;
+            }
+            else
+            {
+                current_function->next = function_node;
+            }
+            current_function = function_node;
+        }
+        else
+        {
+            error_exit(ERR_SYNTAX, "Expected function definition. Line: %d, Column: %d", current_token.line, current_token.column);
+        }
+    }
+    *scanner = saved_scanner_state;
+    *scanner->input = saved_input;
+    current_token = saved_token;
+
+    return;
+}
+
+
+DataType parse_type(Scanner *scanner)
+{
+    if (current_token.type == TOKEN_I32)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_INT;
+    }
+    else if (current_token.type == TOKEN_F64)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_FLOAT;
+    }
+    else if (current_token.type == TOKEN_U8)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_U8;
+    }
+    else if (current_token.type == TOKEN_VOID)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_VOID;
+    }
+    else if (current_token.type == TOKEN_ASSIGN)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_UNKNOWN;
+    }
+    else if (current_token.type == TOKEN_QUESTION)
+    {
+        current_token = get_next_token(scanner);
+        if (current_token.type == TOKEN_I32)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_INT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_F64)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_FLOAT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_U8)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_U8_NULLABLE;
+        }
+    }
+
+    error_exit(ERR_SYNTAX, "Expected type.");
+    return TYPE_UNKNOWN;
+}
+
+// Function to parse the return type (same as parameter type parsing)
+DataType parse_return_type(Scanner *scanner)
+{
+    if (current_token.type == TOKEN_I32)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_INT;
+    }
+    else if (current_token.type == TOKEN_F64)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_FLOAT;
+    }
+    else if (current_token.type == TOKEN_U8)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_U8;
+    }
+    else if (current_token.type == TOKEN_VOID)
+    {
+        current_token = get_next_token(scanner);
+        return TYPE_VOID;
+    }
+    else if (current_token.type == TOKEN_QUESTION)
+    {
+        current_token = get_next_token(scanner);
+        if (current_token.type == TOKEN_I32)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_INT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_F64)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_FLOAT_NULLABLE;
+        }
+        else if (current_token.type == TOKEN_U8)
+        {
+            current_token = get_next_token(scanner);
+            return TYPE_U8_NULLABLE;
+        }
+    }
+
+    error_exit(ERR_SYNTAX, "Expected return type.");
+    return TYPE_UNKNOWN;
+}
+
+// Parses a block of statements enclosed in {}
+
 /*
 A function that recursively traverses an entire AST and:
 1. In case of void function looks for any return statement and checks if its type is different from void
@@ -1562,7 +1551,7 @@ bool check_all_return_types(ASTNode *function_node, DataType return_type)
     }
     if (function_node->type == NODE_RETURN)
     {
-        if (function_node->data_type != return_type && ( function_node->left->type != NODE_LITERAL || !can_assign_type(return_type, function_node->data_type)))
+        if (function_node->data_type != return_type && (function_node->left->type != NODE_LITERAL || !can_assign_type(return_type, function_node->data_type)))
         {
             error_exit(ERR_SEMANTIC_PARAMS, "Incompatible return type. Expected: %d, Got: %d", return_type, function_node->data_type);
         }
@@ -1633,10 +1622,6 @@ bool type_convertion(ASTNode *main_node)
     }
 
     return false;
-    /*
-    else if(ma)
-    remove_decimal(main_node->right->value);
-    remove_decimal(main_node->left->value);*/
 }
 
 bool can_assign_type(DataType expected_type, DataType actual_type)
