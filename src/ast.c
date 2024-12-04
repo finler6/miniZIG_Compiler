@@ -16,6 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * Create a program node representing the root of the AST.
+ */
 ASTNode *create_program_node()
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -31,6 +34,9 @@ ASTNode *create_program_node()
     return node;
 }
 
+/**
+ * Create a function node with a name, return type, parameters, and body.
+ */
 ASTNode *create_function_node(char *name, DataType return_type, ASTNode **parameters, int param_count, ASTNode *body)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -47,10 +53,12 @@ ASTNode *create_function_node(char *name, DataType return_type, ASTNode **parame
     return node;
 }
 
+/**
+ * Create a variable declaration node with a name, type, and initializer.
+ */
 ASTNode *create_variable_declaration_node(char *name, DataType data_type, ASTNode *initializer)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
-
     node->type = NODE_VARIABLE_DECLARATION;
     node->data_type = data_type;
     node->name = string_duplicate(name);
@@ -63,6 +71,9 @@ ASTNode *create_variable_declaration_node(char *name, DataType data_type, ASTNod
     return node;
 }
 
+/**
+ * Create an assignment node for assigning a value to a variable.
+ */
 ASTNode *create_assignment_node(char *name, ASTNode *value)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -77,6 +88,9 @@ ASTNode *create_assignment_node(char *name, ASTNode *value)
     return node;
 }
 
+/**
+ * Create a binary operation node with an operator and operands.
+ */
 ASTNode *create_binary_operation_node(const char *operator_name, ASTNode *left, ASTNode *right)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -94,6 +108,9 @@ ASTNode *create_binary_operation_node(const char *operator_name, ASTNode *left, 
     return node;
 }
 
+/**
+ * Create a literal node representing a constant value.
+ */
 ASTNode *create_literal_node(DataType type, char *value)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -109,10 +126,12 @@ ASTNode *create_literal_node(DataType type, char *value)
     return node;
 }
 
+/**
+ * Create an identifier node with a variable name.
+ */
 ASTNode *create_identifier_node(char *name)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
-
     node->type = NODE_IDENTIFIER;
     node->data_type = TYPE_UNKNOWN;
     node->name = string_duplicate(name);
@@ -126,6 +145,9 @@ ASTNode *create_identifier_node(char *name)
     return node;
 }
 
+/**
+ * Create an if statement node with condition and branches.
+ */
 ASTNode *create_if_node(ASTNode *condition, ASTNode *true_block, ASTNode *false_block, ASTNode *var_without_null)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -145,6 +167,9 @@ ASTNode *create_if_node(ASTNode *condition, ASTNode *true_block, ASTNode *false_
     return node;
 }
 
+/**
+ * Create a while loop node with a condition and body.
+ */
 ASTNode *create_while_node(ASTNode *condition, ASTNode *body)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -161,6 +186,9 @@ ASTNode *create_while_node(ASTNode *condition, ASTNode *body)
     return node;
 }
 
+/**
+ * Create a return statement node with an optional value.
+ */
 ASTNode *create_return_node(ASTNode *value)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -184,6 +212,9 @@ ASTNode *create_return_node(ASTNode *value)
     return node;
 }
 
+/**
+ * Create a function call node with a name and arguments.
+ */
 ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
@@ -198,6 +229,9 @@ ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_coun
     return node;
 }
 
+/**
+ * Create a block node containing a list of statements.
+ */
 ASTNode *create_block_node(ASTNode *statements, DataType return_type)
 {
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));

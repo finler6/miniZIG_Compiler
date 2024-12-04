@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include "symtable.h"
 
-
+// Enumeration of different types of AST nodes
 typedef enum {
     NODE_PROGRAM,
     NODE_FUNCTION,
@@ -32,25 +32,26 @@ typedef enum {
     NODE_BLOCK
 } NodeType;
 
-
+// Definition of an AST node structure
 typedef struct ASTNode {
-    NodeType type;  
-    DataType data_type;  
-    struct ASTNode* left;  
-    struct ASTNode* right; 
-    struct ASTNode* next;  
-    struct ASTNode* condition; 
-    struct ASTNode* body;  
+    NodeType type;  // Type of the AST node
+    DataType data_type;  // Data type associated with the node
+    struct ASTNode* left;  // Pointer to the left child node
+    struct ASTNode* right; // Pointer to the right child node
+    struct ASTNode* next;  // Pointer to the next node (in a sequence)
+    struct ASTNode* condition; // Pointer to a condition node (used in if/while)
+    struct ASTNode* body;  // Pointer to a body node (e.g., block of statements)
 
-    char* name;  
-    char* value;
-    struct ASTNode** parameters; 
-    int param_count; 
+    char* name;  // Name of the variable/function
+    char* value; // Value of the literal
+    struct ASTNode** parameters; // Pointer to an array of parameters (for functions)
+    int param_count; // Number of parameters
 
-    struct ASTNode** arguments; 
-    int arg_count;  
+    struct ASTNode** arguments; // Pointer to an array of arguments (for function calls)
+    int arg_count;  // Number of arguments
 } ASTNode;
 
+// Functions to create different types of AST nodes
 ASTNode* create_program_node();
 ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parameters, int param_count, ASTNode* body);
 ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNode* initializer);
@@ -63,10 +64,5 @@ ASTNode* create_while_node(ASTNode* condition, ASTNode* body);
 ASTNode* create_return_node(ASTNode* value);
 ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_count);
 ASTNode* create_block_node(ASTNode* statements, DataType return_type);
-ASTNode *create_conversion_node(DataType target_type, ASTNode *operand);
-
-void free_ast_node(ASTNode* node);
-
-void print_ast(ASTNode* node, int indent);
 
 #endif // AST_H

@@ -2,7 +2,7 @@ TARGET = ifj24_compiler
 
 CC = gcc
 
-CFLAGS = -std=c99 -Wall -Wextra -g 
+CFLAGS = -std=c99 -Wall -Wextra -g -pedantic -Werror
 
 SRC_DIR = src
 
