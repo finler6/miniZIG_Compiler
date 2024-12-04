@@ -13,7 +13,6 @@
  */
 #include "parser.h"
 
-
 #undef DEBUG_PARSER
 #ifdef DEBUG_PARSER
 #define LOG(...) printf(__VA_ARGS__)
@@ -1146,16 +1145,28 @@ ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments,
 
 bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name)
 {
-    DataType declared_datatype;
-    int builtin_index;
+    if(arguments == NULL){
+        return false;
+    }
+    DataType declared_datatype = TYPE_UNKNOWN;
+    int builtin_index = -1;
+
     if (symbol->declaration_node != NULL)
     {
         declared_datatype = symbol->declaration_node->parameters[(*arg_count) - 1]->data_type;
     }
-    else
+    else if (builtin_function_name != NULL)
     {
         builtin_index = get_builtin_function_index(builtin_function_name);
+        if (builtin_index == -1)
+        {
+            error_exit(ERR_SEMANTIC_UNDEF, "Unknown built-in function: %s", builtin_function_name);
+        }
         declared_datatype = builtin_functions[builtin_index].param_types[(*arg_count) - 1];
+    }
+    else
+    {
+        error_exit(ERR_INTERNAL, "Both symbol->declaration_node and builtin_function_name are NULL");
     }
 
     return (arguments[(*arg_count) - 1]->data_type != declared_datatype && declared_datatype != TYPE_ALL);

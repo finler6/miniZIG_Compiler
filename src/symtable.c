@@ -62,6 +62,8 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
         new_function->is_defined = true;
         new_function->is_used = false;
         new_function->is_constant = true;
+        new_function->parent_function = NULL;
+        new_function->declaration_node = NULL;
         new_function->next = NULL;
 
         symtable_insert(symtable, name_with_prefix, new_function);

@@ -16,6 +16,7 @@
 #include "ast.h"
 #include "parser.h"
 #include "utils.h"
+#include "error.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,13 +36,6 @@ static FILE *output_file;
 int get_next_temp_var() {
     return temp_var_counter++;
 }
-
-#undef DEBUG_PARSER
-#ifdef DEBUG_PARSER
-#define LOG(...) fprintf(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
 
 /**
  * Adds a temporary variable to the list if not already added.
@@ -165,8 +159,8 @@ char *get_temp_var_name_for_node(ASTNode *node, const char *key) {
         }
         entry = entry->next;
     }
-    fprintf(stderr, "Error: Temporary variable for node not found.\n");
-    exit(1);
+    error_exit(ERR_INTERNAL, "Error: Temporary variable for node not found.\n");
+    return NULL;
 }
 
 /**
@@ -256,8 +250,8 @@ void collect_builtin_function_usage(ASTNode *node) {
         break;
 
     default:
-        fprintf(stderr, "Unsupported node type in collect_builtin_function_usage: %d\n", node->type);
-        exit(1);
+        error_exit(ERR_INTERNAL, "Unsupported node type in collect_builtin_function_usage: %d\n", node->type);
+        break;
     }
 }
 
@@ -423,8 +417,7 @@ const char *remove_last_prefix(const char *name) {
     if (last_dot && *(last_dot + 1) != '\0') {
         size_t new_len = last_dot - name;
         if (new_len >= sizeof(buffer)) {
-            fprintf(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
-            exit(EXIT_FAILURE);
+            error_exit(ERR_INTERNAL, "Error: Buffer overflow in remove_last_prefix.\n");
         }
         strncpy(buffer, name, new_len);
         buffer[new_len] = '\0';
@@ -451,8 +444,7 @@ void codegen_init(const char *filename) {
     if (filename) {
         output_file = fopen(filename, "w");
         if (!output_file) {
-            fprintf(stderr, "Error: Cannot open output file %s for writing.\n", filename);
-            exit(1);
+            error_exit(ERR_INTERNAL, "Error: Cannot open output file %s for writing.\n", filename);
         }
     } else {
         output_file = stdout;
@@ -474,11 +466,8 @@ void codegen_finalize() {
  */
 void codegen_generate_program(ASTNode *program_node) {
     if (!program_node || program_node->type != NODE_PROGRAM) {
-        LOG(stderr, "DEBUG: Invalid program node.\n");
         return;
     }
-
-    LOG(stderr, "DEBUG: Starting code generation for program.\n");
 
     collect_builtin_function_usage(program_node);
 
@@ -491,7 +480,6 @@ void codegen_generate_program(ASTNode *program_node) {
 
     while (current_function) {
         if (current_function->type == NODE_FUNCTION) {
-            LOG(stderr, "DEBUG: Found function '%s'. Generating its code.\n", current_function->name);
             codegen_generate_function(current_function);
         }
         current_function = current_function->next;
@@ -642,8 +630,7 @@ void collect_variables_in_statement(ASTNode *node) {
  */
 void collect_variables_in_function_call(ASTNode *node) {
     if (node == NULL || node->type != NODE_FUNCTION_CALL) {
-        fprintf(stderr, "Invalid function call node for variable collection\n");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Invalid function call node for variable collection\n");
     }
 
     if (strcmp(node->name, "ifj.write") == 0) {
@@ -762,8 +749,7 @@ void collect_variables_in_expression(ASTNode *node) {
         break;
 
     default:
-        fprintf(stderr, "Unsupported expression type for variable collection, type: %d, name: %s\n", node->type, node->name ? node->name : "NULL");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Unsupported expression type for variable collection, type: %d, name: %s\n", node->type, node->name ? node->name : "NULL");
     }
 }
 
@@ -783,10 +769,8 @@ void codegen_generate_block(FILE *output, ASTNode *block_node, const char *curre
  */
 void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL) {
-        LOG(stderr, "Node is NULL\n");
         return;
     }
-    LOG(stderr, "Node type: %d\n", node->type);
 
     switch (node->type)
     {
@@ -842,7 +826,6 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
         }
         else
         {
-            LOG(stderr, "175");
             fprintf(output, "PUSHS LF@%s\n", remove_last_prefix(node->name));
         }
     }
@@ -923,8 +906,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
         }
         else
         {
-            fprintf(stderr, "Unsupported operator: %s\n", node->name);
-            exit(1);
+            error_exit(ERR_INTERNAL, "Unsupported operator: %s\n", node->name);
         }
 
         // Push the result onto the stack
@@ -939,8 +921,8 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
         break;
 
     default:
-        fprintf(stderr, "Unsupported expression type for code generation, type: %d, name: %s\n", node->type, node->name);
-        exit(1);
+        error_exit(ERR_INTERNAL, "Unsupported expression type for code generation, type: %d, name: %s\n", node->type, node->name);
+        break;
     }
 }
 
@@ -949,8 +931,7 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
  */
 void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL || node->type != NODE_FUNCTION_CALL) {
-        fprintf(stderr, "Invalid function call node for code generation\n");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Invalid function call node for code generation\n");
     }
 
     if (strcmp(node->name, "ifj.write") == 0) {
@@ -1192,8 +1173,7 @@ void codegen_declare_variables_in_statement(FILE *output, ASTNode *node) {
  */
 void codegen_generate_statement(FILE *output, ASTNode *node, const char *current_function) {
     if (node == NULL) {
-        fprintf(stderr, "Invalid statement node for code generation\n");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Invalid statement node for code generation\n");
     }
 
     switch (node->type)
@@ -1205,8 +1185,7 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
             const char *var_name = remove_last_prefix(node->name);
             if (var_name == NULL)
             {
-                fprintf(stderr, "Error: Variable name is NULL in VARIABLE_DECLARATION.\n");
-                exit(1);
+                error_exit(ERR_INTERNAL, "Error: Variable name is NULL in VARIABLE_DECLARATION.\n");
             }
             fprintf(output, "POPS LF@%s\n", var_name);
         }
@@ -1234,8 +1213,8 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
         break;
 
     default:
-        fprintf(stderr, "Unsupported statement type for code generation\n");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Unsupported statement type for code generation\n");
+        break;
     }
 }
 
@@ -1244,8 +1223,7 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
  */
 void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node) {
     if (!declaration_node || !declaration_node->name) {
-        fprintf(stderr, "Error: Invalid variable declaration.\n");
-        exit(1);
+        error_exit(ERR_INTERNAL, "Error: Invalid variable declaration.\n");
     }
 
     if (declaration_node->left)
