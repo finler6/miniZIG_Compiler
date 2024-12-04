@@ -17,7 +17,10 @@
 #include <stdio.h>
 #include "tokens.h"
 
-
+/**
+ * Scanner structure.
+ * Contains the input file, current line and column, and the current character.
+ */
 typedef struct {
     FILE *input;        
     int line;            

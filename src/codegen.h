@@ -5,11 +5,10 @@
  *
  * IFJ Project 2024, Team 'xstepa77'
  *
- * @author
- *   <xlitvi02> Gleb Litvinchuk
- *   <xstepa77> Pavel Stepanov
- *   <xkovin00> Viktoriia Kovina
- *   <xshmon00> Gleb Shmonin
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
  */
 
 #ifndef CODEGEN_H
@@ -45,8 +44,15 @@ typedef struct TempVar {
     struct TempVar *next;
 } TempVar;
 
+/**
+ * Functions to initialize and finalize code generation
+ */
 void codegen_init(const char *filename);
 void codegen_finalize();
+
+/**
+ * Functions to generate code for different AST nodes
+ */
 void codegen_generate_program(ASTNode *program_node);
 void codegen_generate_function(ASTNode *function_node);
 void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function);
@@ -58,6 +64,10 @@ void codegen_generate_assignment(FILE *output, ASTNode *assignment_node);
 void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function);
 void codegen_generate_if(FILE *output, ASTNode *if_node);
 void codegen_generate_while(FILE *output, ASTNode *while_node);
+
+/**
+ * Functions to generate and declare variables
+ */
 void codegen_generate_builtin_functions();
 void codegen_declare_variables_in_statement(FILE *output, ASTNode *node);
 void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node);
@@ -65,6 +75,10 @@ void collect_variables_in_statement(ASTNode *node);
 void collect_variables_in_block(ASTNode *node);
 void collect_variables_in_function_call(ASTNode *node);
 void collect_variables_in_expression(ASTNode *node);
+
+/**
+ * Utility functions
+ */
 int generate_unique_label();
 const char *get_function_name_from_variable(const char *var_name);
 bool is_function_parameter(ASTNode *function, const char *var_name);

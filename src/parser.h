@@ -58,6 +58,9 @@ bool is_nullable(DataType type_nullable);
 
 size_t get_num_builtin_functions();
 
+/**
+ * Structure containing information about a built-in function (ifj functions)
+ */
 typedef struct {
     const char *name;             
     DataType return_type;         

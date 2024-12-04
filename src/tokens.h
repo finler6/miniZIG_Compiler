@@ -69,7 +69,10 @@ typedef enum {
     TOKEN_UNKNOWN
 } TokenType;
 
-// Structure representing a token
+/**
+ * Token structure
+ * Contains the type of the token, the lexeme, and the position in the source code
+ */
 typedef struct {
     TokenType type;
     char *lexeme;
