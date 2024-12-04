@@ -560,6 +560,11 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
         ASTNode *value_node = parse_expression(scanner, function_name);
 
+        if (value_node->type == NODE_LITERAL && value_node->data_type == TYPE_U8)
+        {
+            error_exit(ERR_SEMANTIC_INFER, "Cannot assign STRING LITERAL without function \"ifj.string(\"\")\"");
+        }
+
         if (!can_assign_type(symbol->data_type, value_node->data_type))
             value_node = check_and_convert_expression(value_node, symbol->data_type, name);
 
@@ -617,7 +622,10 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     {
         error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
     }
-
+    if (strcmp(current_token.lexeme, "_") == 0)
+    {
+        error_exit(ERR_SEMANTIC, "Variable _ is already declared.");
+    }
     const char *base_variable_name = current_token.lexeme;
 
     char *variable_name = construct_variable_name(base_variable_name, function_name);
@@ -636,7 +644,8 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     ASTNode *initializer_node = parse_expression(scanner, function_name);
     DataType expr_type = initializer_node->data_type;
 
-    if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !can_assign_type(declaration_type, expr_type))
+    if ((declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !can_assign_type(declaration_type, expr_type)) ||
+    (declaration_type == TYPE_UNKNOWN && expr_type == TYPE_VOID))
     {
         error_exit(ERR_SEMANTIC_TYPE, "Declared type of variable does not match the assigned type.");
     }
@@ -646,7 +655,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     }
     else if (initializer_node->type == NODE_LITERAL && expr_type == TYPE_U8)
     {
-        error_exit(ERR_SEMANTIC_INFER, "Cannot assign STRING LITERAL without function \"ifj.write(\"\")\"");
+        error_exit(ERR_SEMANTIC_INFER, "Cannot assign STRING LITERAL without function \"ifj.string(\"\")\"");
     }
     else if (declaration_type == TYPE_UNKNOWN)
     {
