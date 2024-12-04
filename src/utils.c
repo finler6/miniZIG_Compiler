@@ -26,13 +26,12 @@ char *string_duplicate(const char *src)
         return NULL;
     }
     int len_str = strlen(src) + 1;
-    char *copy = (char *)malloc(len_str);
+    char *copy = (char *)safe_malloc(len_str);
     if (copy == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed in string_duplicate\n");
     }
     strcpy(copy, src);
-    add_pointer_to_storage(copy);
     return copy;
 }
 
@@ -83,13 +82,12 @@ char *construct_variable_name(const char *variable_name, const char *function_na
 char *construct_builtin_name(const char *str1, const char *str2)
 {
     int len = strlen(str1) + strlen(str2) + (2 * sizeof(char));
-    char *result = (char *)malloc(len);
+    char *result = (char *)safe_malloc(len);
     if (result == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed in construct_builtin_name\n");
     }
     snprintf(result, len, "%s.%s", str1, str2);
-    add_pointer_to_storage(result);
 
     return result;
 }

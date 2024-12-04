@@ -13,13 +13,6 @@
  */
 #include "parser.h"
 
-#undef DEBUG_PARSER
-#ifdef DEBUG_PARSER
-#define LOG(...) printf(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
-
 // Global symbol table for the program
 static SymTable symtable;
 
@@ -120,7 +113,6 @@ bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
 bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name);
 
 void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
-bool type_convertion(ASTNode *main_node);
 bool can_assign_type(DataType expected_type, DataType actual_type);
 DataType detach_nullable(DataType type_nullable);
 int get_builtin_function_index(const char *function_name);
@@ -148,7 +140,6 @@ BuiltinFunctionInfo builtin_functions[] = {
  */
 void parser_init(Scanner *scanner)
 {
-    LOG("DEBUG_PARSER: Initializing parser...\n");
     // Initialize the symbol table
     symtable_init(&symtable);
     // Get the first token to start parsing
@@ -166,8 +157,6 @@ void parser_init(Scanner *scanner)
  */
 ASTNode *parse_program(Scanner *scanner)
 {
-    LOG("DEBUG_PARSER: Parsing program\n");
-
     ASTNode *program_node = create_program_node();
 
     // These nodes were defined to make pre-run to declare functions and its parameters
@@ -236,7 +225,6 @@ ASTNode *parse_program(Scanner *scanner)
  */
 ASTNode *parse_function(Scanner *scanner, bool is_definition)
 {
-    LOG("DEBUG_PARSER: Parsing function\n");
     expect_token(TOKEN_PUB, scanner);
     expect_token(TOKEN_FN, scanner);
 
@@ -300,7 +288,6 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
                 brace_count--;
             }
         }
-        LOG("!!!DEBUG_PARSER: Brace count passed\n");
         function_node = create_function_node(function_name, return_type, parameters, param_count, NULL);
 
         char *function_name_symtable = string_duplicate(function_name);
@@ -339,14 +326,11 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
  */
 ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition)
 {
-    LOG("DEBUG_PARSER: Parsing parameter\n");
-
     if (current_token.type != TOKEN_IDENTIFIER)
     {
         error_exit(ERR_SYNTAX, "Expected parameter name.");
     }
 
-    LOG("DEBUG_PARSER: current_token.lexeme before param: %s\n", current_token.lexeme);
     char *param_name = construct_variable_name(current_token.lexeme, function_name);
 
     current_token = get_next_token(scanner);
@@ -355,7 +339,6 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
 
     DataType param_type = parse_type(scanner);
 
-    LOG("DEBUG_PARSER: param_name before symtable_search: %s\n", param_name);
     Symbol *param_symbol = symtable_search(&symtable, param_name);
     if (param_symbol != NULL && is_definition)
     {
@@ -389,7 +372,6 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
  */
 ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope)
 {
-    LOG("DEBUG_PARSER: Parsing block\n");
     expect_token(TOKEN_LEFT_BRACE, scanner);
 
     if (enter_new_scope)
@@ -470,7 +452,6 @@ ASTNode *parse_statement(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing variable assigning\n");
     char *name = NULL;
     Symbol *symbol = NULL;
     ASTNode *function_node;
@@ -494,7 +475,6 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         function_node = parse_builtin_function_call(scanner, symbol, name, function_name);
         expect_token(TOKEN_SEMICOLON, scanner);
         return function_node;
-        // If is function
     }
     else if (is_function)
     {
@@ -610,7 +590,6 @@ ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, con
  */
 ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing variable declaration\n");
     TokenType var_type = current_token.type;
     current_token = get_next_token(scanner);
 
@@ -626,8 +605,10 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     {
         error_exit(ERR_SEMANTIC, "Variable _ is already declared.");
     }
+    // Saving the base name of the variable for checking
     const char *base_variable_name = current_token.lexeme;
 
+    // We create the full name of the variable taking into account the scope
     char *variable_name = construct_variable_name(base_variable_name, function_name);
     current_token = get_next_token(scanner);
 
@@ -669,12 +650,14 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 
     expect_token(TOKEN_SEMICOLON, scanner);
 
+    // Checking whether a variable with the same name exists in external scopes
     Symbol *symbol = search_variable_in_outer_scopes(base_variable_name, function_name);
     if (symbol != NULL)
     {
         error_exit(ERR_SEMANTIC_OTHER, "Variable '%s' is already defined in an outer scope.", base_variable_name);
     }
 
+    // Checking whether a variable with the same name exists in the current scope
     symbol = symtable_search(&symtable, variable_name);
     if (symbol != NULL)
     {
@@ -706,7 +689,6 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing if statement\n");
     expect_token(TOKEN_IF, scanner);         // 'if'
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
 
@@ -789,7 +771,6 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing while statement\n");
     expect_token(TOKEN_WHILE, scanner);      // 'while'
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
     ASTNode *condition_node = parse_expression(scanner, function_name);
@@ -852,7 +833,6 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing return statement\n");
     expect_token(TOKEN_RETURN, scanner);
 
     ASTNode *return_value_node = NULL;
@@ -863,7 +843,6 @@ ASTNode *parse_return_statement(Scanner *scanner, char *function_name)
     }
 
     expect_token(TOKEN_SEMICOLON, scanner);
-    LOG("DEBUG_PARSER: Finished parsing return statement\n");
     return create_return_node(return_value_node);
 }
 
@@ -1032,6 +1011,7 @@ ASTNode *parse_multiplicative(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_primary_expression(scanner, function_name);
 
+        // Perform type checking and set data_type
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
     }
 
@@ -1048,6 +1028,7 @@ ASTNode *parse_additive(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_multiplicative(scanner, function_name);
 
+        // Perform type checking and set data_type
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
     }
 
@@ -1065,7 +1046,9 @@ ASTNode *parse_relational(Scanner *scanner, char *function_name)
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_additive(scanner, function_name);
 
+        // Perform type checking and create a node
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
+        // Set the result type to TYPE_BOOL
         node->data_type = TYPE_BOOL;
     }
 
@@ -1081,7 +1064,9 @@ ASTNode *parse_equality(Scanner *scanner, char *function_name)
         const char *operator_name = current_token.lexeme;
         current_token = get_next_token(scanner);
         ASTNode *right_node = parse_relational(scanner, function_name);
+        // Perform type checking and create a node
         node = perform_type_checking_and_create_node(operator_name, node, right_node);
+        // Set the result type to TYPE_BOOL
         node->data_type = TYPE_BOOL;
     }
 
@@ -1098,8 +1083,6 @@ ASTNode *parse_expression(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 {
-    LOG("DEBUG_PARSER: Parsing primary expression. Current token: %d\n Line and column: %d %d\n", current_token.type, current_token.line, current_token.column);
-
     if (current_token.type == TOKEN_INT_LITERAL)
     {
         char *value = string_duplicate(current_token.lexeme);
@@ -1123,7 +1106,6 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
     }
     else if (current_token.type == TOKEN_IDENTIFIER)
     {
-        // DataType data_type;
         char *identifier_name = NULL;
         Symbol *symbol = NULL;
         bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
@@ -1170,8 +1152,6 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
  */
 ASTNode *parse_import(Scanner *scanner)
 {
-    LOG("DEBUG_PARSER: Parsing import statement\n");
-
     expect_token(TOKEN_CONST, scanner);
 
     if (current_token.type != TOKEN_IDENTIFIER || strcmp(current_token.lexeme, "ifj") != 0)
@@ -1201,11 +1181,16 @@ ASTNode *parse_import(Scanner *scanner)
 
     expect_token(TOKEN_SEMICOLON, scanner);
 
-    LOG("DEBUG_PARSER: Finished parsing import statement\n");
-
     return create_literal_node(TYPE_U8, import_value);
 }
 
+
+/**
+ * Function to papse builtin function call
+ * 1. Check number of parameters and return type
+ * 2. Parse arguments
+ * Returns pointer to function call node
+ */
 ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
 {
     identifier_name = construct_builtin_name("ifj", current_token.lexeme);
@@ -1242,6 +1227,12 @@ ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *ide
     return func_call_node;
 }
 
+/**
+ * Function to papse user-defined function call
+ * 1. Check number of parameters and return type
+ * 2. Parse arguments
+ * Returns pointer to function call node
+ */
 ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
 {
     identifier_name = current_token.lexeme;
@@ -1269,6 +1260,10 @@ ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_
     return func_call_node;
 }
 
+
+/**
+ * Parse identifier in expression
+ */
 ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
 {
     symbol = search_variable_in_scopes(current_token.lexeme, function_name);
@@ -1284,6 +1279,11 @@ ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_nam
     return identifier_node;
 }
 
+
+/**
+ * Parse arguments in function call
+ * Check if arguments is compabile
+ */
 ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments, int param_count, int *arg_count, char *function_name, char *builtin_function_name)
 {
 
@@ -1353,16 +1353,13 @@ bool is_builtin_function(const char *identifier, Scanner *scanner)
     {
         return false;
     }
-    LOG("!!!!DEBUG_PARSER: Recognized 'ifj' keyword\n");
     current_token = get_next_token(scanner);
     expect_token(TOKEN_DOT, scanner);
     identifier = current_token.lexeme;
-    LOG("!!!!DEBUG_PARSER: Recognized identifier: %s\n", identifier);
     for (size_t i = 0; i < sizeof(builtin_functions) / sizeof(builtin_functions[0]); i++)
     {
         if (strcmp(identifier, builtin_functions[i].name) == 0)
         {
-            LOG("!!!!DEBUG_PARSER: Recognized builtin function: %s\n", identifier);
             return true;
         }
     }
@@ -1377,7 +1374,6 @@ DataType get_builtin_function_type(const char *function_name)
     {
         if (strcmp(function_name, builtin_functions[i].name) == 0)
         {
-            LOG("DEBUG_PARSER: Function return type: %d\n", builtin_functions[i].return_type);
             return builtin_functions[i].return_type;
         }
     }
@@ -1391,19 +1387,23 @@ int get_builtin_function_index(const char *function_name)
     {
         if (strcmp(function_name, builtin_functions[i].name) == 0)
         {
-            LOG("DEBUG_PARSER: Function return index: %d\n", builtin_functions[i].return_type);
             return i;
         }
     }
     return -1;
 }
 
+
+/**
+ * Function to check all identifiers in scope
+ */
 void scope_check_identifiers_in_tree(ASTNode *root)
 {
     if (!root)
     {
         return;
     }
+    // If it is identifier - check it
     if ((root->type == NODE_IDENTIFIER || root->type == NODE_ASSIGNMENT) && strcmp(root->name, "_") != 0)
     {
         Symbol *symbol = symtable_search(&symtable, root->name);
@@ -1435,6 +1435,10 @@ void scope_check_identifiers_in_tree(ASTNode *root)
     scope_check_identifiers_in_tree(root->condition);
 }
 
+
+/**
+ * Function to check if is there a similar node identifier down the tree from Variable declaration node
+ */
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
 {
     if (!node_decl || !node_identifier)
@@ -1469,6 +1473,10 @@ bool scope_check(ASTNode *node_decl, ASTNode *node_identifier)
     return false;
 }
 
+
+/**
+ * Function for Pre-run to declare funtions and its nodes
+ */
 void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
 {
     Scanner saved_scanner_state = *scanner;
@@ -1503,6 +1511,9 @@ void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
     return;
 }
 
+/**
+ * Pasre datatype and return it
+ */
 DataType parse_type(Scanner *scanner)
 {
     if (current_token.type == TOKEN_I32)
@@ -1601,7 +1612,6 @@ DataType parse_return_type(Scanner *scanner)
     return TYPE_UNKNOWN;
 }
 
-// Parses a block of statements enclosed in {}
 
 /*
 A function that recursively traverses an entire AST and:
@@ -1651,6 +1661,9 @@ bool check_return_types_recursive(ASTNode *function_node, DataType return_type)
     return check_return_types_recursive(function_node->next, return_type);
 }
 
+/**
+ * Checks compability for return types
+ */
 bool check_all_return_types(ASTNode *function_node, DataType return_type)
 {
     if (!function_node)
@@ -1671,6 +1684,11 @@ bool check_all_return_types(ASTNode *function_node, DataType return_type)
     return body_check && left_check && next_check;
 }
 
+
+/**
+ * For type void function checks if is any of return statement and checks for black expression
+ * For type non-void checks type of return expression
+ */
 void check_return_types(ASTNode *function_node, DataType return_type, int *block_layer)
 {
     if (return_type == TYPE_VOID)
@@ -1712,40 +1730,25 @@ void check_return_types(ASTNode *function_node, DataType return_type, int *block
     }
 }
 
-bool type_convertion(ASTNode *main_node)
-{
-    if (main_node->left->data_type == TYPE_FLOAT && main_node->right->data_type == TYPE_INT && main_node->right->type == NODE_LITERAL)
-    {
-        add_decimal(main_node->right->value);
-        main_node->right->data_type = TYPE_FLOAT;
-        main_node->data_type = TYPE_FLOAT;
-        return true;
-    }
-    else if (main_node->left->data_type == TYPE_INT && main_node->right->data_type == TYPE_FLOAT && main_node->left->type == NODE_LITERAL)
-    {
-        add_decimal(main_node->left->value);
-        main_node->left->data_type = TYPE_FLOAT;
-        main_node->data_type = TYPE_FLOAT;
-        return true;
-    }
-
-    return false;
-}
 
 bool can_assign_type(DataType expected_type, DataType actual_type)
 {
     if (expected_type == actual_type)
         return true;
 
+    // Allowing implicit conversion from int to float
     if (expected_type == TYPE_FLOAT && actual_type == TYPE_INT)
         return true;
 
+    // Allow assignment of a non-nullable value to a nullable variable
     if (is_nullable(expected_type) && !is_nullable(actual_type) && detach_nullable(expected_type) == actual_type)
         return true;
 
+    // We do not allow the assignment of a nullable value to a non-nullable variable
     if (!is_nullable(expected_type) && is_nullable(actual_type))
         return false;
 
+    // Allow assignment of null to nullable variable
     if (is_nullable(expected_type) && actual_type == TYPE_NULL)
         return true;
 
@@ -1777,7 +1780,6 @@ DataType detach_nullable(DataType type_nullable)
  */
 static void expect_token(TokenType expected_type, Scanner *scanner)
 {
-    LOG("DEBUG_PARSER: Expected token: %d, got token: %d\nLine and column: %d %d\n", expected_type, current_token.type, current_token.line, current_token.column);
     if (current_token.type != expected_type)
     {
         error_exit(ERR_SYNTAX, "Unexpected token. Expected: %d, got: %d\nLine and column: %d %d\n", expected_type, current_token.type, current_token.line, current_token.column);

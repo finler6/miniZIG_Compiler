@@ -418,21 +418,17 @@ const char *remove_last_prefix(const char *name) {
         error_exit(ERR_INTERNAL, "Error: Buffer overflow in remove_last_prefix.\n");
     }
 
-    // Найти последнее вхождение точки
     const char *last_dot = strrchr(name, '.');
     if (!last_dot || *(last_dot + 1) == '\0') {
-        return name; // Если точки нет или она в конце строки, вернуть исходное имя
+        return name;
     }
 
-    // Скопировать всё до последней точки в буфер
     size_t prefix_len = last_dot - name;
     strncpy(buffer, name, prefix_len);
     buffer[prefix_len] = '\0';
 
-    // Добавить всё после последней точки
     strcat(buffer, last_dot + 1);
 
-    // Заменить точки на тире
     for (char *p = buffer; *p; ++p) {
         if (*p == '.') {
             *p = '-';
