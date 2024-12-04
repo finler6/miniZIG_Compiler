@@ -47,6 +47,9 @@ static ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arg
 // Global token storage
 static Token current_token;
 
+/**
+ * Dictionary of builtin functions
+ */
 BuiltinFunctionInfo builtin_functions[] = {
     {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
     {"readi32", TYPE_INT_NULLABLE, {TYPE_NULL}, 0},
@@ -62,6 +65,9 @@ BuiltinFunctionInfo builtin_functions[] = {
     {"ord", TYPE_INT, {TYPE_U8, TYPE_INT}, 2},
     {"chr", TYPE_U8, {TYPE_INT}, 1}};
 
+/**
+ * Function that enters a new scope
+ */
 void enter_scope() {
     scope_counter++;
     if (scope_stack_top >= MAX_SCOPE_DEPTH - 1) {
@@ -70,6 +76,9 @@ void enter_scope() {
     scope_stack[++scope_stack_top] = scope_counter;
 }
 
+/**
+ * Function that exits the current scope
+ */
 void exit_scope() {
     if (scope_stack_top < 0) {
         error_exit(ERR_INTERNAL, "Scope stack underflow");
@@ -77,6 +86,9 @@ void exit_scope() {
     scope_stack_top--;
 }
 
+/**
+ * Function that returns the current scope ID
+ */
 int current_scope_id() {
     if (scope_stack_top < 0) {
         return 0;
@@ -84,6 +96,9 @@ int current_scope_id() {
     return scope_stack[scope_stack_top];
 }
 
+/**
+ * Function that finds variables in scopes in the format "variable.scope.function_name"
+ */
 Symbol *search_variable_in_scopes(const char *variable_name, const char *function_name) {
     for (int i = scope_stack_top; i >= -1; i--) {
         int scope_id = (i >= 0) ? scope_stack[i] : 0;
@@ -98,6 +113,9 @@ Symbol *search_variable_in_scopes(const char *variable_name, const char *functio
     return NULL;
 }
 
+/**
+ * Function that checks variables in outer scopes in the format "variable.scope.function_name"
+ */
 Symbol *search_variable_in_outer_scopes(const char *variable_name, const char *function_name) {
     for (int i = scope_stack_top - 1; i >= -1; i--) {
         int scope_id = (i >= 0) ? scope_stack[i] : 0;
