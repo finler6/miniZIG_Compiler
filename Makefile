@@ -34,6 +34,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 # Удаление скомпилированных файлов
 clean:
 	rm -f $(OBJ_DIR)/*.o $(TARGET)
+	rm -rf $(OBJ_DIR)
 
 # Файлы, которые нужно добавить в make: all, clean
 .PHONY: all clean

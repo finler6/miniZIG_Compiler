@@ -1,11 +1,16 @@
-/*
- * Project Name: Implementation of the IFJ24 Compiler
- * Authors: 
+/**
+ * @file error.c
+ *
+ * Error handling functions.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include "error.h"
 
 void error_exit(int error_code, const char *format, ...) {
@@ -15,6 +20,7 @@ void error_exit(int error_code, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
     va_end(args);
+    cleanup_pointers_storage();
     exit(error_code);
 }
 

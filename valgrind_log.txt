@@ -1,0 +1,15 @@
+==44420== Memcheck, a memory error detector
+==44420== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==44420== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==44420== Command: ./ifj24_compiler all_tests/while_pipe.ifj24 output.txt
+==44420== Parent PID: 507
+==44420== 
+==44420== 
+==44420== HEAP SUMMARY:
+==44420==     in use at exit: 0 bytes in 0 blocks
+==44420==   total heap usage: 762 allocs, 762 frees, 46,590 bytes allocated
+==44420== 
+==44420== All heap blocks were freed -- no leaks are possible
+==44420== 
+==44420== For lists of detected and suppressed errors, rerun with: -s
+==44420== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

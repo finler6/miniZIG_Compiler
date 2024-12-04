@@ -1,5 +1,22 @@
+/**
+ * @file error.h
+ *
+ * Error handling functions declarations and error codes.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
+ */
 #ifndef ERROR_H
 #define ERROR_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include "utils.h"
 
 // Error codes as per specification
 #define ERR_OK 0               // No error

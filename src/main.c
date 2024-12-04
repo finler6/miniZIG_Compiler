@@ -1,6 +1,14 @@
-/*
- * Project Name: Implementation of the IFJ24 Compiler
- * Authors: 
+/**
+ * @file main.c
+ *
+ * Main file of the IFJ2021 compiler project.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
  */
 
 #include <stdio.h>
@@ -11,6 +19,7 @@
 #include "symtable.h"
 #include "ast.h" 
 #include "codegen.h" 
+#include "utils.h"
 
 int main(int argc, char *argv[]) {
     FILE *source_file = stdin; 
@@ -31,6 +40,8 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         output_filename = argv[2];
     }
+
+    init_pointers_storage(5);
 
     Scanner scanner;
     scanner_init(source_file, &scanner);
@@ -56,10 +67,12 @@ int main(int argc, char *argv[]) {
     scanner_free(&scanner);
 
 
-    free_ast_node(ast_root);
+    //free_ast_node(ast_root);
 
 
     fclose(source_file);
+
+    cleanup_pointers_storage();
 
     return ERR_OK;  
 }

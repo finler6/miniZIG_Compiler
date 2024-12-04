@@ -1,0 +1,11 @@
+const ifj = @import("ifj24.zig");
+
+pub fn foo1() void{
+    foo2();
+    return;
+}
+
+pub fn foo2() void{
+    foo1();
+    return;
+}

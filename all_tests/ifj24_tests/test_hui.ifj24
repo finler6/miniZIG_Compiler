@@ -1,0 +1,41 @@
+const ifj = @import("ifj24.zig");
+
+// Main function of the program
+pub fn main() void {
+    ifj.write("=== Start of advanced function and recursion test ===\n");
+
+    const complex_res = complex_calculation(2, 3, 4); // 2^3 + 4! = 8 + 24 = 32
+    ifj.write("Complex calculation res (2^3 + 4!): ");
+    ifj.write(complex_res);
+    ifj.write("\n");
+
+    ifj.write("=== End of advanced function and recursion test ===\n");
+}
+
+
+// Recursive factorial calculation
+pub fn factorial(n: i32) i32 {
+    if (n < 2) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// Complex calculation: base^exponent + factorial(n)
+pub fn complex_calculation(base: i32, exponent: i32, n: i32) i32 {
+    const pow_res = power(base, exponent);
+    const fact_res = factorial(n);
+    return pow_res + fact_res;
+}
+
+// Power calculation (non-recursive for variety)
+pub fn power(base: i32, exp: i32) i32 {
+    var res: i32 = 1;
+    var count: i32 = exp;
+    while (count > 0) {
+        res = res * base;
+        count = count - 1;
+    }
+    return res;
+}

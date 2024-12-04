@@ -1,0 +1,83 @@
+const ifj = @import("ifj24.zig");
+
+// Test numbers
+pub fn test_numbers() void {
+    ifj.write("\n--- Test numbers ---\n");
+    const a: i32 = 10;
+    const b: f64 = 2.5;
+    const sum: f64 = ifj.i2f(a) + b;
+    ifj.write("Sum of 10 and 2.5 is: "); ifj.write(sum); ifj.write("\n");
+
+    const product: i32 = a * ifj.f2i(b);
+    ifj.write("Multiplication of 10 and 2 (round): "); ifj.write(product); ifj.write("\n");
+}
+
+// Test strings
+pub fn test_strings() void {
+    ifj.write("\n--- Test strings ---\n");
+    const str1 = ifj.string("IFJ24");
+    const str2 = ifj.string(" — great language.");
+    const result = ifj.concat(str1, str2);
+    ifj.write("Concatenated string: "); ifj.write(result); ifj.write("\n");
+}
+
+// Test substrings
+pub fn test_substrings() void {
+    ifj.write("\n--- Test substring ---\n");
+    const text = ifj.string("Example text for substring");
+    const substr = ifj.substring(text, 8, 14);
+    if (substr) |sub| {
+        ifj.write("Substring: "); ifj.write(sub); ifj.write("\n");
+    } else {
+        ifj.write("Error extracting substring.\n");
+    }
+}
+
+// Test loops
+pub fn test_loops() void {
+    ifj.write("\n--- Test loops ---\n");
+    var count: i32 = 5;
+    while (count > 0) {
+        ifj.write("Counter: "); ifj.write(count); ifj.write("\n");
+        count = count - 1;
+    }
+}
+
+// Test null handling
+pub fn test_null_handling() void {
+    ifj.write("\n--- Test null handling ---\n");
+    var optional: ?i32 = null;
+
+    if (optional) |value| {
+        ifj.write("Value: "); ifj.write(value); ifj.write("\n");
+    } else {
+        ifj.write("Value is missing (null).\n");
+    }
+
+    optional = 42;
+    if (optional) |value| {
+        ifj.write("New value: "); ifj.write(value); ifj.write("\n");
+    }
+}
+
+// Main function
+pub fn main() void {
+    ifj.write("=== Start of IFJ24 language testing ===\n");
+
+    // Test numbers
+    test_numbers();
+
+    // Test strings
+    test_strings();
+
+    // Test substrings
+    test_substrings();
+
+    // Test loops
+    test_loops();
+
+    // Test null handling
+    test_null_handling();
+
+    ifj.write("=== End of testing ===\n");
+}

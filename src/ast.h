@@ -1,3 +1,15 @@
+/**
+ * @file ast.c
+ *
+ * Header file for abstract syntax tree (AST) representation.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
+ */
 #ifndef AST_H
 #define AST_H
 

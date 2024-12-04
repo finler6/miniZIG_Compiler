@@ -1,0 +1,10 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    const d: ?i32 = null;
+    if (d) |value| { // Условие выполняется только если d != null
+        ifj.write(value);
+    } else {
+        ifj.write("d is null\n");
+    }
+}

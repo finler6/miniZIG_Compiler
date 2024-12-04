@@ -1,0 +1,135 @@
+const ifj = @import("ifj24.zig");
+
+// Main function of the program
+pub fn main() void {
+    ifj.write("=== Start of advanced function and recursion test ===\n");
+
+    // Test nested recursive functions: Fibonacci calculation
+    const fib_result = fibonacci(10); // Fibonacci(10) = 55
+    ifj.write("Fibonacci of 10: "); ifj.write(fib_result); ifj.write("\n");
+
+    // Test mutual recursion: even/odd determination
+    const is_even_result = is_even(42); // True (represented as 1)
+    if (is_even_result != 0) {
+        ifj.write("42 is even - correct\n");
+    } else {
+        ifj.write("42 is not even - error\n");
+    }
+
+    const is_odd_result = is_odd(99); // True (represented as 1)
+    if (is_odd_result != 0) {
+        ifj.write("99 is odd - correct\n");
+    } else {
+        ifj.write("99 is not odd - error\n");
+    }
+
+    // Test factorial with multiple calls
+    const fact_5 = factorial(5); // 5! = 120
+    const fact_0 = factorial(0); // 0! = 1
+    ifj.write("Factorial of 5: "); ifj.write(fact_5); ifj.write("\n");
+    ifj.write("Factorial of 0: "); ifj.write(fact_0); ifj.write("\n");
+
+    // Test function chaining with string manipulation
+    const chained_result = reverse_concat("hello", "world"); // "dlrowolleh"
+    ifj.write("Reverse concat of 'hello' and 'world': "); ifj.write(chained_result); ifj.write("\n");
+
+    // Test complex computation with a helper function
+    const complex_result = complex_calculation(2, 3, 4); // 2^3 + 4! = 8 + 24 = 32
+    ifj.write("Complex calculation result (2^3 + 4!): "); ifj.write(complex_result); ifj.write("\n");
+
+    // Test sum of digits recursively
+    const sum_digits_result = sum_of_digits(9876); // 9 + 8 + 7 + 6 = 30
+    ifj.write("Sum of digits of 9876: "); ifj.write(sum_digits_result); ifj.write("\n");
+
+    ifj.write("=== End of advanced function and recursion test ===\n");
+}
+
+// Recursive function: Fibonacci sequence
+pub fn fibonacci(n: i32) i32 {
+    if (n <= 1) {
+        return n;
+    } else {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}
+
+// Mutually recursive functions: even and odd check
+pub fn is_even(n: i32) i32 {
+    if (n == 0) {
+        return 1; // True
+    } else {
+        return is_odd(n - 1);
+    }
+}
+
+pub fn is_odd(n: i32) i32 {
+    if (n == 0) {
+        return 0; // False
+    } else {
+        return is_even(n - 1);
+    }
+}
+
+// Recursive factorial calculation
+pub fn factorial(n: i32) i32 {
+    if (n < 2) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// Reverse a string
+pub fn reverse_string(s: []u8) []u8 {
+    const len = ifj.length(s);
+    if (len <= 1) {
+        return s;
+    } else {
+        const last_char = ifj.substring(s, len - 1, len);
+        const rest = ifj.substring(s, 0, len - 1);
+        if (last_char) |LAAAAST| {
+            if (rest) |REEEEST| {
+                var piska = reverse_string(REEEEST);
+                return ifj.concat(LAAAAST, piska);
+            } else {
+                return LAAAAST;
+            }
+        } else {
+            return ifj.string(""); // Fallback for null
+        }
+    }
+}
+
+// Concatenate two strings after reversing them
+pub fn reverse_concat(s1: []u8, s2: []u8) []u8 {
+    const rev_s1 = reverse_string(s1);
+    const rev_s2 = reverse_string(s2);
+    return ifj.concat(rev_s1, rev_s2);
+}
+
+// Complex calculation: base^exponent + factorial(n)
+pub fn complex_calculation(base: i32, exponent: i32, n: i32) i32 {
+    const pow_result = power(base, exponent);
+    const fact_result = factorial(n);
+    return pow_result + fact_result;
+}
+
+// Power calculation (non-recursive for variety)
+pub fn power(base: i32, exp: i32) i32 {
+    var result: i32 = 1;
+    var count: i32 = exp;
+    while (count > 0) {
+        result = result * base;
+        count = count - 1;
+    }
+    return result;
+}
+
+// Recursive function: Sum of digits
+pub fn sum_of_digits(n: i32) i32 {
+    if (n < 10) {
+        return n;
+    } else {
+        return (n - (n / 10) * 10) + sum_of_digits(n / 10);
+    }
+}

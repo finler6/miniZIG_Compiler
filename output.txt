@@ -7,685 +7,166 @@ PUSHFRAME
 DEFVAR LF@%tmp_type
 DEFVAR LF@%tmp_var
 DEFVAR LF@%tmp_bool
-DEFVAR LF@sum_digits_result
-DEFVAR LF@complex_result
-DEFVAR LF@chained_result
-DEFVAR LF@fact_0
-DEFVAR LF@fact_5
-DEFVAR LF@is_odd_result
-DEFVAR LF@is_even_result
-DEFVAR LF@fib_result
-DEFVAR LF@%temp_29
-DEFVAR LF@%temp_28
-DEFVAR LF@%temp_27
-DEFVAR LF@%temp_26
-DEFVAR LF@%temp_25
-DEFVAR LF@%temp_24
-DEFVAR LF@%temp_23
-DEFVAR LF@%temp_22
-DEFVAR LF@%temp_21
-DEFVAR LF@%temp_20
-DEFVAR LF@%temp_19
-DEFVAR LF@%temp_18
-DEFVAR LF@%temp_17
-DEFVAR LF@%temp_16
-DEFVAR LF@%temp_15
+DEFVAR LF@strcmpResult
+DEFVAR LF@abcdefgh
+DEFVAR LF@inpOK
+DEFVAR LF@all
+DEFVAR LF@newInput
+DEFVAR LF@str2
+DEFVAR LF@str1
+DEFVAR LF@%retval_18
+DEFVAR LF@%retval_17
+DEFVAR LF@%tmp_str2_16
+DEFVAR LF@%tmp_str1_15
 DEFVAR LF@%temp_14
 DEFVAR LF@%temp_13
 DEFVAR LF@%temp_12
 DEFVAR LF@%result_11
 DEFVAR LF@%temp_10
 DEFVAR LF@%temp_9
-DEFVAR LF@%temp_8
+DEFVAR LF@%retval_8
 DEFVAR LF@%temp_7
-DEFVAR LF@%result_6
+DEFVAR LF@%temp_6
 DEFVAR LF@%temp_5
 DEFVAR LF@%temp_4
 DEFVAR LF@%temp_3
-DEFVAR LF@%temp_2
-DEFVAR LF@%temp_1
-DEFVAR LF@%temp_0
-PUSHS string@===\032Start\032of\032advanced\032function\032and\032recursion\032test\032===\010
-POPS LF@%temp_0
-WRITE LF@%temp_0
-PUSHS int@10
-CALL fibonacci
-POPS LF@fib_result
-PUSHS string@Fibonacci\032of\03210:\032
-POPS LF@%temp_1
-WRITE LF@%temp_1
-PUSHS LF@fib_result
-POPS LF@%temp_2
-WRITE LF@%temp_2
-PUSHS string@\010
+DEFVAR LF@%retval_2
+DEFVAR LF@%tmp_str2_1
+DEFVAR LF@%tmp_str1_0
+PUSHS string@Toto\032je\032text\032v\032programu\032jazyka\032IFJ24
+CALL ifj-string
+POPS LF@str1
+PUSHS string@,\032ktery\032jeste\032trochu\032obohatime
+CALL ifj-string
+POPS LF@str2
+PUSHS LF@str1
+PUSHS LF@str2
+POPS LF@%tmp_str2_1
+POPS LF@%tmp_str1_0
+CONCAT LF@%retval_2 LF@%tmp_str1_0 LF@%tmp_str2_1
+PUSHS LF@%retval_2
+POPS LF@str2
+PUSHS LF@str1
 POPS LF@%temp_3
 WRITE LF@%temp_3
-PUSHS int@42
-CALL is_even
-POPS LF@is_even_result
-PUSHS LF@is_even_result
+PUSHS string@\010
 POPS LF@%temp_4
-PUSHS int@0
+WRITE LF@%temp_4
+PUSHS LF@str2
 POPS LF@%temp_5
-EQ LF@%result_6 LF@%temp_4 LF@%temp_5
-NOT LF@%result_6 LF@%result_6
-PUSHS LF@%result_6
-PUSHS bool@false
-JUMPIFEQS $else_0
-PUSHS string@42\032is\032even\032-\032correct\010
+WRITE LF@%temp_5
+PUSHS string@\010
+POPS LF@%temp_6
+WRITE LF@%temp_6
+PUSHS string@Zadejte\032serazenou\032posloupnost\032malych\032pismen\032a-h:\010
 POPS LF@%temp_7
 WRITE LF@%temp_7
-JUMP $endif_0
-LABEL $else_0
-PUSHS string@42\032is\032not\032even\032-\032error\010
-POPS LF@%temp_8
-WRITE LF@%temp_8
-LABEL $endif_0
-PUSHS int@99
-CALL is_odd
-POPS LF@is_odd_result
-PUSHS LF@is_odd_result
+READ LF@%retval_8 string
+PUSHS LF@%retval_8
+POPS LF@newInput
+PUSHS string@
+CALL ifj-string
+POPS LF@all
+LABEL $while_start_0
+TYPE LF@%tmp_type LF@newInput
+PUSHS LF@%tmp_type
+PUSHS string@nil
+EQS
+NOTS
+PUSHS bool@false
+JUMPIFEQS $while_end_0
+PUSHS LF@newInput
+POPS LF@inpOK
+PUSHS string@abcdefgh
+CALL ifj-string
+POPS LF@abcdefgh
+PUSHS LF@inpOK
+PUSHS LF@abcdefgh
+CALL ifj-strcmp
+POPS LF@strcmpResult
+PUSHS LF@strcmpResult
 POPS LF@%temp_9
 PUSHS int@0
 POPS LF@%temp_10
 EQ LF@%result_11 LF@%temp_9 LF@%temp_10
-NOT LF@%result_11 LF@%result_11
 PUSHS LF@%result_11
 PUSHS bool@false
-JUMPIFEQS $else_1
-PUSHS string@99\032is\032odd\032-\032correct\010
+JUMPIFEQS $else_0
+PUSHS string@Spravne\032zadano!\010
 POPS LF@%temp_12
 WRITE LF@%temp_12
-JUMP $endif_1
-LABEL $else_1
-PUSHS string@99\032is\032not\032odd\032-\032error\010
+PUSHS LF@all
 POPS LF@%temp_13
 WRITE LF@%temp_13
-LABEL $endif_1
-PUSHS int@5
-CALL factorial
-POPS LF@fact_5
-PUSHS int@0
-CALL factorial
-POPS LF@fact_0
-PUSHS string@Factorial\032of\0325:\032
+PUSHS nil@nil
+POPS LF@newInput
+JUMP $endif_0
+LABEL $else_0
+PUSHS string@Spatne\032zadana\032posloupnost,\032zkuste\032znovu:\010
 POPS LF@%temp_14
 WRITE LF@%temp_14
-PUSHS LF@fact_5
-POPS LF@%temp_15
-WRITE LF@%temp_15
-PUSHS string@\010
-POPS LF@%temp_16
-WRITE LF@%temp_16
-PUSHS string@Factorial\032of\0320:\032
-POPS LF@%temp_17
-WRITE LF@%temp_17
-PUSHS LF@fact_0
-POPS LF@%temp_18
-WRITE LF@%temp_18
-PUSHS string@\010
-POPS LF@%temp_19
-WRITE LF@%temp_19
-PUSHS string@world
-PUSHS string@hello
-CALL reverse_concat
-POPS LF@chained_result
-PUSHS string@Reverse\032concat\032of\032'hello'\032and\032'world':\032
-POPS LF@%temp_20
-WRITE LF@%temp_20
-PUSHS LF@chained_result
-POPS LF@%temp_21
-WRITE LF@%temp_21
-PUSHS string@\010
-POPS LF@%temp_22
-WRITE LF@%temp_22
-PUSHS int@4
-PUSHS int@3
-PUSHS int@2
-CALL complex_calculation
-POPS LF@complex_result
-PUSHS string@Complex\032calculation\032result\032(2^3\032+\0324!):\032
-POPS LF@%temp_23
-WRITE LF@%temp_23
-PUSHS LF@complex_result
-POPS LF@%temp_24
-WRITE LF@%temp_24
-PUSHS string@\010
-POPS LF@%temp_25
-WRITE LF@%temp_25
-PUSHS int@9876
-CALL sum_of_digits
-POPS LF@sum_digits_result
-PUSHS string@Sum\032of\032digits\032of\0329876:\032
-POPS LF@%temp_26
-WRITE LF@%temp_26
-PUSHS LF@sum_digits_result
-POPS LF@%temp_27
-WRITE LF@%temp_27
-PUSHS string@\010
-POPS LF@%temp_28
-WRITE LF@%temp_28
-PUSHS string@===\032End\032of\032advanced\032function\032and\032recursion\032test\032===\010
-POPS LF@%temp_29
-WRITE LF@%temp_29
-POPFRAME
-RETURN
-LABEL fibonacci
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%result_41
-DEFVAR LF@%temp_40
-DEFVAR LF@%result_39
-DEFVAR LF@%temp_38
-DEFVAR LF@%temp_37
-DEFVAR LF@%temp_36
-DEFVAR LF@%result_35
-DEFVAR LF@%temp_34
-DEFVAR LF@%temp_33
-DEFVAR LF@%result_32
-DEFVAR LF@%temp_31
-DEFVAR LF@%temp_30
-PUSHS LF@n
-POPS LF@%temp_30
-PUSHS int@1
-POPS LF@%temp_31
-GT LF@%result_32 LF@%temp_30 LF@%temp_31
-NOT LF@%result_32 LF@%result_32
-PUSHS LF@%result_32
-PUSHS bool@false
-JUMPIFEQS $else_2
-PUSHS LF@n
-POPFRAME
-RETURN
-JUMP $endif_2
-LABEL $else_2
-PUSHS LF@n
-POPS LF@%temp_33
-PUSHS int@1
-POPS LF@%temp_34
-SUB LF@%result_35 LF@%temp_33 LF@%temp_34
-PUSHS LF@%result_35
-CALL fibonacci
-POPS LF@%temp_36
-PUSHS LF@n
-POPS LF@%temp_37
-PUSHS int@2
-POPS LF@%temp_38
-SUB LF@%result_39 LF@%temp_37 LF@%temp_38
-PUSHS LF@%result_39
-CALL fibonacci
-POPS LF@%temp_40
-ADD LF@%result_41 LF@%temp_36 LF@%temp_40
-PUSHS LF@%result_41
-POPFRAME
-RETURN
-LABEL $endif_2
-POPFRAME
-RETURN
-LABEL is_even
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%result_47
-DEFVAR LF@%temp_46
-DEFVAR LF@%temp_45
-DEFVAR LF@%result_44
-DEFVAR LF@%temp_43
-DEFVAR LF@%temp_42
-PUSHS LF@n
-POPS LF@%temp_42
-PUSHS int@0
-POPS LF@%temp_43
-EQ LF@%result_44 LF@%temp_42 LF@%temp_43
-PUSHS LF@%result_44
-PUSHS bool@false
-JUMPIFEQS $else_3
-PUSHS int@1
-POPFRAME
-RETURN
-JUMP $endif_3
-LABEL $else_3
-PUSHS LF@n
-POPS LF@%temp_45
-PUSHS int@1
-POPS LF@%temp_46
-SUB LF@%result_47 LF@%temp_45 LF@%temp_46
-PUSHS LF@%result_47
-CALL is_odd
-POPFRAME
-RETURN
-LABEL $endif_3
-POPFRAME
-RETURN
-LABEL is_odd
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%result_53
-DEFVAR LF@%temp_52
-DEFVAR LF@%temp_51
-DEFVAR LF@%result_50
-DEFVAR LF@%temp_49
-DEFVAR LF@%temp_48
-PUSHS LF@n
-POPS LF@%temp_48
-PUSHS int@0
-POPS LF@%temp_49
-EQ LF@%result_50 LF@%temp_48 LF@%temp_49
-PUSHS LF@%result_50
-PUSHS bool@false
-JUMPIFEQS $else_4
-PUSHS int@0
-POPFRAME
-RETURN
-JUMP $endif_4
-LABEL $else_4
-PUSHS LF@n
-POPS LF@%temp_51
-PUSHS int@1
-POPS LF@%temp_52
-SUB LF@%result_53 LF@%temp_51 LF@%temp_52
-PUSHS LF@%result_53
-CALL is_even
-POPFRAME
-RETURN
-LABEL $endif_4
-POPFRAME
-RETURN
-LABEL factorial
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%result_62
-DEFVAR LF@%temp_61
-DEFVAR LF@%result_60
-DEFVAR LF@%temp_59
-DEFVAR LF@%temp_58
-DEFVAR LF@%temp_57
-DEFVAR LF@%result_56
-DEFVAR LF@%temp_55
-DEFVAR LF@%temp_54
-PUSHS LF@n
-POPS LF@%temp_54
-PUSHS int@2
-POPS LF@%temp_55
-LT LF@%result_56 LF@%temp_54 LF@%temp_55
-PUSHS LF@%result_56
-PUSHS bool@false
-JUMPIFEQS $else_5
-PUSHS int@1
-POPFRAME
-RETURN
-JUMP $endif_5
-LABEL $else_5
-PUSHS LF@n
-POPS LF@%temp_57
-PUSHS LF@n
-POPS LF@%temp_58
-PUSHS int@1
-POPS LF@%temp_59
-SUB LF@%result_60 LF@%temp_58 LF@%temp_59
-PUSHS LF@%result_60
-CALL factorial
-POPS LF@%temp_61
-MUL LF@%result_62 LF@%temp_57 LF@%temp_61
-PUSHS LF@%result_62
-POPFRAME
-RETURN
-LABEL $endif_5
-POPFRAME
-RETURN
-LABEL reverse_string
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@s
-POPS LF@s
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@piska
-DEFVAR LF@REEEEST
-DEFVAR LF@LAAAAST
-DEFVAR LF@rest
-DEFVAR LF@last_char
-DEFVAR LF@len
-DEFVAR LF@%retval_76
-DEFVAR LF@%tmp_str2_75
-DEFVAR LF@%tmp_str1_74
-DEFVAR LF@%result_73
-DEFVAR LF@%temp_72
-DEFVAR LF@%temp_71
-DEFVAR LF@%result_70
-DEFVAR LF@%temp_69
-DEFVAR LF@%temp_68
-DEFVAR LF@%result_67
-DEFVAR LF@%temp_66
-DEFVAR LF@%temp_65
-DEFVAR LF@%retval_64
-DEFVAR LF@%tmp_str_63
-PUSHS LF@s
-POPS LF@%tmp_str_63
-STRLEN LF@%retval_64 LF@%tmp_str_63
-PUSHS LF@%retval_64
-POPS LF@len
-PUSHS LF@len
-POPS LF@%temp_65
-PUSHS int@1
-POPS LF@%temp_66
-GT LF@%result_67 LF@%temp_65 LF@%temp_66
-NOT LF@%result_67 LF@%result_67
-PUSHS LF@%result_67
-PUSHS bool@false
-JUMPIFEQS $else_6
-PUSHS LF@s
-POPFRAME
-RETURN
-JUMP $endif_6
-LABEL $else_6
-PUSHS LF@s
-PUSHS LF@len
-POPS LF@%temp_68
-PUSHS int@1
-POPS LF@%temp_69
-SUB LF@%result_70 LF@%temp_68 LF@%temp_69
-PUSHS LF@%result_70
-PUSHS LF@len
-CALL ifj-substring
-POPS LF@last_char
-PUSHS LF@s
-PUSHS int@0
-PUSHS LF@len
-POPS LF@%temp_71
-PUSHS int@1
-POPS LF@%temp_72
-SUB LF@%result_73 LF@%temp_71 LF@%temp_72
-PUSHS LF@%result_73
-CALL ifj-substring
-POPS LF@rest
-TYPE LF@%tmp_type LF@last_char
-JUMPIFEQ $else_7 LF@%tmp_type string@nil
-PUSHS LF@last_char
-POPS LF@LAAAAST
-TYPE LF@%tmp_type LF@rest
-JUMPIFEQ $else_8 LF@%tmp_type string@nil
-PUSHS LF@rest
-POPS LF@REEEEST
-PUSHS LF@REEEEST
-CALL reverse_string
-POPS LF@piska
-PUSHS LF@LAAAAST
-PUSHS LF@piska
-POPS LF@%tmp_str2_75
-POPS LF@%tmp_str1_74
-CONCAT LF@%retval_76 LF@%tmp_str1_74 LF@%tmp_str2_75
-PUSHS LF@%retval_76
-POPFRAME
-RETURN
-JUMP $endif_8
-LABEL $else_8
-PUSHS LF@LAAAAST
-POPFRAME
-RETURN
-LABEL $endif_8
-JUMP $endif_7
-LABEL $else_7
-PUSHS string@
-CALL ifj-string
-POPFRAME
-RETURN
-LABEL $endif_7
-LABEL $endif_6
-POPFRAME
-RETURN
-LABEL reverse_concat
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@s1
-POPS LF@s1
-DEFVAR LF@s2
-POPS LF@s2
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@rev_s2
-DEFVAR LF@rev_s1
-DEFVAR LF@%retval_79
-DEFVAR LF@%tmp_str2_78
-DEFVAR LF@%tmp_str1_77
-PUSHS LF@s1
-CALL reverse_string
-POPS LF@rev_s1
-PUSHS LF@s2
-CALL reverse_string
-POPS LF@rev_s2
-PUSHS LF@rev_s1
-PUSHS LF@rev_s2
-POPS LF@%tmp_str2_78
-POPS LF@%tmp_str1_77
-CONCAT LF@%retval_79 LF@%tmp_str1_77 LF@%tmp_str2_78
-PUSHS LF@%retval_79
-POPFRAME
-RETURN
-POPFRAME
-RETURN
-LABEL complex_calculation
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@base
-POPS LF@base
-DEFVAR LF@exponent
-POPS LF@exponent
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@fact_result
-DEFVAR LF@pow_result
-DEFVAR LF@%result_82
-DEFVAR LF@%temp_81
-DEFVAR LF@%temp_80
-PUSHS LF@exponent
-PUSHS LF@base
-CALL power
-POPS LF@pow_result
-PUSHS LF@n
-CALL factorial
-POPS LF@fact_result
-PUSHS LF@pow_result
-POPS LF@%temp_80
-PUSHS LF@fact_result
-POPS LF@%temp_81
-ADD LF@%result_82 LF@%temp_80 LF@%temp_81
-PUSHS LF@%result_82
-POPFRAME
-RETURN
-POPFRAME
-RETURN
-LABEL power
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@base
-POPS LF@base
-DEFVAR LF@exp
-POPS LF@exp
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@count
-DEFVAR LF@result
-DEFVAR LF@%result_91
-DEFVAR LF@%temp_90
-DEFVAR LF@%temp_89
-DEFVAR LF@%result_88
-DEFVAR LF@%temp_87
-DEFVAR LF@%temp_86
-DEFVAR LF@%result_85
-DEFVAR LF@%temp_84
-DEFVAR LF@%temp_83
-PUSHS int@1
-POPS LF@result
-PUSHS LF@exp
-POPS LF@count
-LABEL $while_start_0
-PUSHS LF@count
-POPS LF@%temp_83
-PUSHS int@0
-POPS LF@%temp_84
-GT LF@%result_85 LF@%temp_83 LF@%temp_84
-PUSHS LF@%result_85
-PUSHS bool@false
-JUMPIFEQS $while_end_0
-PUSHS LF@result
-POPS LF@%temp_86
-PUSHS LF@base
-POPS LF@%temp_87
-MUL LF@%result_88 LF@%temp_86 LF@%temp_87
-PUSHS LF@%result_88
-POPS LF@result
-PUSHS LF@count
-POPS LF@%temp_89
-PUSHS int@1
-POPS LF@%temp_90
-SUB LF@%result_91 LF@%temp_89 LF@%temp_90
-PUSHS LF@%result_91
-POPS LF@count
+PUSHS LF@all
+PUSHS LF@inpOK
+POPS LF@%tmp_str2_16
+POPS LF@%tmp_str1_15
+CONCAT LF@%retval_17 LF@%tmp_str1_15 LF@%tmp_str2_16
+PUSHS LF@%retval_17
+POPS LF@all
+READ LF@%retval_18 string
+PUSHS LF@%retval_18
+POPS LF@newInput
+LABEL $endif_0
 JUMP $while_start_0
 LABEL $while_end_0
-PUSHS LF@result
 POPFRAME
 RETURN
-POPFRAME
-RETURN
-LABEL sum_of_digits
+LABEL ifj-strcmp
 CREATEFRAME
 PUSHFRAME
-DEFVAR LF@n
-POPS LF@n
-DEFVAR LF@%tmp_type
-DEFVAR LF@%tmp_var
-DEFVAR LF@%tmp_bool
-DEFVAR LF@%result_109
-DEFVAR LF@%temp_108
-DEFVAR LF@%result_107
-DEFVAR LF@%temp_106
-DEFVAR LF@%temp_105
-DEFVAR LF@%temp_104
-DEFVAR LF@%result_103
-DEFVAR LF@%temp_102
-DEFVAR LF@%result_101
-DEFVAR LF@%temp_100
-DEFVAR LF@%temp_99
-DEFVAR LF@%result_98
-DEFVAR LF@%temp_97
-DEFVAR LF@%temp_96
-DEFVAR LF@%temp_95
-DEFVAR LF@%result_94
-DEFVAR LF@%temp_93
-DEFVAR LF@%temp_92
-PUSHS LF@n
-POPS LF@%temp_92
-PUSHS int@10
-POPS LF@%temp_93
-LT LF@%result_94 LF@%temp_92 LF@%temp_93
-PUSHS LF@%result_94
-PUSHS bool@false
-JUMPIFEQS $else_9
-PUSHS LF@n
-POPFRAME
-RETURN
-JUMP $endif_9
-LABEL $else_9
-PUSHS LF@n
-POPS LF@%temp_95
-PUSHS LF@n
-POPS LF@%temp_96
-PUSHS int@10
-POPS LF@%temp_97
-IDIV LF@%result_98 LF@%temp_96 LF@%temp_97
-PUSHS LF@%result_98
-POPS LF@%temp_99
-PUSHS int@10
-POPS LF@%temp_100
-MUL LF@%result_101 LF@%temp_99 LF@%temp_100
-PUSHS LF@%result_101
-POPS LF@%temp_102
-SUB LF@%result_103 LF@%temp_95 LF@%temp_102
-PUSHS LF@%result_103
-POPS LF@%temp_104
-PUSHS LF@n
-POPS LF@%temp_105
-PUSHS int@10
-POPS LF@%temp_106
-IDIV LF@%result_107 LF@%temp_105 LF@%temp_106
-PUSHS LF@%result_107
-CALL sum_of_digits
-POPS LF@%temp_108
-ADD LF@%result_109 LF@%temp_104 LF@%temp_108
-PUSHS LF@%result_109
-POPFRAME
-RETURN
-LABEL $endif_9
-POPFRAME
-RETURN
-LABEL ifj-substring
-CREATEFRAME
-PUSHFRAME
-DEFVAR LF@str
-DEFVAR LF@start
-DEFVAR LF@end
-DEFVAR LF@length
+DEFVAR LF@str1
+DEFVAR LF@str2
+DEFVAR LF@len1
+DEFVAR LF@len2
+DEFVAR LF@i
+DEFVAR LF@char1
+DEFVAR LF@char2
 DEFVAR LF@retval
+DEFVAR LF@tmp_int
 DEFVAR LF@tmp_bool
-DEFVAR LF@tmp_char
-POPS LF@end
-POPS LF@start
-POPS LF@str
-STRLEN LF@length LF@str
-LT LF@tmp_bool LF@start int@0
-JUMPIFEQ $substr_null LF@tmp_bool bool@true
-LT LF@tmp_bool LF@end int@0
-JUMPIFEQ $substr_null LF@tmp_bool bool@true
-GT LF@tmp_bool LF@start LF@end
-JUMPIFEQ $substr_null LF@tmp_bool bool@true
-LT LF@tmp_bool LF@start LF@length
-JUMPIFEQ $check_j LF@tmp_bool bool@true
-JUMP $substr_null
-LABEL $check_j
-GT LF@tmp_bool LF@end LF@length
-JUMPIFEQ $substr_null LF@tmp_bool bool@true
-SUB LF@length LF@end LF@start
-MOVE LF@retval string@
-LABEL $substr_loop
-JUMPIFEQ $substr_end LF@length int@0
-GETCHAR LF@tmp_char LF@str LF@start
-CONCAT LF@retval LF@retval LF@tmp_char
-ADD LF@start LF@start int@1
-SUB LF@length LF@length int@1
-JUMP $substr_loop
-LABEL $substr_end
+POPS LF@str2
+POPS LF@str1
+STRLEN LF@len1 LF@str1
+STRLEN LF@len2 LF@str2
+MOVE LF@i int@0
+LABEL $strcmp_loop
+LT LF@tmp_bool LF@i LF@len1
+JUMPIFEQ $strcmp_end LF@tmp_bool bool@false
+LT LF@tmp_bool LF@i LF@len2
+JUMPIFEQ $strcmp_end LF@tmp_bool bool@false
+GETCHAR LF@char1 LF@str1 LF@i
+GETCHAR LF@char2 LF@str2 LF@i
+GT LF@tmp_bool LF@char1 LF@char2
+JUMPIFEQ $strcmp_greater LF@tmp_bool bool@true
+LT LF@tmp_bool LF@char1 LF@char2
+JUMPIFEQ $strcmp_less LF@tmp_bool bool@true
+ADD LF@i LF@i int@1
+JUMP $strcmp_loop
+LABEL $strcmp_end
+SUB LF@tmp_int LF@len1 LF@len2
+JUMPIFEQ $strcmp_equal LF@tmp_int int@0
+GT LF@tmp_bool LF@len1 LF@len2
+JUMPIFEQ $strcmp_greater LF@tmp_bool bool@true
+JUMP $strcmp_less
+LABEL $strcmp_equal
+MOVE LF@retval int@0
+JUMP $strcmp_finish
+LABEL $strcmp_greater
+MOVE LF@retval int@1
+JUMP $strcmp_finish
+LABEL $strcmp_less
+MOVE LF@retval int@-1
+LABEL $strcmp_finish
 PUSHS LF@retval
-POPFRAME
-RETURN
-LABEL $substr_null
-PUSHS nil@nil
 POPFRAME
 RETURN
 LABEL ifj-string

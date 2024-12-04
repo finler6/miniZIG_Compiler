@@ -1,3 +1,15 @@
+/**
+ * @file tokens.h
+ *
+ * Header file for the token module. Contains the definition of the TokenType
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
+ */
 #ifndef TOKENS_H
 #define TOKENS_H
 

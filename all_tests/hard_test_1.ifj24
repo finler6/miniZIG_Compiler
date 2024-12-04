@@ -1,0 +1,36 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    ifj.write("=== Test 1: Advanced String and Array Operations ===\n");
+
+    // Initial strings
+    const str1 = ifj.string("Array elements: ");
+    const elements = ifj.string("1,2,3,4,5");
+
+    // Concatenation
+    var result = ifj.concat(str1, elements);
+    ifj.write("Concatenated string: "); ifj.write(result); ifj.write("\n");
+
+    // Splitting the array-like string manually (comma-separated)
+    var position: i32 = 0;
+    var array_length = ifj.length(elements);
+    while (position < array_length) {
+        const element = ifj.substring(elements, position, position + 1);
+        if (element) |e| {
+            if (ifj.ord(e, 0) != 44) { // Ignore commas (ASCII 44)
+                ifj.write("Array element: "); ifj.write(e); ifj.write("\n");
+            }
+        }
+        position = position + 2; // Skip to next number (and comma)
+    }
+
+    // Check handling of invalid indices
+    const invalid_substring = ifj.substring(elements, 10, 15);
+    if (invalid_substring) {
+        ifj.write("Error: Invalid substring did not return null!\n");
+    } else {
+        ifj.write("Invalid substring correctly returned null\n");
+    }
+
+    ifj.write("=== End of Test 1 ===\n");
+}

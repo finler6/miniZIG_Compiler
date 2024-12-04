@@ -1,3 +1,16 @@
+/**
+ * @file symtable.h
+ *
+ * Header file for the symbol table module.
+ * The symbol table is implemented as a hash table.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
+ */
 #ifndef SYMTABLE_H
 #define SYMTABLE_H
 

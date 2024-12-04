@@ -1,0 +1,39 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    ifj.write("=== Test 2: Recursive Algorithms and Type Compatibility ===\n");
+
+    // Fibonacci sequence using recursion
+    var n: i32 = 10; // Number of terms
+    ifj.write("Fibonacci sequence up to 10 terms:\n");
+    var index: i32 = 0;
+    while (index < n) {
+        const term = fibonacci(index);
+        ifj.write(term); ifj.write(" ");
+        index = index + 1;
+    }
+    ifj.write("\n");
+
+    // Type compatibility test: Converting f64 to i32
+    var float_num: f64 = 9.75;
+    const rounded_num = ifj.f2i(float_num);
+    ifj.write("Rounded integer from 9.75: "); ifj.write(rounded_num); ifj.write("\n");
+
+    // Type compatibility: Check implicit type mismatch
+    const result = calculate_area(3, 5.5); // Mix of i32 and f64
+    ifj.write("Calculated area (mixing i32 and f64): "); ifj.write(result); ifj.write("\n");
+
+    ifj.write("=== End of Test 2 ===\n");
+}
+
+// Recursive Fibonacci
+pub fn fibonacci(n: i32) i32 {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Function mixing i32 and f64
+pub fn calculate_area(length: i32, width: f64) f64 {
+    return ifj.i2f(length) * width;
+}

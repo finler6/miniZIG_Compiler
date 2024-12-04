@@ -1,0 +1,102 @@
+const ifj = @import("ifj24.zig");
+
+// Main function of the program
+pub fn main() void {
+    ifj.write("=== Start of comprehensive IFJ24 test ===\n");
+
+    // Testing arithmetic and type conversions
+    var a: i32 = 5;
+    var b: f64 = 2.5;
+    var result: f64 = b * ifj.i2f(a) + 10.0 / 2.0; // 2.5 * 5 + 5.0 = 17.5
+    ifj.write("Arithmetic result: "); ifj.write(result); ifj.write("\n");
+
+    // Testing null handling
+    var maybe_null: ?i32 = null;
+    if (maybe_null) |value| {
+        ifj.write("Unexpected result: null is not null!\n");
+    } else {
+        ifj.write("Null handling: Everything is correct, value is null\n");
+    }
+
+    // Reassigning maybe_null and testing again
+    maybe_null = 42;
+    if (maybe_null) |value| {
+        ifj.write("Value after reassignment: "); ifj.write(value); ifj.write("\n");
+    } else {
+        ifj.write("Unexpected error: value is still null!\n");
+    }
+
+    // Working with strings
+    const str1 = ifj.string("Hello, world!");
+    const str2 = ifj.string(" How are you?");
+    var concatenated = ifj.concat(str1, str2);
+    ifj.write("String concatenation result: "); ifj.write(concatenated); ifj.write("\n");
+
+    // Checking string length
+    const length = ifj.length(concatenated);
+    ifj.write("Length of concatenated string: "); ifj.write(length); ifj.write("\n");
+
+    // Working with substrings
+    const substr = ifj.substring(concatenated, 8, 12);
+    if (substr) |sub| {
+        ifj.write("Substring: "); ifj.write(sub); ifj.write("\n");
+    } else {
+        ifj.write("Error in substring handling!\n");
+    }
+
+    // Recursion: factorial calculation
+    const fact_res = factorial(5); // 5! = 120
+    ifj.write("Factorial of 5: "); ifj.write(fact_res); ifj.write("\n");
+
+    // Loops: testing while loop
+    var counter: i32 = 0;
+    var sum: i32 = 0;
+    while (counter < 10) {
+        sum = sum + counter;
+        counter = counter + 1;
+    }
+    ifj.write("Sum of numbers from 0 to 9: "); ifj.write(sum); ifj.write("\n");
+
+    // Working with functions and parameters
+    const pow_result = power(2, 10); // 2^10 = 1024
+    ifj.write("2 raised to the power of 10: "); ifj.write(pow_result); ifj.write("\n");
+
+    // Testing comparison logic
+    if (a < 10) {
+        ifj.write("Comparison: 5 is less than 10 - correct\n");
+    } else {
+        ifj.write("Comparison: error in < operator\n");
+    }
+
+    // Complex use of string functions
+    const compare_res = ifj.strcmp(ifj.string("abc"), ifj.string("abc"));
+    ifj.write("String comparison (\"abc\" and \"abc\"): "); ifj.write(compare_res); ifj.write("\n");
+
+    const ord_res = ifj.ord(ifj.string("A"), 0);
+    ifj.write("ASCII code of 'A': "); ifj.write(ord_res); ifj.write("\n");
+
+    const chr_res = ifj.chr(65);
+    ifj.write("Character for ASCII 65: "); ifj.write(chr_res); ifj.write("\n");
+
+    ifj.write("=== End of comprehensive IFJ24 test ===\n");
+}
+
+// Factorial calculation using recursion
+pub fn factorial(n: i32) i32 {
+    if (n < 2) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// Function for exponentiation
+pub fn power(base: i32, exp: i32) i32 {
+    var result: i32 = 1;
+    var count: i32 = exp;
+    while (count > 0) {
+        result = result * base;
+        count = count - 1;
+    }
+    return result;
+}

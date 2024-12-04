@@ -1,0 +1,41 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    ifj.write("=== Test 3: Complex Nested Conditionals and Loops ===\n");
+
+    var outer_counter: i32 = 0;
+    var total_sum: i32 = 0;
+
+    // Nested loops with conditionals
+    while (outer_counter < 5) {
+        ifj.write("Outer loop iteration: "); ifj.write(outer_counter); ifj.write("\n");
+        var inner_counter: i32 = 0;
+
+        while (inner_counter <= outer_counter) {
+            if (inner_counter % 2 == 0) {
+                total_sum = total_sum + inner_counter;
+            }
+            inner_counter = inner_counter + 1;
+        }
+        outer_counter = outer_counter + 1;
+    }
+
+    ifj.write("Total sum of even numbers in nested loops: "); ifj.write(total_sum); ifj.write("\n");
+
+    // Complex condition: Working with null and non-null values
+    var maybe_null: ?i32 = null;
+    if (maybe_null) |value| {
+        ifj.write("Unexpected non-null value: "); ifj.write(value); ifj.write("\n");
+    } else {
+        maybe_null = 50;
+        ifj.write("Assigned non-null value: "); ifj.write(maybe_null); ifj.write("\n");
+    }
+
+    // Verify null safety
+    if (maybe_null) |value| {
+        const comparison = value > 10 ? ifj.string("greater") : ifj.string("less or equal");
+        ifj.write("Value is "); ifj.write(comparison); ifj.write(" than 10\n");
+    }
+
+    ifj.write("=== End of Test 3 ===\n");
+}

@@ -1,6 +1,15 @@
-/*
- * Symbol table implementation for IFJ24 compiler
- * This implementation uses a hash table with chaining (TRP-izp).
+/**
+ * @file symtable.c
+ *
+ * Implementation of the symbol table data structure and its operations.
+ * The symbol table is implemented as a hash table with separate chaining.
+ *
+ * IFJ Project 2024, Team 'xstepa77'
+ *
+ * @author <xlitvi02> Gleb Litvinchuk
+ * @author <xstepa77> Pavel Stepanov
+ * @author <xkovin00> Viktoriia Kovina
+ * @author <xshmon00> Gleb Shmonin
  */
 
 #include "symtable.h"
@@ -29,11 +38,7 @@ void symtable_init(SymTable *symtable)
 {
     symtable->size = INITIAL_SYMTABLE_SIZE;
     symtable->count = 0;
-    symtable->table = (Symbol **)malloc(sizeof(Symbol) * symtable->size);
-    if (symtable->table == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed");
-    }
+    symtable->table = (Symbol **)safe_malloc(sizeof(Symbol) * symtable->size);
     for (int i = 0; i < symtable->size; i++)
     {
         symtable->table[i] = NULL;
@@ -48,21 +53,11 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
     import_node = import_node;
     for (size_t i = 0; i < num_functions; i++)
     {
-        char *name_with_prefix = (char *)malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
-        if (name_with_prefix == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function name.");
-        }
-
+        char *name_with_prefix = (char *)safe_malloc(strlen("ifj.") + strlen(builtin_functions[i].name) + 1);
         strcpy(name_with_prefix, "ifj.");
         strcat(name_with_prefix, builtin_functions[i].name);
 
-        Symbol *new_function = (Symbol *)malloc(sizeof(Symbol));
-        if (new_function == NULL)
-        {
-            error_exit(ERR_INTERNAL, "Memory allocation failed for built-in function symbol.");
-        }
-
+        Symbol *new_function = (Symbol *)safe_malloc(sizeof(Symbol));
         new_function->name = name_with_prefix;
         new_function->symbol_type = SYMBOL_FUNCTION;
         new_function->data_type = builtin_functions[i].return_type;
@@ -77,7 +72,7 @@ void load_builtin_functions(SymTable *symtable, ASTNode *import_node)
 
 void insert_underscore(SymTable *symtable)
 {
-    Symbol *underscore = (Symbol *)malloc(sizeof(Symbol));
+    Symbol *underscore = (Symbol *)safe_malloc(sizeof(Symbol));
     underscore->name = "_";
     underscore->symbol_type = SYMBOL_VARIABLE;
     underscore->data_type = TYPE_ALL;
@@ -99,11 +94,11 @@ void symtable_free(SymTable *symtable)
         {
             Symbol *temp = symbol;
             symbol = symbol->next;
-            free(temp->name); // Free symbol name
-            free(temp);       // Free symbol structure
+            safe_free(temp->name); // Free symbol name
+            safe_free(temp);       // Free symbol structure
         }
     }
-    free(symtable->table);
+    safe_free(symtable->table);
     symtable->table = NULL;
     symtable->size = 0;
     symtable->count = 0;
@@ -225,11 +220,11 @@ void is_symtable_all_used(SymTable *symtable)
 void is_main_correct(SymTable *symtable)
 {
     Symbol *main = symtable_search(symtable, "main");
-    if(main == NULL)
+    if (main == NULL)
         error_exit(ERR_SEMANTIC_UNDEF, "Funtion \"main\" is not defined");
-    if(main->declaration_node->parameters != NULL)
+    if (main->declaration_node->parameters != NULL)
         error_exit(ERR_SEMANTIC_PARAMS, "Function \"main\" must have no parameters");
-    if(main->data_type != TYPE_VOID)
+    if (main->data_type != TYPE_VOID)
         error_exit(ERR_SEMANTIC_PARAMS, "Function \"main\" must have no parameters");
 
     return;
@@ -253,8 +248,8 @@ void symtable_remove(SymTable *symtable, char *key)
             {
                 prev->next = current->next;
             }
-            free(current->name);
-            free(current);
+            safe_free(current->name);
+            safe_free(current);
             symtable->count--;
             return;
         }
@@ -271,12 +266,7 @@ static void symtable_grow(SymTable *symtable)
     Symbol **old_table = symtable->table;
 
     // Allocate new, larger table
-    symtable->table = (Symbol **)malloc(sizeof(Symbol *) * symtable->size);
-    if (symtable->table == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed during resizing");
-    }
-
+    symtable->table = (Symbol **)safe_malloc(sizeof(Symbol *) * symtable->size);
     // Initialize the new table
     for (int i = 0; i < symtable->size; i++)
     {
@@ -298,5 +288,5 @@ static void symtable_grow(SymTable *symtable)
     }
 
     // Free the old table
-    free(old_table);
+    safe_free(old_table);
 }

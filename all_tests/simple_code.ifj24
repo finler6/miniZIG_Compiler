@@ -1,0 +1,12 @@
+const ifj = @import("ifj24.zig");
+
+pub fn main() void {
+    var a = 5;
+    a = 9;
+    ifj.write(a);
+    ifj.write("\n");
+    var b = 6.5;
+    b = b + ifj.i2f(a);
+    b = b + ifj.i2f(a);
+    ifj.write(b);
+}

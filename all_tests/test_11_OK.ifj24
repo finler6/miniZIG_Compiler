@@ -1,0 +1,10 @@
+const ifj = @import("ifj24.zig");
+
+pub fn square(x: i32) i32 {
+    return x * x;
+}
+
+pub fn main() void {
+    const result: i32 = square(5);
+    ifj.write(result); // Должно напечатать 25
+}
