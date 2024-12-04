@@ -1,55 +1,40 @@
 /**
  * @file codegen.c
  *
- * Codegen module implementation
+ * Code generation module implementation.
  *
  * IFJ Project 2024, Team 'xstepa77'
  *
- * @author <xlitvi02> Gleb Litvinchuk
- * @author <xstepa77> Pavel Stepanov
- * @author <xkovin00> Viktoriia Kovin
- * @author <xshmon00> Gleb Shmonin
+ * @author
+ *   <xlitvi02> Gleb Litvinchuk
+ *   <xstepa77> Pavel Stepanov
+ *   <xkovin00> Viktoriia Kovin
+ *   <xshmon00> Gleb Shmonin
  */
 
 #include "codegen.h"
 #include "ast.h"
 #include "parser.h"
-#include "scanner.h"
-#include "symtable.h"
 #include "utils.h"
-#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct
-{
-    bool uses_substring;
-    bool uses_strcmp;
-    bool uses_string;
-} BuiltinFunctionUsage;
-
-typedef struct TempVarMapEntry
-{
-    ASTNode *node;
-    char *key; // New key identifier
-    char *var_name;
-    struct TempVarMapEntry *next;
-} TempVarMapEntry;
-
 static TempVarMapEntry *temp_var_map = NULL;
-
 static int unique_var_counter = 0;
-
 static int temp_var_counter = 0;
+static BuiltinFunctionUsage builtin_function_usage = {false, false, false};
 
-int get_next_temp_var()
-{
+DeclaredVar *declared_vars = NULL;
+TempVar *temp_vars = NULL;
+
+/** Global variable for storing the output file */
+static FILE *output_file;
+
+int get_next_temp_var() {
     return temp_var_counter++;
 }
-
-static BuiltinFunctionUsage builtin_function_usage = {false, false, false};
 
 #undef DEBUG_PARSER
 #ifdef DEBUG_PARSER
@@ -57,32 +42,14 @@ static BuiltinFunctionUsage builtin_function_usage = {false, false, false};
 #else
 #define LOG(...)
 #endif
-// Global variable for storing the output file
-static FILE *output_file;
 
-typedef struct DeclaredVar
-{
-    char *var_name;
-    struct DeclaredVar *next;
-} DeclaredVar;
-
-DeclaredVar *declared_vars = NULL;
-
-typedef struct TempVar
-{
-    char *name;
-    struct TempVar *next;
-} TempVar;
-
-TempVar *temp_vars = NULL;
-
-void add_temp_var(const char *var_name)
-{
+/**
+ * Adds a temporary variable to the list if not already added.
+ */
+void add_temp_var(const char *var_name) {
     TempVar *current = temp_vars;
-    while (current)
-    {
-        if (strcmp(current->name, var_name) == 0)
-        {
+    while (current) {
+        if (strcmp(current->name, var_name) == 0) {
             return; // Variable already added
         }
         current = current->next;
@@ -94,11 +61,12 @@ void add_temp_var(const char *var_name)
     temp_vars = new_var;
 }
 
-void reset_temp_vars()
-{
+/**
+ * Resets the list of temporary variables.
+ */
+void reset_temp_vars() {
     TempVar *current = temp_vars;
-    while (current)
-    {
+    while (current) {
         TempVar *next = current->next;
         safe_free(current->name);
         safe_free(current);
@@ -107,13 +75,13 @@ void reset_temp_vars()
     temp_vars = NULL;
 }
 
-bool is_variable_declared(const char *var_name)
-{
+/**
+ * Checks if a variable is already declared.
+ */
+bool is_variable_declared(const char *var_name) {
     DeclaredVar *current = declared_vars;
-    while (current)
-    {
-        if (strcmp(current->var_name, var_name) == 0)
-        {
+    while (current) {
+        if (strcmp(current->var_name, var_name) == 0) {
             return true;
         }
         current = current->next;
@@ -121,11 +89,12 @@ bool is_variable_declared(const char *var_name)
     return false;
 }
 
-void add_declared_variable(const char *var_name)
-{
-    if (is_variable_declared(var_name))
-    {
-        // Переменная уже добавлена, не добавляем повторно
+/**
+ * Adds a declared variable to the list if not already declared.
+ */
+void add_declared_variable(const char *var_name) {
+    if (is_variable_declared(var_name)) {
+        // Variable already declared, do not add again
         return;
     }
     DeclaredVar *new_var = safe_malloc(sizeof(DeclaredVar));
@@ -134,11 +103,12 @@ void add_declared_variable(const char *var_name)
     declared_vars = new_var;
 }
 
-void reset_temp_var_map()
-{
+/**
+ * Resets the temporary variable map.
+ */
+void reset_temp_var_map() {
     TempVarMapEntry *entry = temp_var_map;
-    while (entry != NULL)
-    {
+    while (entry != NULL) {
         TempVarMapEntry *next = entry->next;
         safe_free(entry->var_name);
         safe_free(entry->key);
@@ -148,11 +118,12 @@ void reset_temp_var_map()
     temp_var_map = NULL;
 }
 
-void reset_declared_variables()
-{
+/**
+ * Resets the list of declared variables.
+ */
+void reset_declared_variables() {
     DeclaredVar *current = declared_vars;
-    while (current)
-    {
+    while (current) {
         DeclaredVar *next = current->next;
         safe_free(current->var_name);
         safe_free(current);
@@ -161,14 +132,16 @@ void reset_declared_variables()
     declared_vars = NULL;
 }
 
-char *generate_unique_var_name(const char *base_name, ASTNode *node, const char *key)
-{
+/**
+ * Generates a unique variable name based on a base name.
+ * Optionally maps the variable name to an AST node and key.
+ */
+char *generate_unique_var_name(const char *base_name, ASTNode *node, const char *key) {
     char *var_name = safe_malloc(64);
     snprintf(var_name, 64, "%%%s_%d", base_name, unique_var_counter++);
     add_temp_var(var_name); // Add to temp variable list
 
-    if (node != NULL && key != NULL)
-    {
+    if (node != NULL && key != NULL) {
         // Map the AST node and key to the variable name
         TempVarMapEntry *new_entry = safe_malloc(sizeof(TempVarMapEntry));
         new_entry->node = node;
@@ -181,13 +154,13 @@ char *generate_unique_var_name(const char *base_name, ASTNode *node, const char 
     return var_name;
 }
 
-char *get_temp_var_name_for_node(ASTNode *node, const char *key)
-{
+/**
+ * Retrieves the temporary variable name associated with a given AST node and key.
+ */
+char *get_temp_var_name_for_node(ASTNode *node, const char *key) {
     TempVarMapEntry *entry = temp_var_map;
-    while (entry != NULL)
-    {
-        if (entry->node == node && strcmp(entry->key, key) == 0)
-        {
+    while (entry != NULL) {
+        if (entry->node == node && strcmp(entry->key, key) == 0) {
             return entry->var_name;
         }
         entry = entry->next;
@@ -196,27 +169,10 @@ char *get_temp_var_name_for_node(ASTNode *node, const char *key)
     exit(1);
 }
 
-void codegen_generate_function(ASTNode *function_node);
-void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function);
-void codegen_generate_statement(FILE *output, ASTNode *statement_node, const char *current_function);
-void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function);
-void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function);
-void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node);
-void codegen_generate_assignment(FILE *output, ASTNode *assignment_node);
-void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function);
-void codegen_generate_if(FILE *output, ASTNode *if_node);
-void codegen_generate_while(FILE *output, ASTNode *while_node);
-void codegen_generate_builtin_functions();
-void codegen_declare_variables_in_statement(FILE *output, ASTNode *node);
-void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node);
-
-void collect_variables_in_statement(ASTNode *node);
-void collect_variables_in_block(ASTNode *node);
-void collect_variables_in_function_call(ASTNode *node);
-void collect_variables_in_expression(ASTNode *node);
-
-void collect_builtin_function_usage(ASTNode *node)
-{
+/**
+ * Collects usage information of built-in functions in the AST.
+ */
+void collect_builtin_function_usage(ASTNode *node) {
     if (!node)
         return;
 
@@ -305,8 +261,10 @@ void collect_builtin_function_usage(ASTNode *node)
     }
 }
 
-void codegen_generate_substring_function()
-{
+/**
+ * Generates the built-in 'substring' function code if used.
+ */
+void codegen_generate_substring_function() {
     fprintf(output_file,
             "LABEL ifj-substring\n"
             "CREATEFRAME\n"
@@ -365,8 +323,10 @@ void codegen_generate_substring_function()
             "RETURN\n");
 }
 
-void codegen_generate_strcmp_function()
-{
+/**
+ * Generates the built-in 'strcmp' function code if used.
+ */
+void codegen_generate_strcmp_function() {
     fprintf(output_file,
             "LABEL ifj-strcmp\n"
             "CREATEFRAME\n"
@@ -420,8 +380,10 @@ void codegen_generate_strcmp_function()
             "RETURN\n");
 }
 
-void codegen_generate_ifj_string_function()
-{
+/**
+ * Generates the built-in 'string' function code if used.
+ */
+void codegen_generate_ifj_string_function() {
     fprintf(output_file,
             "LABEL ifj-string\n"
             "CREATEFRAME\n"
@@ -433,37 +395,35 @@ void codegen_generate_ifj_string_function()
             "RETURN\n");
 }
 
-void codegen_generate_builtin_functions()
-{
-    if (builtin_function_usage.uses_substring)
-    {
+/**
+ * Generates code for all used built-in functions.
+ */
+void codegen_generate_builtin_functions() {
+    if (builtin_function_usage.uses_substring) {
         codegen_generate_substring_function();
     }
-    if (builtin_function_usage.uses_strcmp)
-    {
+    if (builtin_function_usage.uses_strcmp) {
         codegen_generate_strcmp_function();
     }
-    if (builtin_function_usage.uses_string)
-    {
+    if (builtin_function_usage.uses_string) {
         codegen_generate_ifj_string_function();
     }
 }
 
-const char *remove_last_prefix(const char *name)
-{
+/**
+ * Removes the last prefix from a variable or function name (e.g., module prefix).
+ */
+const char *remove_last_prefix(const char *name) {
     static char buffer[1024];
-    if (!name)
-    {
+    if (!name) {
         return NULL;
     }
 
     const char *last_dot = strrchr(name, '.');
-    if (last_dot && *(last_dot + 1) != '\0')
-    {
+    if (last_dot && *(last_dot + 1) != '\0') {
         size_t new_len = last_dot - name;
-        if (new_len >= sizeof(buffer))
-        {
-            fprintf(stderr, "Error: Buffer overflow in remove_last_suffix.\n");
+        if (new_len >= sizeof(buffer)) {
+            fprintf(stderr, "Error: Buffer overflow in remove_last_prefix.\n");
             exit(EXIT_FAILURE);
         }
         strncpy(buffer, name, new_len);
@@ -473,68 +433,47 @@ const char *remove_last_prefix(const char *name)
     return name;
 }
 
-/*void collect_functions(ASTNode *program_node) {
-    ASTNode *current_function = program_node->body;
-
-    while (current_function) {
-        if (current_function->type == NODE_FUNCTION) {
-            function_count++;
-            functions = realloc(functions, function_count * sizeof(FunctionInfo));
-            functions[function_count - 1].name = string_duplicate(current_function->name);
-            functions[function_count - 1].param_count = current_function->param_count;
-
-            if (current_function->param_count > 0) {
-                functions[function_count - 1].parameters = malloc(current_function->param_count * sizeof(char *));
-                for (int i = 0; i < current_function->param_count; i++) {
-                    functions[function_count - 1].parameters[i] = strdup(current_function->parameters[i]->name);
-                }
-            } else {
-                functions[function_count - 1].parameters = NULL;
-            }
-        }
-        current_function = current_function->next;
-    }
-}*/
-
 char *escape_ifj24_string(const char *input);
+
 static int label_counter = 0;
 
-int generate_unique_label()
-{
+/**
+ * Generates a unique label number.
+ */
+int generate_unique_label() {
     return label_counter++;
 }
-// Initialize code generator
-void codegen_init(const char *filename)
-{
-    if (filename)
-    {
+
+/**
+ * Initializes the code generator with the specified output file.
+ */
+void codegen_init(const char *filename) {
+    if (filename) {
         output_file = fopen(filename, "w");
-        if (!output_file)
-        {
+        if (!output_file) {
             fprintf(stderr, "Error: Cannot open output file %s for writing.\n", filename);
-            exit(EXIT_FAILURE);
+            exit(1);
         }
-    }
-    else
-    {
+    } else {
         output_file = stdout;
     }
 }
 
-// Finalize code generation
-void codegen_finalize()
-{
-    if (output_file)
-    {
+/**
+ * Finalizes the code generator and closes the output file.
+ */
+void codegen_finalize() {
+    if (output_file) {
         fclose(output_file);
         output_file = NULL;
     }
 }
 
-void codegen_generate_program(ASTNode *program_node)
-{
-    if (!program_node || program_node->type != NODE_PROGRAM)
-    {
+/**
+ * Generates code for the entire program.
+ */
+void codegen_generate_program(ASTNode *program_node) {
+    if (!program_node || program_node->type != NODE_PROGRAM) {
         LOG(stderr, "DEBUG: Invalid program node.\n");
         return;
     }
@@ -550,10 +489,8 @@ void codegen_generate_program(ASTNode *program_node)
 
     ASTNode *current_function = program_node->body;
 
-    while (current_function)
-    {
-        if (current_function->type == NODE_FUNCTION)
-        {
+    while (current_function) {
+        if (current_function->type == NODE_FUNCTION) {
             LOG(stderr, "DEBUG: Found function '%s'. Generating its code.\n", current_function->name);
             codegen_generate_function(current_function);
         }
@@ -563,20 +500,22 @@ void codegen_generate_program(ASTNode *program_node)
     codegen_generate_builtin_functions();
 }
 
-bool is_function_parameter(ASTNode *function, const char *var_name)
-{
-    for (int i = 0; i < function->param_count; i++)
-    {
-        if (strcmp(remove_last_prefix(function->parameters[i]->name), var_name) == 0)
-        {
+/**
+ * Checks if a variable name corresponds to a function parameter.
+ */
+bool is_function_parameter(ASTNode *function, const char *var_name) {
+    for (int i = 0; i < function->param_count; i++) {
+        if (strcmp(remove_last_prefix(function->parameters[i]->name), var_name) == 0) {
             return true;
         }
     }
     return false;
 }
 
-void codegen_generate_function(ASTNode *function)
-{
+/**
+ * Generates code for a function.
+ */
+void codegen_generate_function(ASTNode *function) {
     reset_temp_var_map();
     reset_declared_variables();
     reset_temp_vars(); // Reset temporary variables
@@ -586,8 +525,7 @@ void codegen_generate_function(ASTNode *function)
     fprintf(output_file, "PUSHFRAME\n");
 
     // Declare function parameters
-    for (int i = 0; i < function->param_count; i++)
-    {
+    for (int i = 0; i < function->param_count; i++) {
         const char *param_name = remove_last_prefix(function->parameters[i]->name);
         fprintf(output_file, "DEFVAR LF@%s\n", param_name);
         fprintf(output_file, "POPS LF@%s\n", param_name);
@@ -607,15 +545,13 @@ void codegen_generate_function(ASTNode *function)
 
     // Declare all variables collected (excluding parameters and standard temporary variables)
     DeclaredVar *current_declared_var = declared_vars;
-    while (current_declared_var)
-    {
+    while (current_declared_var) {
         const char *var_name = current_declared_var->var_name;
         // Skip parameters and standard temporary variables
         if (strcmp(var_name, "%%tmp_type") != 0 &&
             strcmp(var_name, "%%tmp_var") != 0 &&
             strcmp(var_name, "%%tmp_bool") != 0 &&
-            !is_function_parameter(function, var_name))
-        {
+            !is_function_parameter(function, var_name)) {
             fprintf(output_file, "DEFVAR LF@%s\n", var_name);
         }
         current_declared_var = current_declared_var->next;
@@ -623,8 +559,7 @@ void codegen_generate_function(ASTNode *function)
 
     // Declare all temporary variables collected
     TempVar *current_temp_var = temp_vars;
-    while (current_temp_var)
-    {
+    while (current_temp_var) {
         const char *var_name = current_temp_var->name;
         fprintf(output_file, "DEFVAR LF@%s\n", var_name);
         current_temp_var = current_temp_var->next;
@@ -637,20 +572,22 @@ void codegen_generate_function(ASTNode *function)
     fprintf(output_file, "RETURN\n");
 }
 
-void collect_variables_in_block(ASTNode *block_node)
-{
+/**
+ * Collects variables used in a block.
+ */
+void collect_variables_in_block(ASTNode *block_node) {
     ASTNode *current = block_node->body;
-    while (current)
-    {
+    while (current) {
         collect_variables_in_statement(current);
         current = current->next;
     }
 }
 
-void collect_variables_in_statement(ASTNode *node)
-{
-    if (node == NULL)
-    {
+/**
+ * Collects variables used in a statement.
+ */
+void collect_variables_in_statement(ASTNode *node) {
+    if (node == NULL) {
         return;
     }
 
@@ -700,37 +637,32 @@ void collect_variables_in_statement(ASTNode *node)
     }
 }
 
-void collect_variables_in_function_call(ASTNode *node)
-{
-    if (node == NULL || node->type != NODE_FUNCTION_CALL)
-    {
+/**
+ * Collects variables used in a function call.
+ */
+void collect_variables_in_function_call(ASTNode *node) {
+    if (node == NULL || node->type != NODE_FUNCTION_CALL) {
         fprintf(stderr, "Invalid function call node for variable collection\n");
         exit(1);
     }
 
-    if (strcmp(node->name, "ifj.write") == 0)
-    {
+    if (strcmp(node->name, "ifj.write") == 0) {
         ASTNode *arg = node->arguments[0];
         collect_variables_in_expression(arg);
 
         // Associate temp_var_name with 'arg' using key "temp_var"
         generate_unique_var_name("temp", arg, "temp_var");
 
-        if (is_nullable(arg->data_type))
-        {
+        if (is_nullable(arg->data_type)) {
             // Associate temp_type_name with 'arg' using key "temp_type"
             generate_unique_var_name("tmp_type", arg, "temp_type");
         }
-    }
-    else if (strcmp(node->name, "ifj.readi32") == 0 ||
-             strcmp(node->name, "ifj.readf64") == 0 ||
-             strcmp(node->name, "ifj.readstr") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.readi32") == 0 ||
+               strcmp(node->name, "ifj.readf64") == 0 ||
+               strcmp(node->name, "ifj.readstr") == 0) {
         // Associate retval_var with 'node' using key "retval_var"
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else if (strcmp(node->name, "ifj.length") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.length") == 0) {
         collect_variables_in_expression(node->arguments[0]);
 
         // Associate tmp_str_var with 'node->arguments[0]' using key "tmp_str_var"
@@ -738,9 +670,7 @@ void collect_variables_in_function_call(ASTNode *node)
 
         // Associate retval_var with 'node' using key "retval_var"
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else if (strcmp(node->name, "ifj.concat") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.concat") == 0) {
         collect_variables_in_expression(node->arguments[0]);
         collect_variables_in_expression(node->arguments[1]);
 
@@ -750,10 +680,8 @@ void collect_variables_in_function_call(ASTNode *node)
 
         // Associate retval_var with 'node' using key "retval_var"
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else if (strcmp(node->name, "ifj.i2f") == 0 ||
-             strcmp(node->name, "ifj.f2i") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.i2f") == 0 ||
+               strcmp(node->name, "ifj.f2i") == 0) {
         collect_variables_in_expression(node->arguments[0]);
 
         // Associate tmp_var with 'node->arguments[0]' using key "tmp_var"
@@ -761,19 +689,14 @@ void collect_variables_in_function_call(ASTNode *node)
 
         // Associate retval_var with 'node' using key "retval_var"
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else if (strcmp(node->name, "ifj.substring") == 0 ||
-             strcmp(node->name, "ifj.strcmp") == 0 ||
-             strcmp(node->name, "ifj.string") == 0)
-    {
-        for (int i = 0; i < node->arg_count; ++i)
-        {
+    } else if (strcmp(node->name, "ifj.substring") == 0 ||
+               strcmp(node->name, "ifj.strcmp") == 0 ||
+               strcmp(node->name, "ifj.string") == 0) {
+        for (int i = 0; i < node->arg_count; ++i) {
             collect_variables_in_expression(node->arguments[i]);
         }
         // The built-in function handles variables internally
-    }
-    else if (strcmp(node->name, "ifj.chr") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.chr") == 0) {
         collect_variables_in_expression(node->arguments[0]);
 
         // Associate tmp_int_var with 'node->arguments[0]' using key "tmp_int_var"
@@ -782,9 +705,7 @@ void collect_variables_in_function_call(ASTNode *node)
         // Associate tmp_temp_var and retval_var with 'node' using unique keys
         generate_unique_var_name("tmp_temp", node, "tmp_temp_var");
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else if (strcmp(node->name, "ifj.ord") == 0)
-    {
+    } else if (strcmp(node->name, "ifj.ord") == 0) {
         collect_variables_in_expression(node->arguments[0]); // String argument
         collect_variables_in_expression(node->arguments[1]); // Index argument
 
@@ -794,25 +715,22 @@ void collect_variables_in_function_call(ASTNode *node)
         generate_unique_var_name("strlen", node, "strlen_var");
         generate_unique_var_name("tmp_bool", node, "tmp_bool_var");
         generate_unique_var_name("retval", node, "retval_var");
-    }
-    else
-    {
+    } else {
         // User-defined function call
-        for (int i = 0; i < node->arg_count; ++i)
-        {
+        for (int i = 0; i < node->arg_count; ++i) {
             collect_variables_in_expression(node->arguments[i]);
         }
-        if (node->left)
-        {
+        if (node->left) {
             add_declared_variable(remove_last_prefix(node->left->name));
         }
     }
 }
 
-void collect_variables_in_expression(ASTNode *node)
-{
-    if (node == NULL)
-    {
+/**
+ * Collects variables used in an expression.
+ */
+void collect_variables_in_expression(ASTNode *node) {
+    if (node == NULL) {
         return;
     }
 
@@ -849,22 +767,22 @@ void collect_variables_in_expression(ASTNode *node)
     }
 }
 
-// Function to generate code for a block of statements
-void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function)
-{
+/**
+ * Generates code for a block of statements.
+ */
+void codegen_generate_block(FILE *output, ASTNode *block_node, const char *current_function) {
     ASTNode *current = block_node->body;
-    output = output;
-    while (current)
-    {
-        codegen_generate_statement(output_file, current, current_function);
+    while (current) {
+        codegen_generate_statement(output, current, current_function);
         current = current->next;
     }
 }
 
-void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function)
-{
-    if (node == NULL)
-    {
+/**
+ * Generates code for an expression.
+ */
+void codegen_generate_expression(FILE *output, ASTNode *node, const char *current_function) {
+    if (node == NULL) {
         LOG(stderr, "Node is NULL\n");
         return;
     }
@@ -1026,24 +944,23 @@ void codegen_generate_expression(FILE *output, ASTNode *node, const char *curren
     }
 }
 
-void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function)
-{
-    if (node == NULL || node->type != NODE_FUNCTION_CALL)
-    {
+/**
+ * Generates code for a function call.
+ */
+void codegen_generate_function_call(FILE *output, ASTNode *node, const char *current_function) {
+    if (node == NULL || node->type != NODE_FUNCTION_CALL) {
         fprintf(stderr, "Invalid function call node for code generation\n");
         exit(1);
     }
 
-    if (strcmp(node->name, "ifj.write") == 0)
-    {
+    if (strcmp(node->name, "ifj.write") == 0) {
         ASTNode *arg = node->arguments[0];
         codegen_generate_expression(output, arg, current_function);
 
         char *temp_var_name = get_temp_var_name_for_node(arg, "temp_var");
         fprintf(output, "POPS LF@%s\n", temp_var_name);
 
-        if (is_nullable(arg->data_type))
-        {
+        if (is_nullable(arg->data_type)) {
             char *temp_type_name = get_temp_var_name_for_node(arg, "temp_type");
             int label_num = generate_unique_label();
 
@@ -1056,9 +973,7 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
             fprintf(output, "LABEL $write_null_%d\n", label_num);
             fprintf(output, "WRITE string@null\n");
             fprintf(output, "LABEL $write_end_%d\n", label_num);
-        }
-        else
-        {
+        } else {
             fprintf(output, "WRITE LF@%s\n", temp_var_name);
         }
     }
@@ -1198,20 +1113,22 @@ void codegen_generate_function_call(FILE *output, ASTNode *node, const char *cur
     }
 }
 
-void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node)
-{
+/**
+ * Declares variables used in a block.
+ */
+void codegen_declare_variables_in_block(FILE *output, ASTNode *block_node) {
     ASTNode *current = block_node->body;
-    while (current)
-    {
+    while (current) {
         codegen_declare_variables_in_statement(output, current);
         current = current->next;
     }
 }
 
-void codegen_declare_variables_in_statement(FILE *output, ASTNode *node)
-{
-    if (node == NULL)
-    {
+/**
+ * Declares variables used in a statement.
+ */
+void codegen_declare_variables_in_statement(FILE *output, ASTNode *node) {
+    if (node == NULL) {
         return;
     }
 
@@ -1270,10 +1187,11 @@ void codegen_declare_variables_in_statement(FILE *output, ASTNode *node)
     }
 }
 
-void codegen_generate_statement(FILE *output, ASTNode *node, const char *current_function)
-{
-    if (node == NULL)
-    {
+/**
+ * Generates code for a statement.
+ */
+void codegen_generate_statement(FILE *output, ASTNode *node, const char *current_function) {
+    if (node == NULL) {
         fprintf(stderr, "Invalid statement node for code generation\n");
         exit(1);
     }
@@ -1321,10 +1239,11 @@ void codegen_generate_statement(FILE *output, ASTNode *node, const char *current
     }
 }
 
-void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node)
-{
-    if (!declaration_node || !declaration_node->name)
-    {
+/**
+ * Generates code for a variable declaration.
+ */
+void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_node) {
+    if (!declaration_node || !declaration_node->name) {
         fprintf(stderr, "Error: Invalid variable declaration.\n");
         exit(1);
     }
@@ -1336,26 +1255,30 @@ void codegen_generate_variable_declaration(FILE *output, ASTNode *declaration_no
     }
 }
 
-void codegen_generate_assignment(FILE *output, ASTNode *assignment_node)
-{
+/**
+ * Generates code for an assignment statement.
+ */
+void codegen_generate_assignment(FILE *output, ASTNode *assignment_node) {
     codegen_generate_expression(output, assignment_node->left, assignment_node->name);
     fprintf(output, "POPS LF@%s\n", remove_last_prefix(assignment_node->name));
 }
 
-void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function)
-{
-    if (return_node->left)
-    {
+/**
+ * Generates code for a return statement.
+ */
+void codegen_generate_return(FILE *output, ASTNode *return_node, const char *current_function) {
+    if (return_node->left) {
         codegen_generate_expression(output, return_node->left, current_function);
         // The return value is now on the stack
     }
-    // No need to pop into LF@%retval
     fprintf(output, "POPFRAME\n");
     fprintf(output, "RETURN\n");
 }
 
-void codegen_generate_if(FILE *output, ASTNode *if_node)
-{
+/**
+ * Generates code for an if statement.
+ */
+void codegen_generate_if(FILE *output, ASTNode *if_node) {
     static int if_label_count = 0;
 
     int current_label = if_label_count++;
@@ -1377,16 +1300,17 @@ void codegen_generate_if(FILE *output, ASTNode *if_node)
     fprintf(output, "JUMP $endif_%d\n", current_label);
 
     fprintf(output, "LABEL $else_%d\n", current_label);
-    if (if_node->left != NULL)
-    {
+    if (if_node->left != NULL) {
         codegen_generate_block(output, if_node->left, if_node->name);
     }
 
     fprintf(output, "LABEL $endif_%d\n", current_label);
 }
 
-void codegen_generate_while(FILE *output, ASTNode *while_node)
-{
+/**
+ * Generates code for a while loop.
+ */
+void codegen_generate_while(FILE *output, ASTNode *while_node) {
     int label_num = generate_unique_label();
     fprintf(output, "LABEL $while_start_%d\n", label_num);
 
@@ -1401,22 +1325,20 @@ void codegen_generate_while(FILE *output, ASTNode *while_node)
     fprintf(output, "LABEL $while_end_%d\n", label_num);
 }
 
-char *escape_ifj24_string(const char *input)
-{
+/**
+ * Escapes special characters in a string for IFJcode24.
+ */
+char *escape_ifj24_string(const char *input) {
     size_t length = strlen(input);
-    size_t buffer_size = length * 4 + 1; // reserve space for escaping
+    size_t buffer_size = length * 4 + 1; // Reserve space for escaping
     char *escaped_string = safe_malloc(buffer_size);
     size_t index = 0;
-    for (size_t i = 0; i < length; i++)
-    {
+    for (size_t i = 0; i < length; i++) {
         unsigned char c = input[i];
 
-        if (c <= 32 || c == 35 || c == 92 || c >= 127)
-        { // ASCII 0-32, 35 (#), 92 (\), 127+ (non-printable)
+        if (c <= 32 || c == 35 || c == 92 || c >= 127) { // ASCII 0-32, 35 (#), 92 (\), 127+ (non-printable)
             index += snprintf(escaped_string + index, buffer_size - index, "\\%03d", c);
-        }
-        else
-        {
+        } else {
             escaped_string[index++] = c;
         }
     }
