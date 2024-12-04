@@ -1,6 +1,11 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include "utils.h"
+
 // Error codes as per specification
 #define ERR_OK 0               // No error
 #define ERR_LEXICAL 1          // Lexical error

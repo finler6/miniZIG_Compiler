@@ -7,7 +7,7 @@ pub fn main() void {
     var a = 1;
     if(a == b)
     {
-
+sas
     }
     
     return;

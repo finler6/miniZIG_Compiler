@@ -284,10 +284,6 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     }
 
     char *function_name = string_duplicate(current_token.lexeme);
-    if (function_name == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for function name.");
-    }
     current_token = get_next_token(scanner);
 
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
@@ -298,6 +294,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     if (current_token.type != TOKEN_RIGHT_PAREN)
     {
         parameters = (ASTNode **)malloc(sizeof(ASTNode *));
+        add_pointer_to_storage(parameters);
         parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
         while (current_token.type == TOKEN_COMMA)
         {
@@ -362,14 +359,9 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         {
             error_exit(ERR_INTERNAL, "Memory allocation failed for new function symbol");
         }
+        add_pointer_to_storage(new_function);
 
         new_function->name = string_duplicate(function_name_symtable);
-        if (new_function->name == NULL)
-        {
-            free(new_function);
-            error_exit(ERR_INTERNAL, "Memory allocation failed for function name");
-        }
-
         new_function->symbol_type = SYMBOL_FUNCTION;
         new_function->parent_function = string_duplicate(function_name);
         new_function->data_type = return_type;
@@ -396,10 +388,6 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
 
     LOG("DEBUG_PARSER: current_token.lexeme before param: %s\n", current_token.lexeme);
     char *param_name = construct_variable_name(current_token.lexeme, function_name);
-    if (param_name == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for parameter name.");
-    }
 
     current_token = get_next_token(scanner);
 
@@ -411,7 +399,7 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     Symbol *param_symbol = symtable_search(&symtable, param_name);
     if (param_symbol != NULL && is_definition)
     {
-        free(param_name);
+       safe_free(param_name);
         error_exit(ERR_SEMANTIC_OTHER, "Parameter already defined.");
     }
 
@@ -421,9 +409,10 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
         Symbol *new_param = (Symbol *)malloc(sizeof(Symbol));
         if (new_param == NULL)
         {
-            free(param_name);
+           safe_free(param_name);
             error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
         }
+        add_pointer_to_storage(new_param);
 
         new_param->name = param_name;
         new_param->symbol_type = SYMBOL_PARAMETER;
@@ -634,6 +623,8 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         if (current_token.type != TOKEN_RIGHT_PAREN)
         {
             arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+            add_pointer_to_storage(arguments);
+
             arguments[arg_count++] = parse_expression(scanner, function_name);
             if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
             {
@@ -690,6 +681,8 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
         if (current_token.type != TOKEN_RIGHT_PAREN)
         {
             arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+            add_pointer_to_storage(arguments);
+
             arguments[arg_count++] = parse_expression(scanner, function_name);
 
             if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
@@ -829,10 +822,6 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
         error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
     }
     char *variable_name = construct_variable_name(current_token.lexeme, function_name);
-    if (variable_name == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for variable name.");
-    }
     current_token = get_next_token(scanner);
 
     DataType declaration_type = TYPE_UNKNOWN;
@@ -882,9 +871,11 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
     if (new_var == NULL)
     {
-        free(variable_name);
+       safe_free(variable_name);
         error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
     }
+    add_pointer_to_storage(new_var);
+
     new_var->name = variable_name;
     new_var->symbol_type = SYMBOL_VARIABLE;
     new_var->parent_function = string_duplicate(function_name);
@@ -935,9 +926,11 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
         if (new_var == NULL)
         {
-            free(variable_name);
+           safe_free(variable_name);
             error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
         }
+        add_pointer_to_storage(new_var);
+
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
         new_var->parent_function = string_duplicate(function_name);
@@ -1013,9 +1006,11 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         Symbol *new_var = (Symbol *)malloc(sizeof(Symbol));
         if (new_var == NULL)
         {
-            free(variable_name);
+           safe_free(variable_name);
             error_exit(ERR_INTERNAL, "Memory allocation failed for parameter symbol.");
         }
+        add_pointer_to_storage(new_var);
+
         new_var->name = variable_name;
         new_var->symbol_type = SYMBOL_VARIABLE;
         new_var->parent_function = string_duplicate(function_name);
@@ -1066,14 +1061,10 @@ ASTNode *convert_to_float_node(ASTNode *node)
         error_exit(ERR_SEMANTIC_TYPE, "Attempted to convert non-integer node to float.");
     }
     char *new_value = string_duplicate(node->value);
-    if (!new_value)
-    {
-        error_exit(ERR_INTERNAL, "Failed to allocate memory for float conversion.");
-    }
     add_decimal(new_value);
 
     ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, new_value);
-    free(new_value);
+   safe_free(new_value);
     return conversion_node;
 }
 
@@ -1349,6 +1340,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
             if (current_token.type != TOKEN_RIGHT_PAREN)
             {
                 arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+                add_pointer_to_storage(arguments);
                 arguments[arg_count++] = parse_expression(scanner, function_name);
                 if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
                 {
@@ -1400,6 +1392,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
                 if (current_token.type != TOKEN_RIGHT_PAREN)
                 {
                     arguments = (ASTNode **)malloc(sizeof(ASTNode *));
+                    add_pointer_to_storage(arguments);
                     arguments[arg_count++] = parse_expression(scanner, function_name);
                     if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
                     {

@@ -3,9 +3,6 @@
  * Authors: 
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include "error.h"
 
 void error_exit(int error_code, const char *format, ...) {
@@ -15,6 +12,7 @@ void error_exit(int error_code, const char *format, ...) {
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
     va_end(args);
+    cleanup_pointers_storage();
     exit(error_code);
 }
 

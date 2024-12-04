@@ -11,6 +11,7 @@
 #include "symtable.h"
 #include "ast.h" 
 #include "codegen.h" 
+#include "utils.h"
 
 int main(int argc, char *argv[]) {
     FILE *source_file = stdin; 
@@ -31,6 +32,8 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         output_filename = argv[2];
     }
+
+    init_pointers_storage(5);
 
     Scanner scanner;
     scanner_init(source_file, &scanner);
@@ -56,7 +59,9 @@ int main(int argc, char *argv[]) {
     scanner_free(&scanner);
 
 
-    free_ast_node(ast_root);
+    //free_ast_node(ast_root);
+
+    cleanup_pointers_storage();
 
 
     fclose(source_file);

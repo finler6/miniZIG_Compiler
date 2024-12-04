@@ -7,6 +7,12 @@
 
 ASTNode* create_program_node() {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_PROGRAM;
     node->left = node->right = node->next = node->condition = NULL;
     node->body = NULL; 
@@ -22,6 +28,12 @@ ASTNode* create_program_node() {
 
 ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parameters, int param_count, ASTNode* body) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_FUNCTION;
     node->data_type = return_type;
     node->name = string_duplicate(name);
@@ -38,6 +50,12 @@ ASTNode* create_function_node(char* name, DataType return_type, ASTNode** parame
 
 ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNode* initializer) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_VARIABLE_DECLARATION;
     node->data_type = data_type;
     node->name = string_duplicate(name);
@@ -53,6 +71,12 @@ ASTNode* create_variable_declaration_node(char* name, DataType data_type, ASTNod
 
 ASTNode* create_assignment_node(char* name, ASTNode* value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_ASSIGNMENT;
     node->name = string_duplicate(name);
     node->left = value;
@@ -66,6 +90,12 @@ ASTNode* create_assignment_node(char* name, ASTNode* value) {
 
 ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, ASTNode* right) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_BINARY_OPERATION;
     node->data_type = left->data_type;
     node->left = left;
@@ -83,6 +113,12 @@ ASTNode* create_binary_operation_node(const char* operator_name, ASTNode* left, 
 
 ASTNode* create_literal_node(DataType type, char* value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+    add_pointer_to_storage(node);
+
     node->type = NODE_LITERAL;
     node->data_type = type;
     node->value = string_duplicate(value);
@@ -98,6 +134,12 @@ ASTNode* create_literal_node(DataType type, char* value) {
 
 ASTNode* create_identifier_node(char* name) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
+
     node->type = NODE_IDENTIFIER;
     node->name = string_duplicate(name);
     node->left = node->right = node->next = node->condition = node->body = NULL;
@@ -111,6 +153,12 @@ ASTNode* create_identifier_node(char* name) {
 
 ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_block, ASTNode *var_without_null) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
+
     node->type = NODE_IF;
     node->data_type = true_block->data_type;
     node->condition = condition;
@@ -120,6 +168,11 @@ ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_
     node->name = NULL;
     node->value = NULL;
     node->parameters = (ASTNode **)malloc(sizeof(ASTNode *));
+    if(node->parameters == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode parameters failed");
+    }
+    add_pointer_to_storage(node->parameters);
     node->parameters[0] = var_without_null;
     node->param_count = 0;
     node->arguments = NULL;
@@ -129,6 +182,12 @@ ASTNode* create_if_node(ASTNode* condition, ASTNode* true_block, ASTNode* false_
 
 ASTNode* create_while_node(ASTNode* condition, ASTNode* body) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
+
     node->type = NODE_WHILE;
     node->condition = condition;
     node->body = body;
@@ -144,6 +203,11 @@ ASTNode* create_while_node(ASTNode* condition, ASTNode* body) {
 
 ASTNode* create_return_node(ASTNode* value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
     node->type = NODE_RETURN;
     node->left = value;
     node->right = node->next = node->condition = node->body = NULL;
@@ -166,6 +230,11 @@ ASTNode* create_return_node(ASTNode* value) {
 
 ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_count) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
     node->type = NODE_FUNCTION_CALL;
     node->name = string_duplicate(name);
     node->arguments = arguments;
@@ -179,6 +248,12 @@ ASTNode* create_function_call_node(char* name, ASTNode** arguments, int arg_coun
 
 ASTNode* create_block_node(ASTNode* statements, DataType return_type) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+        if(node == NULL)
+    {
+        error_exit(ERR_INTERNAL, "Memory allocation for ASTNode failed");
+    }
+        add_pointer_to_storage(node);
+
     node->type = NODE_BLOCK;
     node->data_type = return_type;
     node->body = statements;
@@ -202,24 +277,24 @@ void free_ast_node(ASTNode* node) {
     if (node->body) free_ast_node(node->body);
     if (node->condition) free_ast_node(node->condition);
 
-    if (node->name) free(node->name);
-    if (node->value) free(node->value);
+    if (node->name) safe_free(node->name);
+    if (node->value) safe_free(node->value);
 
     if (node->parameters) {
         for (int i = 0; i < node->param_count; ++i) {
             if (node->parameters[i]) free_ast_node(node->parameters[i]);
         }
-        free(node->parameters);
+        safe_free(node->parameters);
     }
 
     if (node->arguments) {
         for (int i = 0; i < node->arg_count; ++i) {
             if (node->arguments[i]) free_ast_node(node->arguments[i]);
         }
-        free(node->arguments);
+        safe_free(node->arguments);
     }
 
-    free(node);
+    safe_free(node);
 }
 
 

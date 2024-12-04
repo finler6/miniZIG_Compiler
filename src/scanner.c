@@ -104,10 +104,6 @@ static Token recognize_keyword_or_identifier(char *lexeme, Scanner *scanner)
     Token token;
     LOG("DEBUG_SCANNER: token.Lexeme in the start recognize is: %s\n", token.lexeme);
     token.lexeme = string_duplicate(lexeme);
-    if (token.lexeme == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
-    }
     LOG("DEBUG_SCANNER: Lexeme in the middle recognize is: %s\n", lexeme);
     LOG("DEBUG_SCANNER: token.Lexeme in the middle recognize is: %s\n", token.lexeme);
     token.line = scanner->line;
@@ -430,10 +426,6 @@ static Token scan_string(Scanner *scanner)
     Token token;
     token.type = TOKEN_STRING_LITERAL;
     token.lexeme = string_duplicate(string_buffer);
-    if (token.lexeme == NULL)
-    {
-        error_exit(ERR_INTERNAL, "Memory allocation failed for string literal.");
-    }
     token.line = scanner->line;
     token.column = scanner->column - strlen(string_buffer) - 2; // Approximation
 
@@ -453,7 +445,8 @@ static Token get_operator_or_delimiter(Scanner *scanner)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed for token lexeme.");
     }
-    token.lexeme = malloc(2); 
+    add_pointer_to_storage(token.lexeme);
+
     token.line = scanner->line;
     token.column = scanner->column;
 
@@ -496,7 +489,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); 
+               safe_free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -571,7 +564,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); 
+               safe_free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -596,7 +589,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); 
+               safe_free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -642,7 +635,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
             char *temp = realloc(token.lexeme, 3);
             if (temp == NULL)
             {
-                free(token.lexeme); 
+               safe_free(token.lexeme); 
                 error_exit(ERR_INTERNAL, "Memory reallocation failed.");
             }
             token.lexeme = temp;
@@ -659,7 +652,7 @@ static Token get_operator_or_delimiter(Scanner *scanner)
         }
         break;
     default:
-        free(token.lexeme);
+       safe_free(token.lexeme);
         error_exit(ERR_LEXICAL, "Unknown character encountered. character: %c, ASCII: %d", scanner->current_char, scanner->current_char);
         break;
     }
@@ -744,7 +737,7 @@ void free_token(Token *token)
 {
     if (token->lexeme != NULL)
     {
-        free(token->lexeme);
+       safe_free(token->lexeme);
         token->lexeme = NULL;
     }
 }
