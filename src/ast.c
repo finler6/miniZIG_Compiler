@@ -114,6 +114,7 @@ ASTNode *create_identifier_node(char *name)
     ASTNode *node = (ASTNode *)safe_malloc(sizeof(ASTNode));
 
     node->type = NODE_IDENTIFIER;
+    node->data_type = TYPE_UNKNOWN;
     node->name = string_duplicate(name);
     node->left = node->right = node->next = node->condition = node->body = NULL;
     node->value = NULL;

@@ -12,15 +12,7 @@
  * @author <xshmon00> Gleb Shmonin
  */
 #include "parser.h"
-#include "error.h"
-#include "scanner.h"
-#include "string.h"
-#include "symtable.h"
-#include "tokens.h"
-#include "utils.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 
 #undef DEBUG_PARSER
 #ifdef DEBUG_PARSER
@@ -34,7 +26,7 @@
 // Function to make sure that current token us expected_type
 static void expect_token(TokenType expected_type, Scanner *scanner);
 
-//Main functions for parser
+// Main functions for parser
 static ASTNode *parse_import(Scanner *scanner);
 static ASTNode *parse_function(Scanner *scanner, bool is_definition);
 static ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
@@ -47,9 +39,11 @@ static ASTNode *parse_while_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_expression(Scanner *scanner, char *function_name);
 static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
+static ASTNode *parse_builtin_fucntion_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
 static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
-
-
+static ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments, int param_count, int *arg_count, char *function_name, char *builtin_function_name);
 
 // Data type parse functions
 DataType parse_type(Scanner *scanner);
@@ -63,6 +57,8 @@ bool check_all_return_types(ASTNode *function_node, DataType return_type);
 // Scopre check funtions
 void scope_check_identifiers_in_tree(ASTNode *root);
 bool scope_check(ASTNode *node_decl, ASTNode *node_identifier);
+
+bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name);
 
 void parse_functions_declaration(Scanner *scanner, ASTNode *program_node);
 bool type_convertion(ASTNode *main_node);
@@ -120,7 +116,7 @@ ASTNode *parse_program(Scanner *scanner)
 
     /* At this point program currently have functions ASTNode created
     now program need to prevent rewriting this nodes and continue.
-    So after Pre-run AST has all function nodes, but no function node has deeper nodes in tree 
+    So after Pre-run AST has all function nodes, but no function node has deeper nodes in tree
     Later this tree will be called pre-run tree
     */
     program_node_pointer = *program_node->body;
@@ -133,13 +129,13 @@ ASTNode *parse_program(Scanner *scanner)
             // Creating function node again with all deeper nodes
             *current_function_pointer = *(parse_function(scanner, true));
 
-            // Pointing to next funtion node according with pre-run 
+            // Pointing to next funtion node according with pre-run
             current_function_pointer->next = program_node_pointer.next;
 
-            // Moving to the next function node from pre-run tree 
+            // Moving to the next function node from pre-run tree
             current_function_pointer = program_node_pointer.next;
 
-            // Moving pre-run tree pointer to the next function node if exists  
+            // Moving pre-run tree pointer to the next function node if exists
             if (program_node_pointer.next != NULL)
                 program_node_pointer = *program_node_pointer.next;
         }
@@ -187,12 +183,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
             parameters[param_count++] = parse_parameter(scanner, function_name, is_definition);
         }
     }
-    //}
-    /*else
-    {
-        while (current_token.type != TOKEN_RIGHT_PAREN)
-            current_token = get_next_token(scanner);
-    }**/
+
     expect_token(TOKEN_RIGHT_PAREN, scanner); // ')'
 
     DataType return_type = parse_return_type(scanner);
@@ -361,6 +352,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
     LOG("DEBUG_PARSER: Parsing variable assigning\n");
     char *name = NULL;
     Symbol *symbol = NULL;
+    ASTNode *function_node;
     bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
     bool is_function = false;
     bool is_underscore = false;
@@ -378,59 +370,9 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
     }
     if (is_builtin)
     {
-        name = construct_builtin_name("ifj", current_token.lexeme);
-        symbol = symtable_search(&symtable, name);
-        if (symbol == NULL)
-        {
-            error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
-        }
-        char *builtin_function_name = string_duplicate(current_token.lexeme);
-
-        current_token = get_next_token(scanner);
-        expect_token(TOKEN_LEFT_PAREN, scanner);
-        ASTNode **arguments;
-        int arg_count = 0;
-        int builtin_index = get_builtin_function_index(builtin_function_name);
-        int params_count = builtin_functions[builtin_index].param_count;
-
-        if (current_token.type != TOKEN_RIGHT_PAREN)
-        {
-            arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
-            arguments[arg_count++] = parse_expression(scanner, function_name);
-            if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
-            {
-                error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-            }
-
-            while (current_token.type == TOKEN_COMMA)
-            {
-                current_token = get_next_token(scanner);
-                if (current_token.type == TOKEN_RIGHT_PAREN)
-                    break;
-                if (arg_count >= params_count)
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
-                }
-                arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                arguments[arg_count++] = parse_expression(scanner, function_name);
-                if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                }
-            }
-        }
-        expect_token(TOKEN_RIGHT_PAREN, scanner);
-
-        if (arg_count != builtin_functions[builtin_index].param_count)
-        {
-            error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
-        }
-
-        ASTNode *func_call_node = create_function_call_node(name, arguments, arg_count);
-        func_call_node->data_type = builtin_functions[builtin_index].return_type;
-
+        function_node = parse_builtin_fucntion_call(scanner, symbol, name, function_name);
         expect_token(TOKEN_SEMICOLON, scanner);
-        return func_call_node;
+        return function_node;
         // If is function
     }
     else if (is_function)
@@ -442,50 +384,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
             error_exit(ERR_SEMANTIC_UNDEF, "Undefined function %s.", function_call_name);
         }
 
-        current_token = get_next_token(scanner);
-        expect_token(TOKEN_LEFT_PAREN, scanner);
-
-        ASTNode **arguments = NULL;
-        int arg_count = 0;
-        int params_count = symbol->declaration_node->param_count;
-
-        if (current_token.type != TOKEN_RIGHT_PAREN)
-        {
-            arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
-            arguments[arg_count++] = parse_expression(scanner, function_name);
-
-            if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
-            {
-                error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of argument %d in function %s.", arg_count, function_call_name);
-            }
-
-            while (current_token.type == TOKEN_COMMA)
-            {
-                current_token = get_next_token(scanner);
-                if (current_token.type == TOKEN_RIGHT_PAREN)
-                    break;
-                if (arg_count >= params_count)
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", function_call_name);
-                }
-
-                arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                arguments[arg_count++] = parse_expression(scanner, function_name);
-
-                if (!can_assign_type(symbol->declaration_node->parameters[arg_count - 1]->data_type, arguments[arg_count - 1]->data_type))
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of argument %d in function %s.", arg_count, function_call_name);
-                }
-            }
-        }
-        expect_token(TOKEN_RIGHT_PAREN, scanner);
-
-        if (arg_count != params_count)
-        {
-            error_exit(ERR_SEMANTIC_PARAMS, "Incorrect number of arguments in function call to %s.", function_call_name);
-        }
-
-        ASTNode *func_call_node = create_function_call_node(function_call_name, arguments, arg_count);
+        ASTNode *func_call_node = parse_function_call(scanner, symbol, function_call_name, function_name);
         func_call_node->data_type = symbol->data_type;
 
         if (func_call_node->data_type != TYPE_VOID)
@@ -1057,62 +956,12 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
     else if (current_token.type == TOKEN_IDENTIFIER)
     {
         // DataType data_type;
-        char *identifier_name;
-        Symbol *symbol;
+        char *identifier_name = NULL;
+        Symbol *symbol = NULL;
         bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
         if (is_builtin)
         {
-            identifier_name = construct_builtin_name("ifj", current_token.lexeme);
-            symbol = symtable_search(&symtable, identifier_name);
-            if (symbol == NULL)
-            {
-                error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
-            }
-            char *builtin_function_name = string_duplicate(current_token.lexeme);
-
-            current_token = get_next_token(scanner);
-            expect_token(TOKEN_LEFT_PAREN, scanner);
-            ASTNode **arguments = NULL;
-            int arg_count = 0;
-            int builtin_index = get_builtin_function_index(builtin_function_name);
-            int params_count = builtin_functions[builtin_index].param_count;
-
-            if (current_token.type != TOKEN_RIGHT_PAREN)
-            {
-                arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
-                arguments[arg_count++] = parse_expression(scanner, function_name);
-                if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                }
-
-                while (current_token.type == TOKEN_COMMA)
-                {
-                    current_token = get_next_token(scanner);
-                    if (current_token.type == TOKEN_RIGHT_PAREN)
-                        break;
-                    if (arg_count >= params_count)
-                    {
-                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of arguments");
-                    }
-                    arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                    arguments[arg_count++] = parse_expression(scanner, function_name);
-                    if ((arguments[arg_count - 1]->data_type != builtin_functions[builtin_index].param_types[arg_count - 1]) && builtin_functions[builtin_index].param_types[arg_count - 1] != TYPE_ALL)
-                    {
-                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                    }
-                }
-            }
-            expect_token(TOKEN_RIGHT_PAREN, scanner);
-
-            if (arg_count != builtin_functions[builtin_index].param_count)
-            {
-                error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
-            }
-
-            ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
-            func_call_node->data_type = builtin_functions[builtin_index].return_type;
-            return func_call_node;
+            return parse_builtin_fucntion_call(scanner, symbol, identifier_name, function_name);
         }
         else
         {
@@ -1120,68 +969,12 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
 
             if (symbol != NULL && symbol->symbol_type == SYMBOL_FUNCTION)
             {
-                identifier_name = current_token.lexeme;
-                current_token = get_next_token(scanner);
-
-                expect_token(TOKEN_LEFT_PAREN, scanner);
-
-                ASTNode **arguments = symbol->declaration_node->parameters;
-                int arg_count = 0;
-
-                if (current_token.type != TOKEN_RIGHT_PAREN)
-                {
-                    arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
-                    arguments[arg_count++] = parse_expression(scanner, function_name);
-                    if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
-                    {
-                        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                    }
-
-                    while (current_token.type == TOKEN_COMMA)
-                    {
-                        current_token = get_next_token(scanner);
-                        if (current_token.type == TOKEN_RIGHT_PAREN)
-                            break;
-                        if (arg_count >= symbol->declaration_node->param_count)
-                        {
-                            error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", symbol->name);
-                        }
-                        arguments = (ASTNode **)safe_realloc(arguments, (arg_count + 1) * sizeof(ASTNode *));
-                        arguments[arg_count++] = parse_expression(scanner, function_name);
-                        if (arguments[arg_count - 1]->data_type != symbol->declaration_node->parameters[arg_count - 1]->data_type)
-                        {
-                            error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
-                        }
-                    }
-                }
-                expect_token(TOKEN_RIGHT_PAREN, scanner);
-
-                if (arg_count != symbol->declaration_node->param_count)
-                {
-                    error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
-                }
-
-                ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
-                func_call_node->data_type = symbol->data_type;
-                return func_call_node;
+                return parse_function_call(scanner, symbol, identifier_name, function_name);
             }
             else
             {
-                identifier_name = construct_variable_name(current_token.lexeme, function_name);
-                symbol = symtable_search(&symtable, identifier_name);
-                if (symbol == NULL)
-                {
-                    error_exit(ERR_SEMANTIC_UNDEF, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
-                }
-                ASTNode *identifier_node = create_identifier_node(identifier_name);
-                identifier_node->data_type = symbol->data_type;
-
-                current_token = get_next_token(scanner);
-                return identifier_node;
+                return parse_idendifier(scanner, symbol, identifier_name, function_name);
             }
-            LOG("DEBUG_PARSER: BEFORE Primary parsing got token type: %d\n", current_token.type);
-            current_token = get_next_token(scanner);
-            LOG("DEBUG_PARSER: Primary parsing got token type: %d\n", current_token.type);
         }
     }
     else if (current_token.type == TOKEN_LEFT_PAREN)
@@ -1244,6 +1037,130 @@ ASTNode *parse_import(Scanner *scanner)
     return create_literal_node(TYPE_U8, import_value);
 }
 
+ASTNode *parse_builtin_fucntion_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
+{
+    identifier_name = construct_builtin_name("ifj", current_token.lexeme);
+    symbol = symtable_search(&symtable, identifier_name);
+    if (symbol == NULL)
+    {
+        error_exit(ERR_SEMANTIC_UNDEF, "Undefined builtin function");
+    }
+    char *builtin_function_name = string_duplicate(current_token.lexeme);
+
+    current_token = get_next_token(scanner);
+
+    expect_token(TOKEN_LEFT_PAREN, scanner);
+
+    ASTNode **arguments = NULL;
+    int arg_count = 0;
+
+    int builtin_index = get_builtin_function_index(builtin_function_name);
+    int params_count = builtin_functions[builtin_index].param_count;
+
+    if (current_token.type != TOKEN_RIGHT_PAREN)
+    {
+        arguments =  parse_arguments(scanner, symbol, arguments, params_count, &arg_count, function_name, builtin_function_name);
+    }
+    expect_token(TOKEN_RIGHT_PAREN, scanner);
+
+    if (arg_count != params_count)
+    {
+        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
+    }
+
+    ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
+    func_call_node->data_type = builtin_functions[builtin_index].return_type;
+    return func_call_node;
+}
+
+ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
+{
+    identifier_name = current_token.lexeme;
+    current_token = get_next_token(scanner);
+
+    expect_token(TOKEN_LEFT_PAREN, scanner);
+
+    ASTNode **arguments = symbol->declaration_node->parameters;
+    int params_count = symbol->declaration_node->param_count;
+    int arg_count = 0;
+
+    if (current_token.type != TOKEN_RIGHT_PAREN)
+    {
+        arguments = parse_arguments(scanner, symbol, arguments, params_count, &arg_count, function_name, NULL);
+    }
+    expect_token(TOKEN_RIGHT_PAREN, scanner);
+
+    if (arg_count != params_count)
+    {
+        error_exit(ERR_SEMANTIC_PARAMS, "Invalid number of params");
+    }
+
+    ASTNode *func_call_node = create_function_call_node(identifier_name, arguments, arg_count);
+    func_call_node->data_type = symbol->data_type;
+    return func_call_node;
+}
+
+ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
+{
+    identifier_name = construct_variable_name(current_token.lexeme, function_name);
+    symbol = symtable_search(&symtable, identifier_name);
+    if (symbol == NULL)
+    {
+        error_exit(ERR_SEMANTIC_UNDEF, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
+    }
+    ASTNode *identifier_node = create_identifier_node(identifier_name);
+    identifier_node->data_type = symbol->data_type;
+
+    current_token = get_next_token(scanner);
+    return identifier_node;
+}
+
+ASTNode **parse_arguments(Scanner *scanner, Symbol *symbol, ASTNode **arguments, int param_count, int *arg_count, char *function_name, char *builtin_function_name)
+{
+
+    arguments = (ASTNode **)safe_malloc(sizeof(ASTNode *));
+    arguments[(*arg_count)++] = parse_expression(scanner, function_name);
+    if (check_arguments_compability(symbol, arguments, arg_count, builtin_function_name))
+    {
+        error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+    }
+
+    while (current_token.type == TOKEN_COMMA)
+    {
+        current_token = get_next_token(scanner);
+        if (current_token.type == TOKEN_RIGHT_PAREN)
+            break;
+        if (*arg_count >= param_count)
+        {
+            error_exit(ERR_SEMANTIC_PARAMS, "Too many arguments in function call to %s.", symbol->name);
+        }
+        arguments = (ASTNode **)safe_realloc(arguments, ((*arg_count) + 1) * sizeof(ASTNode *));
+        arguments[(*arg_count)++] = parse_expression(scanner, function_name);
+        if (check_arguments_compability(symbol, arguments, arg_count, builtin_function_name))
+        {
+            error_exit(ERR_SEMANTIC_PARAMS, "Invalid type of arguments");
+        }
+    }
+    return arguments;
+}
+
+bool check_arguments_compability(Symbol *symbol, ASTNode **arguments, int *arg_count, char *builtin_function_name)
+{
+    DataType declared_datatype;
+    int builtin_index;
+    if (symbol->declaration_node != NULL)
+    {
+        declared_datatype = symbol->declaration_node->parameters[(*arg_count) - 1]->data_type;
+    }
+    else
+    {
+        builtin_index = get_builtin_function_index(builtin_function_name);
+        declared_datatype = builtin_functions[builtin_index].param_types[(*arg_count) - 1];
+    }
+
+    return (arguments[(*arg_count) - 1]->data_type != declared_datatype && declared_datatype != TYPE_ALL);
+}
+
 size_t get_num_builtin_functions()
 {
     return sizeof(builtin_functions) / sizeof(builtin_functions[0]);
@@ -1299,8 +1216,6 @@ int get_builtin_function_index(const char *function_name)
     }
     return -1;
 }
-
-
 
 void scope_check_identifiers_in_tree(ASTNode *root)
 {
@@ -1406,7 +1321,6 @@ void parse_functions_declaration(Scanner *scanner, ASTNode *program_node)
 
     return;
 }
-
 
 DataType parse_type(Scanner *scanner)
 {

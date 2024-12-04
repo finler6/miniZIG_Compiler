@@ -14,11 +14,17 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "utils.h"
 #include "tokens.h"
 #include "symtable.h"
 #include "ast.h"
 #include "scanner.h"
 #include "string.h"
+#include "error.h"
+#include "scanner.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Initializes the parser
 void parser_init(Scanner *scanner);
