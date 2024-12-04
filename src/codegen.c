@@ -405,7 +405,7 @@ void codegen_generate_builtin_functions() {
 }
 
 /**
- * Removes the last prefix from a variable or function name (e.g., module prefix).
+ * Removes the first prefix and replaces the second dot with a hyphen.
  */
 const char *remove_last_prefix(const char *name) {
     static char buffer[1024];
@@ -413,18 +413,35 @@ const char *remove_last_prefix(const char *name) {
         return NULL;
     }
 
-    const char *last_dot = strrchr(name, '.');
-    if (last_dot && *(last_dot + 1) != '\0') {
-        size_t new_len = last_dot - name;
-        if (new_len >= sizeof(buffer)) {
-            error_exit(ERR_INTERNAL, "Error: Buffer overflow in remove_last_prefix.\n");
-        }
-        strncpy(buffer, name, new_len);
-        buffer[new_len] = '\0';
-        return buffer;
+    size_t name_len = strlen(name);
+    if (name_len >= sizeof(buffer)) {
+        error_exit(ERR_INTERNAL, "Error: Buffer overflow in remove_last_prefix.\n");
     }
-    return name;
+
+    // Найти последнее вхождение точки
+    const char *last_dot = strrchr(name, '.');
+    if (!last_dot || *(last_dot + 1) == '\0') {
+        return name; // Если точки нет или она в конце строки, вернуть исходное имя
+    }
+
+    // Скопировать всё до последней точки в буфер
+    size_t prefix_len = last_dot - name;
+    strncpy(buffer, name, prefix_len);
+    buffer[prefix_len] = '\0';
+
+    // Добавить всё после последней точки
+    strcat(buffer, last_dot + 1);
+
+    // Заменить точки на тире
+    for (char *p = buffer; *p; ++p) {
+        if (*p == '.') {
+            *p = '-';
+        }
+    }
+
+    return buffer;
 }
+
 
 char *escape_ifj24_string(const char *input);
 

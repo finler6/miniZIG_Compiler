@@ -1,0 +1,179 @@
+.IFJcode24
+CALL main
+EXIT int@0
+LABEL main
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@%tmp_type
+DEFVAR LF@%tmp_var
+DEFVAR LF@%tmp_bool
+DEFVAR LF@strcmpResult-4main
+DEFVAR LF@abcdefgh-4main
+DEFVAR LF@inpOK-2main
+DEFVAR LF@all-2main
+DEFVAR LF@newInput-2main
+DEFVAR LF@str2-2main
+DEFVAR LF@str1-2main
+DEFVAR LF@%retval_18
+DEFVAR LF@%retval_17
+DEFVAR LF@%tmp_str2_16
+DEFVAR LF@%tmp_str1_15
+DEFVAR LF@%temp_14
+DEFVAR LF@%temp_13
+DEFVAR LF@%temp_12
+DEFVAR LF@%result_11
+DEFVAR LF@%temp_10
+DEFVAR LF@%temp_9
+DEFVAR LF@%retval_8
+DEFVAR LF@%temp_7
+DEFVAR LF@%temp_6
+DEFVAR LF@%temp_5
+DEFVAR LF@%temp_4
+DEFVAR LF@%temp_3
+DEFVAR LF@%retval_2
+DEFVAR LF@%tmp_str2_1
+DEFVAR LF@%tmp_str1_0
+PUSHS string@Toto\032je\032text\032v\032programu\032jazyka\032IFJ24
+CALL ifj-string
+POPS LF@str1-2main
+PUSHS string@,\032ktery\032jeste\032trochu\032obohatime
+CALL ifj-string
+POPS LF@str2-2main
+PUSHS LF@str1-2main
+PUSHS LF@str2-2main
+POPS LF@%tmp_str2_1
+POPS LF@%tmp_str1_0
+CONCAT LF@%retval_2 LF@%tmp_str1_0 LF@%tmp_str2_1
+PUSHS LF@%retval_2
+POPS LF@str2-2main
+PUSHS LF@str1-2main
+POPS LF@%temp_3
+WRITE LF@%temp_3
+PUSHS string@\010
+POPS LF@%temp_4
+WRITE LF@%temp_4
+PUSHS LF@str2-2main
+POPS LF@%temp_5
+WRITE LF@%temp_5
+PUSHS string@\010
+POPS LF@%temp_6
+WRITE LF@%temp_6
+PUSHS string@Zadejte\032serazenou\032posloupnost\032malych\032pismen\032a-h:\010
+POPS LF@%temp_7
+WRITE LF@%temp_7
+READ LF@%retval_8 string
+PUSHS LF@%retval_8
+POPS LF@newInput-2main
+PUSHS string@
+CALL ifj-string
+POPS LF@all-2main
+LABEL $while_start_0
+TYPE LF@%tmp_type LF@newInput-2main
+PUSHS LF@%tmp_type
+PUSHS string@nil
+EQS
+NOTS
+PUSHS bool@false
+JUMPIFEQS $while_end_0
+PUSHS LF@newInput-2main
+POPS LF@inpOK-2main
+PUSHS string@abcdefgh
+CALL ifj-string
+POPS LF@abcdefgh-4main
+PUSHS LF@inpOK-2main
+PUSHS LF@abcdefgh-4main
+CALL ifj-strcmp
+POPS LF@strcmpResult-4main
+PUSHS LF@strcmpResult-4main
+POPS LF@%temp_9
+PUSHS int@0
+POPS LF@%temp_10
+EQ LF@%result_11 LF@%temp_9 LF@%temp_10
+PUSHS LF@%result_11
+PUSHS bool@false
+JUMPIFEQS $else_0
+PUSHS string@Spravne\032zadano!\010
+POPS LF@%temp_12
+WRITE LF@%temp_12
+PUSHS LF@all-2main
+POPS LF@%temp_13
+WRITE LF@%temp_13
+PUSHS nil@nil
+POPS LF@newInput-2main
+JUMP $endif_0
+LABEL $else_0
+PUSHS string@Spatne\032zadana\032posloupnost,\032zkuste\032znovu:\010
+POPS LF@%temp_14
+WRITE LF@%temp_14
+PUSHS LF@all-2main
+PUSHS LF@inpOK-2main
+POPS LF@%tmp_str2_16
+POPS LF@%tmp_str1_15
+CONCAT LF@%retval_17 LF@%tmp_str1_15 LF@%tmp_str2_16
+PUSHS LF@%retval_17
+POPS LF@all-2main
+READ LF@%retval_18 string
+PUSHS LF@%retval_18
+POPS LF@newInput-2main
+LABEL $endif_0
+JUMP $while_start_0
+LABEL $while_end_0
+POPFRAME
+RETURN
+LABEL ifj-strcmp
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@str1
+DEFVAR LF@str2
+DEFVAR LF@len1
+DEFVAR LF@len2
+DEFVAR LF@i
+DEFVAR LF@char1
+DEFVAR LF@char2
+DEFVAR LF@retval
+DEFVAR LF@tmp_int
+DEFVAR LF@tmp_bool
+POPS LF@str2
+POPS LF@str1
+STRLEN LF@len1 LF@str1
+STRLEN LF@len2 LF@str2
+MOVE LF@i int@0
+LABEL $strcmp_loop
+LT LF@tmp_bool LF@i LF@len1
+JUMPIFEQ $strcmp_end LF@tmp_bool bool@false
+LT LF@tmp_bool LF@i LF@len2
+JUMPIFEQ $strcmp_end LF@tmp_bool bool@false
+GETCHAR LF@char1 LF@str1 LF@i
+GETCHAR LF@char2 LF@str2 LF@i
+GT LF@tmp_bool LF@char1 LF@char2
+JUMPIFEQ $strcmp_greater LF@tmp_bool bool@true
+LT LF@tmp_bool LF@char1 LF@char2
+JUMPIFEQ $strcmp_less LF@tmp_bool bool@true
+ADD LF@i LF@i int@1
+JUMP $strcmp_loop
+LABEL $strcmp_end
+SUB LF@tmp_int LF@len1 LF@len2
+JUMPIFEQ $strcmp_equal LF@tmp_int int@0
+GT LF@tmp_bool LF@len1 LF@len2
+JUMPIFEQ $strcmp_greater LF@tmp_bool bool@true
+JUMP $strcmp_less
+LABEL $strcmp_equal
+MOVE LF@retval int@0
+JUMP $strcmp_finish
+LABEL $strcmp_greater
+MOVE LF@retval int@1
+JUMP $strcmp_finish
+LABEL $strcmp_less
+MOVE LF@retval int@-1
+LABEL $strcmp_finish
+PUSHS LF@retval
+POPFRAME
+RETURN
+LABEL ifj-string
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@str_literal
+POPS LF@str_literal
+PUSHS LF@str_literal
+POPFRAME
+RETURN

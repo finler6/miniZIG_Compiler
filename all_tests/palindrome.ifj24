@@ -1,0 +1,35 @@
+const ifj = @import("ifj24.zig");
+
+// Функция проверки строки на палиндром
+pub fn is_palindrome(input: []u8) i32 {
+    const length = ifj.length(input);
+    var i: i32 = 0;
+    while (i < length / 2) {
+        const left = ifj.ord(input, i);
+        const right = ifj.ord(input, length - i - 1);
+        if (left != right) {
+            return 0; // false
+        }
+        i = i + 1;
+    }
+    return 1; // true
+}
+
+// Главная функция программы
+pub fn main() void {
+    ifj.write("Введите строку для проверки на палиндром (Ctrl+D для выхода):\n");
+    var input = ifj.readstr();
+
+    while (input) |str| {
+        const result = is_palindrome(str);
+        if (result == 1) {
+            ifj.write("Строка является палиндромом.\n");
+        } else {
+            ifj.write("Строка не является палиндромом.\n");
+        }
+        ifj.write("\nВведите следующую строку (Ctrl+D для выхода):\n");
+        input = ifj.readstr();
+    }
+
+    ifj.write("Выход из программы.\n");
+}

@@ -1,0 +1,26 @@
+const ifj = @import("ifj24.zig");
+
+// Главная функция
+pub fn main() void {
+    ifj.write("Введите число для построения треугольника:\n");
+    const input = ifj.readi32();
+
+    if (input) |n| {
+        if (n <= 0) {
+            ifj.write("Ошибка: введите положительное число.\n");
+        } else {
+            var i: i32 = 1;
+            while (i <= n) {
+                var j: i32 = 1;
+                while (j <= i) {
+                    ifj.write(j);
+                    j = j + 1;
+                }
+                ifj.write("\n");
+                i = i + 1;
+            }
+        }
+    } else {
+        ifj.write("Ошибка: введено некорректное число.\n");
+    }
+}

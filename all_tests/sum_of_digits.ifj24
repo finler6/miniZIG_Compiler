@@ -1,0 +1,36 @@
+const ifj = @import("ifj24.zig");
+
+// Главная функция
+pub fn main() void {
+    ifj.write("Введите строку из цифр (например, \"12345\"):\n");
+    var input = ifj.readstr();
+    var result: i32 = 0; // Переменная для накопления суммы цифр
+
+    while (input) |validInput| {
+        var i: i32 = 0;
+        const length = ifj.length(validInput);
+
+        // Вложенный цикл для обработки каждой цифры
+        while (i < length) {
+            const charCode = ifj.ord(validInput, i);
+            if (charCode >= 48) {
+                if (charCode <= 57) {
+                    const digit = charCode - 48; // Преобразование ASCII-кода в число
+                    result = result + digit;
+                }
+            }
+            i = i + 1;
+        }
+
+        ifj.write("Текущая сумма цифр: ");
+        ifj.write(result);
+        ifj.write("\n");
+
+        ifj.write("Введите следующую строку (или оставьте пустую строку для выхода):\n");
+        input = ifj.readstr();
+    }
+
+    ifj.write("Итоговая сумма цифр: ");
+    ifj.write(result);
+    ifj.write("\n");
+}

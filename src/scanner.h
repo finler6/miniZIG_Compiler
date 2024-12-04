@@ -28,7 +28,7 @@ typedef struct {
     int current_char;   
 } Scanner;
 
-// Function prototypes
+// Scanner initialization function
 void scanner_init(FILE *input_file, Scanner *scanner);
 
 // Public function to get the next token

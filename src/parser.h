@@ -68,8 +68,12 @@ typedef struct {
     int param_count;           
 } BuiltinFunctionInfo;
 
-
+// Built-in functions dictionary
 extern BuiltinFunctionInfo builtin_functions[];
 
+// Functions to manage scopes
+int current_scope_id();
+void enter_scope();
+void exit_scope();
 
 #endif // PARSER_H

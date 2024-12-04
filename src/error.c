@@ -12,7 +12,7 @@
  */
 
 #include "error.h"
-
+#include "utils.h"
 
 /**
  * Print an error message and exit the program with the given error code.

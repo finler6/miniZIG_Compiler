@@ -1,0 +1,65 @@
+const ifj = @import("ifj24.zig");
+
+// Функция для сортировки цифр
+pub fn sort_digits(input: []u8) []u8 {
+    // Строка частот цифр, инициализирована нулями ("0000000000")
+    var counts: []u8 = ifj.string("0000000000");
+    const length = ifj.length(input);
+    var i: i32 = 0;
+
+    // Подсчет частот цифр
+    while (i < length) {
+        const charCode = ifj.ord(input, i);
+        if (charCode >= 48) {
+            if (charCode <= 57) {
+                const digit = charCode - 48; // Преобразование ASCII-кода в число
+                const currentCount = ifj.ord(counts, digit) - 48; // Текущая частота
+                const newCount = currentCount + 1;
+
+                // Обновление строки частот
+                const prefix = ifj.substring(counts, 0, digit);
+                if (prefix) |pre| {
+                    const updatedChar = ifj.chr(newCount + 48);
+                    const suffix = ifj.substring(counts, digit + 1, 10);
+                    if (suffix) |suf| {
+                        var updatedCounts = ifj.concat(pre, updatedChar);
+                        updatedCounts = ifj.concat(updatedCounts, suf);
+                        counts = updatedCounts;
+                    }
+                }
+            }
+        }
+        i = i + 1;
+    }
+
+    // Построение отсортированной строки
+    var sorted: []u8 = ifj.string("");
+    var digit: i32 = 0;
+    while (digit < 10) {
+        const count = ifj.ord(counts, digit) - 48; // Частота цифры
+        var j: i32 = 0;
+        while (j < count) {
+            const digitChar = ifj.chr(digit + 48); // Преобразование числа в символ
+            sorted = ifj.concat(sorted, digitChar);
+            j = j + 1;
+        }
+        digit = digit + 1;
+    }
+
+    return sorted;
+}
+
+// Главная функция
+pub fn main() void {
+    ifj.write("Введите строку, содержащую только цифры:\n");
+    const input = ifj.readstr();
+
+    if (input) |str| {
+        const sorted = sort_digits(str);
+        ifj.write("Отсортированные цифры: ");
+        ifj.write(sorted);
+        ifj.write("\n");
+    } else {
+        ifj.write("Ошибка: введена пустая строка или EOF.\n");
+    }
+}

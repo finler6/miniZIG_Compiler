@@ -14,8 +14,11 @@
 #include <string.h>
 #include <stdio.h>
 #include "utils.h"
+#include "parser.h"
 
-// Function to duplicate a string
+/**
+ *  Function to safely duplicate a string
+ */
 char *string_duplicate(const char *src)
 {
     if (src == NULL)
@@ -33,7 +36,9 @@ char *string_duplicate(const char *src)
     return copy;
 }
 
-// Function to add a decimal point to a string if it doesn't already contain one
+/**
+ * Function to add a decimal point
+ */
 char *add_decimal(const char *str)
 {
     if (!str)
@@ -45,7 +50,7 @@ char *add_decimal(const char *str)
         return string_duplicate(str);
     }
     size_t new_len = strlen(str) + 3;
-    char *new_str = (char *)malloc(new_len);
+    char *new_str = (char *)safe_malloc(new_len);
     if(new_str == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed in add_decimal");
@@ -55,22 +60,26 @@ char *add_decimal(const char *str)
     return new_str;
 }
 
-// Function to construct a variable name from two strings
-char *construct_variable_name(const char *str1, const char *str2)
+/**
+ * Adding scope_id and function_name as prefixes to the variable name
+ */
+char *construct_variable_name(const char *variable_name, const char *function_name)
 {
-    int len = strlen(str1) + strlen(str2) + (2 * sizeof(char));
-    char *result = (char *)malloc(len);
+    int scope_id = current_scope_id();
+    size_t len = strlen(function_name) + strlen(variable_name) + 20;
+    char *result = (char *)safe_malloc(len);
     if (result == NULL)
     {
         error_exit(ERR_INTERNAL, "Memory allocation failed in construct_variable_name\n");
     }
-    snprintf(result, len, "%s.%s", str1, str2);
-    add_pointer_to_storage(result);
+    snprintf(result, len, "%s.%d.%s", variable_name, scope_id, function_name);
 
     return result;
 }
 
-// Function to construct a built-in function name from two strings
+/**
+ * Construct a name for a built-in function (ifj. functions)
+ */
 char *construct_builtin_name(const char *str1, const char *str2)
 {
     int len = strlen(str1) + strlen(str2) + (2 * sizeof(char));
@@ -140,32 +149,21 @@ void *safe_realloc(void *ptr, size_t new_size)
 {
     if (ptr == NULL)
     {
-        // If ptr is NULL, simply allocate new memory
-        void *new_ptr = malloc(new_size);
-        if (new_ptr != NULL)
-        {
-            add_pointer_to_storage(new_ptr); // Add new pointer to storage
-        }
-        return new_ptr;
+        return safe_malloc(new_size);
     }
 
-    // Actual realloc operation
     void *new_ptr = realloc(ptr, new_size);
-    if (new_ptr != NULL)
+    if (new_ptr == NULL)
     {
-        // Update pointer in storage
-        for (size_t i = 0; i < global_storage.count; i++)
-        {
-            if (global_storage.pointers[i] == ptr)
-            {
-                global_storage.pointers[i] = new_ptr; // Update pointer in storage
-                break;
-            }
-        }
+        error_exit(ERR_INTERNAL, "Memory reallocation failed.\n");
     }
-    else
+    for (size_t i = 0; i < global_storage.count; i++)
     {
-        fprintf(stderr, "Error: realloc failed.\n");
+        if (global_storage.pointers[i] == ptr)
+        {
+            global_storage.pointers[i] = new_ptr;
+            break;
+        }
     }
 
     return new_ptr;
@@ -178,26 +176,23 @@ void safe_free(void *ptr)
 {
     if (ptr == NULL)
     {
-        return; // Cannot free NULL
+        return;
     }
 
-    // Check if the pointer is in storage
     for (size_t i = 0; i < global_storage.count; i++)
     {
         if (global_storage.pointers[i] == ptr)
         {
-            // Free memory
             free(ptr);
-            // Remove pointer from storage
-            global_storage.pointers[i] = NULL;
 
-            // Shift remaining elements one position to the left (can be optimized)
             for (size_t j = i; j < global_storage.count - 1; j++)
             {
                 global_storage.pointers[j] = global_storage.pointers[j + 1];
             }
 
             global_storage.count--;
+            global_storage.pointers[global_storage.count] = NULL;
+
             return;
         }
     }

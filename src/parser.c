@@ -20,6 +20,67 @@
 #define LOG(...)
 #endif
 
+// Global symbol table for the program
+static SymTable symtable;
+
+#define MAX_SCOPE_DEPTH 100
+
+static int scope_stack[MAX_SCOPE_DEPTH];
+static int scope_stack_top = -1;
+static int scope_counter = 0;
+
+// Функция для входа в новую область видимости
+void enter_scope() {
+    scope_counter++;
+    if (scope_stack_top >= MAX_SCOPE_DEPTH - 1) {
+        error_exit(ERR_INTERNAL, "Scope stack overflow");
+    }
+    scope_stack[++scope_stack_top] = scope_counter;
+}
+
+void exit_scope() {
+    if (scope_stack_top < 0) {
+        error_exit(ERR_INTERNAL, "Scope stack underflow");
+    }
+    scope_stack_top--;
+}
+
+int current_scope_id() {
+    if (scope_stack_top < 0) {
+        return 0;
+    }
+    return scope_stack[scope_stack_top];
+}
+
+Symbol *search_variable_in_scopes(const char *variable_name, const char *function_name) {
+    for (int i = scope_stack_top; i >= -1; i--) {
+        int scope_id = (i >= 0) ? scope_stack[i] : 0; // Глобальная область видимости
+        size_t len = strlen(function_name) + strlen(variable_name) + 20;
+        char *full_name = (char *)safe_malloc(len);
+        snprintf(full_name, len, "%s.%d.%s", variable_name, scope_id, function_name);
+        Symbol *symbol = symtable_search(&symtable, full_name);
+        if (symbol != NULL) {
+            return symbol;
+        }
+    }
+    return NULL;
+}
+
+Symbol *search_variable_in_outer_scopes(const char *variable_name, const char *function_name) {
+    for (int i = scope_stack_top - 1; i >= -1; i--) {
+        int scope_id = (i >= 0) ? scope_stack[i] : 0; // Глобальная область видимости
+        size_t len = strlen(function_name) + strlen(variable_name) + 20;
+        char *full_name = (char *)safe_malloc(len);
+        snprintf(full_name, len, "%s.%d.%s", variable_name, scope_id, function_name);
+        Symbol *symbol = symtable_search(&symtable, full_name);
+        safe_free(full_name); // Освобождаем память
+        if (symbol != NULL) {
+            return symbol;
+        }
+    }
+    return NULL;
+}
+
 // Forward declarations of helper functions
 
 // Function to make sure that current token us expected_type
@@ -29,7 +90,7 @@ static void expect_token(TokenType expected_type, Scanner *scanner);
 static ASTNode *parse_import(Scanner *scanner);
 static ASTNode *parse_function(Scanner *scanner, bool is_definition);
 static ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definition);
-static ASTNode *parse_block(Scanner *scanner, char *function_name);
+static ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope);
 static ASTNode *parse_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name);
 static ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name);
@@ -38,7 +99,7 @@ static ASTNode *parse_while_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_return_statement(Scanner *scanner, char *function_name);
 static ASTNode *parse_expression(Scanner *scanner, char *function_name);
 static ASTNode *parse_primary_expression(Scanner *scanner, char *function_name);
-static ASTNode *parse_builtin_fucntion_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
+static ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
 static ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
 static ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name);
 static ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name);
@@ -67,9 +128,6 @@ int get_builtin_function_index(const char *function_name);
 
 // Global token storage
 static Token current_token;
-
-// Global symbol table for the program
-static SymTable symtable;
 
 BuiltinFunctionInfo builtin_functions[] = {
     {"readstr", TYPE_U8_NULLABLE, {TYPE_NULL}, 0},
@@ -168,6 +226,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
     current_token = get_next_token(scanner);
 
     expect_token(TOKEN_LEFT_PAREN, scanner); // '('
+    enter_scope(); // Входим в область видимости функции
     ASTNode **parameters = NULL;
     int param_count = 0;
 
@@ -190,7 +249,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
 
     if (is_definition)
     {
-        ASTNode *body_node = parse_block(scanner, function_name);
+        ASTNode *body_node = parse_block(scanner, function_name, false);
         function_node = create_function_node(function_name, return_type, parameters, param_count, body_node);
         // Symbol *symbol = symtable_search(&symtable, function_name);
 
@@ -241,6 +300,7 @@ ASTNode *parse_function(Scanner *scanner, bool is_definition)
         symtable_insert(&symtable, function_name_symtable, new_function);
         current_token = get_next_token(scanner);
     }
+    exit_scope(); // Выходим из области видимости функции
 
     return function_node;
 }
@@ -289,10 +349,15 @@ ASTNode *parse_parameter(Scanner *scanner, char *function_name, bool is_definiti
     return param_node;
 }
 
-ASTNode *parse_block(Scanner *scanner, char *function_name)
+ASTNode *parse_block(Scanner *scanner, char *function_name, bool enter_new_scope)
 {
     LOG("DEBUG_PARSER: Parsing block\n");
     expect_token(TOKEN_LEFT_BRACE, scanner);
+
+    if (enter_new_scope)
+    {
+        enter_scope(); // Входим в новую область видимости
+    }
 
     ASTNode *block_node = create_block_node(NULL, TYPE_NULL);
     ASTNode *current_statement = NULL;
@@ -313,6 +378,11 @@ ASTNode *parse_block(Scanner *scanner, char *function_name)
     }
 
     expect_token(TOKEN_RIGHT_BRACE, scanner);
+
+    if (enter_new_scope)
+    {
+        exit_scope(); // Выходим из области видимости
+    }
 
     return block_node;
 }
@@ -341,7 +411,7 @@ ASTNode *parse_statement(Scanner *scanner, char *function_name)
     }
     else
     {
-        error_exit(ERR_SYNTAX, "Invalid statement.");
+        error_exit(ERR_SYNTAX, "Invalid statement.\n");
         return NULL;
     }
 }
@@ -355,6 +425,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
     bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
     bool is_function = false;
     bool is_underscore = false;
+    //symbol = symtable_search(&symtable, current_token.lexeme);
     symbol = symtable_search(&symtable, current_token.lexeme);
     if (symbol != NULL)
     {
@@ -369,7 +440,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
     }
     if (is_builtin)
     {
-        function_node = parse_builtin_fucntion_call(scanner, symbol, name, function_name);
+        function_node = parse_builtin_function_call(scanner, symbol, name, function_name);
         expect_token(TOKEN_SEMICOLON, scanner);
         return function_node;
         // If is function
@@ -427,26 +498,17 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
     else
     {
-        name = construct_variable_name(current_token.lexeme, function_name);
-        symbol = symtable_search(&symtable, name);
+        symbol = search_variable_in_scopes(current_token.lexeme, function_name);
         if (symbol == NULL)
         {
             error_exit(ERR_SEMANTIC_UNDEF, "Variable or function %s is not defined.", current_token.lexeme);
         }
-        if (symbol->is_constant)
-        {
-            error_exit(ERR_SEMANTIC_OTHER, "Constant variable can't be modified");
-        }
+        name = string_duplicate(symbol->name);
         current_token = get_next_token(scanner);
 
         expect_token(TOKEN_ASSIGN, scanner);
 
         ASTNode *value_node = parse_expression(scanner, function_name);
-
-        if (value_node->type == NODE_LITERAL && value_node->data_type == TYPE_U8)
-        {
-            error_exit(ERR_SEMANTIC_TYPE, "Cannot assign STRING LITERAL to a variable without using a function \"ifj.write(\"\")\"");
-        }
 
         if (!can_assign_type(symbol->data_type, value_node->data_type))
             value_node = check_and_convert_expression(value_node, symbol->data_type, name);
@@ -455,6 +517,7 @@ ASTNode *parse_variable_assigning(Scanner *scanner, char *function_name)
 
         return create_assignment_node(name, value_node);
     }
+
 }
 
 ASTNode *check_and_convert_expression(ASTNode *node, DataType expected_type, const char *variable_name)
@@ -488,7 +551,12 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
     {
         error_exit(ERR_INTERNAL, "Lexeme is NULL before strdup.");
     }
-    char *variable_name = construct_variable_name(current_token.lexeme, function_name);
+
+    // Сохраняем базовое имя переменной для проверки
+    const char *base_variable_name = current_token.lexeme;
+
+    // Создаём полное имя переменной с учётом области видимости
+    char *variable_name = construct_variable_name(base_variable_name, function_name);
     current_token = get_next_token(scanner);
 
     DataType declaration_type = TYPE_UNKNOWN;
@@ -506,7 +574,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 
     if (declaration_type != TYPE_UNKNOWN && expr_type != declaration_type && !can_assign_type(declaration_type, expr_type))
     {
-        error_exit(ERR_SEMANTIC_TYPE, "Declared type of variable does not match the assigned type. %d %d,\n Line and column: %d %d\n", declaration_type, expr_type, current_token.line, current_token.column);
+        error_exit(ERR_SEMANTIC_TYPE, "Declared type of variable does not match the assigned type.");
     }
     else if (declaration_type == TYPE_UNKNOWN && (expr_type == TYPE_UNKNOWN || expr_type == TYPE_NULL))
     {
@@ -528,10 +596,18 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 
     expect_token(TOKEN_SEMICOLON, scanner);
 
-    Symbol *symbol = symtable_search(&symtable, variable_name);
+    // Проверяем, существует ли переменная с таким именем во внешних областях видимости
+    Symbol *symbol = search_variable_in_outer_scopes(base_variable_name, function_name);
     if (symbol != NULL)
     {
-        error_exit(ERR_SEMANTIC_OTHER, "Variable already defined.");
+        error_exit(ERR_SEMANTIC_OTHER, "Variable '%s' is already defined in an outer scope.", base_variable_name);
+    }
+
+    // Проверяем, существует ли переменная с таким именем в текущей области видимости
+    symbol = symtable_search(&symtable, variable_name);
+    if (symbol != NULL)
+    {
+        error_exit(ERR_SEMANTIC_OTHER, "Variable '%s' is already defined in the current scope.", base_variable_name);
     }
 
     ASTNode *variable_declaration_node = create_variable_declaration_node(variable_name, declaration_type, initializer_node);
@@ -549,6 +625,7 @@ ASTNode *parse_variable_declaration(Scanner *scanner, char *function_name)
 
     return variable_declaration_node;
 }
+
 
 ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 {
@@ -600,7 +677,9 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
 
         is_pipe = true;
     }
-    ASTNode *true_block = parse_block(scanner, function_name);
+    enter_scope(); // Входим в область видимости для блока if
+    ASTNode *true_block = parse_block(scanner, function_name, true);
+    exit_scope(); // Выходим из области видимости блока if
     if (is_pipe)
     {
         ASTNode *tmp = true_block->body;
@@ -612,7 +691,9 @@ ASTNode *parse_if_statement(Scanner *scanner, char *function_name)
     if (current_token.type == TOKEN_ELSE)
     {
         current_token = get_next_token(scanner);
-        false_block = parse_block(scanner, function_name);
+        enter_scope(); // Входим в область видимости для блока else
+        false_block = parse_block(scanner, function_name, true);
+        exit_scope(); // Выходим из области видимости блока else
     }
 
     if (false_block != NULL)
@@ -672,7 +753,9 @@ ASTNode *parse_while_statement(Scanner *scanner, char *function_name)
         expect_token(TOKEN_PIPE, scanner);
         is_pipe = true;
     }
-    ASTNode *body_node = parse_block(scanner, function_name);
+    enter_scope(); // Входим в область видимости для блока while
+    ASTNode *body_node = parse_block(scanner, function_name, true);
+    exit_scope(); // Выходим из области видимости блока while
     if (is_pipe)
     {
         ASTNode *tmp = body_node->body;
@@ -707,10 +790,12 @@ ASTNode *convert_to_float_node(ASTNode *node)
         error_exit(ERR_SEMANTIC_TYPE, "Attempted to convert non-integer node to float.");
     }
     char *new_value = string_duplicate(node->value);
-    add_decimal(new_value);
+    char *decimal_value = add_decimal(new_value);
+    safe_free(new_value); // Освобождаем старое значение
 
-    ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, new_value);
-    safe_free(new_value);
+    ASTNode *conversion_node = create_literal_node(TYPE_FLOAT, decimal_value);
+    // Не освобождаем decimal_value, так как оно нужно в узле AST
+
     return conversion_node;
 }
 
@@ -960,7 +1045,7 @@ ASTNode *parse_primary_expression(Scanner *scanner, char *function_name)
         bool is_builtin = is_builtin_function(current_token.lexeme, scanner);
         if (is_builtin)
         {
-            return parse_builtin_fucntion_call(scanner, symbol, identifier_name, function_name);
+            return parse_builtin_function_call(scanner, symbol, identifier_name, function_name);
         }
         else
         {
@@ -1036,7 +1121,7 @@ ASTNode *parse_import(Scanner *scanner)
     return create_literal_node(TYPE_U8, import_value);
 }
 
-ASTNode *parse_builtin_fucntion_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
+ASTNode *parse_builtin_function_call(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
 {
     identifier_name = construct_builtin_name("ifj", current_token.lexeme);
     symbol = symtable_search(&symtable, identifier_name);
@@ -1101,12 +1186,12 @@ ASTNode *parse_function_call(Scanner *scanner, Symbol *symbol, char *identifier_
 
 ASTNode *parse_idendifier(Scanner *scanner, Symbol *symbol, char *identifier_name, char *function_name)
 {
-    identifier_name = construct_variable_name(current_token.lexeme, function_name);
-    symbol = symtable_search(&symtable, identifier_name);
+    symbol = search_variable_in_scopes(current_token.lexeme, function_name);
     if (symbol == NULL)
     {
-        error_exit(ERR_SEMANTIC_UNDEF, "Undefined variable or function. Got lexeme: %s", current_token.lexeme);
+        error_exit(ERR_SEMANTIC_UNDEF, "Undefined variable or function. Got lexeme: %s. Line and column: %d %d\n", current_token.lexeme, current_token.line, current_token.column);
     }
+    identifier_name = string_duplicate(symbol->name);
     ASTNode *identifier_node = create_identifier_node(identifier_name);
     identifier_node->data_type = symbol->data_type;
 

@@ -24,5 +24,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 clean:
 	rm -f $(OBJ_DIR)/*.o $(TARGET)
 	rm -rf $(OBJ_DIR)
+	rm -f valgrind_log.txt
 
 .PHONY: all clean
